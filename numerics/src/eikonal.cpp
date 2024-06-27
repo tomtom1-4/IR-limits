@@ -1,0 +1,538 @@
+#include "eikonal.hpp"
+
+std::unordered_map<std::string, std::complex<double>> J_g_eikonal(double *pp, double *q, amplitude& A) {
+  std::unordered_map<std::string, std::complex<double>> J;
+  for (int i = 0; i < A.process.size(); i++) { // particle index
+    double pi[4];
+    part(pp, pi, 4 * i, 4 * i + 4);
+    for (int mu = 0; mu < 4; mu++) {  // Lorentz index
+      for (int a = 0; a < 8; a++) {  // Color index
+        for (int b = 0; b < A.process[i]; b++) {
+          for (int c = 0; c < A.process[i]; c++) {
+            std::string key = std::to_string(i) + std::to_string(mu) + std::to_string(a) + std::to_string(b) + std::to_string(c);
+            if (A.particle_type[i] == 1) {
+              J[key] = - gs * lam[a][3 * b + c]/2. * pi[mu]/minkovski(pi, q);
+            }
+            else if (A.particle_type[i] == -1) {
+              J[key] = gs * lam[a][3 * c + b]/2. * pi[mu]/minkovski(pi, q);
+            }
+            else if (A.particle_type[i] == 2) {
+              J[key] = -gs * fabc[a][8 * c + b] * I * pi[mu]/minkovski(pi, q);
+            }
+          }
+        }
+
+      }
+    }
+  }
+  return J;
+}
+
+std::unordered_map<std::string, std::complex<double>> J_gg_eikonal(double *pp, double *q1, double *q2, amplitude& A) {
+  // Irreducible component of the double soft current
+  std::unordered_map<std::string, std::complex<double>> J;
+  for (int i = 0; i < A.process.size(); i++) { // particle index
+    double pi[4];
+    part(pp, pi, 4 * i, 4 * i + 4);
+    for (int mu1 = 0; mu1 < 4; mu1++) for (int mu2 = 0; mu2 < 4; mu2++) {  // Lorentz index
+      // momentum dependence
+      double gamma = (pi[mu1]*q1[mu2] - pi[mu2]*q2[mu1])/minkovski(q1,q2)/(minkovski(pi, q1) + minkovski(pi, q2))
+                    - (minkovski(pi, q1) - minkovski(pi, q2))/2./(minkovski(pi, q1) + minkovski(pi, q2))*(pi[mu1]*pi[mu2]/minkovski(pi, q1)/minkovski(pi, q2) + metric[mu1][mu2]/minkovski(q1,q2));
+      for (int a1 = 0; a1 < 8; a1++) for(int a2 = 0; a2 < 8; a2++) {  // Color index
+        for (int b = 0; b < A.process[i]; b++) {
+          for (int c = 0; c < A.process[i]; c++) {
+            std::string key = std::to_string(i) + std::to_string(mu1) + std::to_string(mu2) + std::to_string(a1) + std::to_string(a2) + std::to_string(b) + std::to_string(c);
+            J[key] = 0;
+            for(int d = 0; d < 8; d++) {
+              if (A.particle_type[i] == 1) {
+                J[key] += gs*gs*I*fabc[a1][8*a2+d] * lam[d][3 * b + c]/2.*gamma;
+              }
+              else if (A.particle_type[i] == -1) {
+                J[key] += -gs*gs*I*fabc[a1][8*a2+d] * lam[d][3 * c + b]/2.*gamma;
+              }
+              else if (A.particle_type[i] == 2) {
+                J[key] += gs*gs*I*fabc[a1][8*a2+d] * I*fabc[d][8 * c + b]*gamma;
+              }
+            }
+          }
+        }
+
+      }
+    }
+  }
+  return J;
+}
+
+std::unordered_map<std::string, std::complex<double>> J_qq_eikonal(double *pp, double *q1, double *q2, amplitude& A) {
+  // Irreducible component of the double soft current
+  std::unordered_map<std::string, std::complex<double>> J;
+
+  for(int s = -1; s <=1; s+=2) {
+    std::vector<std::complex<double>> u = spinor(q1, s);
+    std::vector<std::complex<double>> v = (-1.)*spinor(q2, s);
+    for (int i = 0; i < A.process.size(); i++) { // particle index
+      if(A.particle_type[i] == 0) continue;
+      double pi[4];
+      part(pp, pi, 4 * i, 4 * i + 4);
+      // momentum dependence
+      std::complex<double> gamma = -(u * (gamma0 * p_slash(pi) * v))/2./minkovski(q1, q2)/(minkovski(pi, q1) + minkovski(pi, q2));
+      for (int a1 = 0; a1 < 3; a1++) for(int a2 = 0; a2 < 3; a2++) {  // Color index
+        for (int b = 0; b < A.process[i]; b++) {
+          for (int c = 0; c < A.process[i]; c++) {
+            std::string key = std::to_string(i) + std::to_string(s) + std::to_string(a1) + std::to_string(a2) + std::to_string(b) + std::to_string(c);
+            J[key] = 0;
+            for(int d = 0; d < 8; d++) {
+              if (A.particle_type[i] == 1) {
+                J[key] += gs*gs*lam[d][3*a1+a2]/2. * lam[d][3 * b + c]/2.*gamma;
+              }
+              else if (A.particle_type[i] == -1) {
+                J[key] += -gs*gs*lam[d][3*a1+a2]/2. * lam[d][3 * c + b]/2.*gamma;
+              }
+              else if (A.particle_type[i] == 2) {
+                J[key] += gs*gs*lam[d][3*a1+a2]/2. * I*fabc[d][8 * c + b]*gamma;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return J;
+}
+
+std::unordered_map<std::string, std::complex<double>> J_qqg_eikonal(double *pp, double *q1, double *q2, double *q3, amplitude& A) {
+  // Irreducible component of the quark-anti-quark-gluon soft current
+  std::unordered_map<std::string, std::complex<double>> J;
+  double q123[4] = {q1[0]+q2[0]+q3[0],q1[1]+q2[1]+q3[1],q1[2]+q2[2]+q3[2],q1[3]+q2[3]+q3[3]};
+  double q13[4] = {q1[0]+q3[0],q1[1]+q3[1],q1[2]+q3[2],q1[3]+q3[3]};
+  double q23[4] = {q2[0]+q3[0],q2[1]+q3[1],q2[2]+q3[2],q2[3]+q3[3]};
+  double q12[4] = {q1[0]+q2[0],q1[1]+q2[1],q1[2]+q2[2],q1[3]+q2[3]};
+
+  for(int s = -1; s <=1; s+=2) {
+    std::vector<std::complex<double>> u = spinor(q1, s);
+    std::vector<std::complex<double>> v = spinor(q2, s);
+    for(int mu = 0; mu < 4; mu++) {
+      for (int i = 0; i < A.process.size(); i++) { // particle index
+        if(A.particle_type[i] == 0) continue;
+        double pi[4];
+        part(pp, pi, 4 * i, 4 * i + 4);
+        // momentum dependence
+        std::complex<double> gamma_ab = (u*((gamma0*p_slash(pi)*p_slash(q23)*gammas[mu]*(1./minkovski(q23, q23)) - gamma0*gammas[mu]*p_slash(q13)*p_slash(pi)*(1./minkovski(q13, q13)))*v))/minkovski(q123, q123)/minkovski(pi, q123);
+        std::complex<double> gamma_nab = (u*(((gamma0*p_slash(pi))*(pi[mu]/minkovski(q12, q12)*(1./minkovski(pi, q3) - 1./minkovski(pi, q12)))
+                  + ((gamma0*gammas[mu]*2.*(minkovski(pi, q12) - minkovski(pi, q3)) - gamma0*p_slash(pi)*4.*q12[mu] + gamma0*p_slash(q3)*4.*pi[mu])*(1./minkovski(q12, q12))
+                                              - gamma0*gammas[mu]*p_slash(q13)*p_slash(pi)*(1./minkovski(q13,q13)) - gamma0*p_slash(pi)*p_slash(q23)*gammas[mu]*(1./minkovski(q23, q23)))*(1./minkovski(q123, q123)))*v))/minkovski(pi, q123);
+        for (int a1 = 0; a1 < 3; a1++) for(int a2 = 0; a2 < 3; a2++) for(int a3 = 0; a3 < 8; a3++) {  // Color index
+          for (int ci1 = 0; ci1 < A.process[i]; ci1++) for(int ci2 = 0; ci2 < A.process[i]; ci2++) {
+            std::string key = std::to_string(i) + std::to_string(s) + std::to_string(mu) + std::to_string(a1) + std::to_string(a2) + std::to_string(a3) + std::to_string(ci1) + std::to_string(ci2);
+            J[key] = 0;
+            for(int c = 0; c < 8; c++) for(int d = 0; d < 3; d++) {
+              if (A.particle_type[i] == 1) {
+                J[key] += gs*gs*gs*(lam[a3][3*a1+d]*lam[c][3*d+a2] - lam[c][3*a1+d]*lam[a3][3*d+a2])/8.*lam[c][3*ci1 + ci2]/2.*gamma_nab;
+              }
+              else if (A.particle_type[i] == -1) {
+                J[key] += -gs*gs*gs*(lam[a3][3*a1+d]*lam[c][3*d+a2] - lam[c][3*a1+d]*lam[a3][3*d+a2])/8.*lam[c][3*ci2 + ci1]/2.*gamma_nab;
+              }
+              else if (A.particle_type[i] == 2) {
+                J[key] += gs*gs*gs*(lam[a3][3*a1+d]*lam[c][3*d+a2] - lam[c][3*a1+d]*lam[a3][3*d+a2])/8.*I*fabc[c][8*ci2 + ci1]*gamma_nab;
+              }
+            }
+            for (int c = 0; c < 8; c++) for(int d = 0; d < 3; d++) {
+              if (A.particle_type[i] == 1) {
+                J[key] += gs*gs*gs*(lam[a3][3*a1+d]*lam[c][3*d+a2] + lam[c][3*a1+d]*lam[a3][3*d+a2])/8.*lam[c][3*ci1 + ci2]/2.*gamma_ab;
+              }
+              else if (A.particle_type[i] == -1) {
+                J[key] += -gs*gs*gs*(lam[a3][3*a1+d]*lam[c][3*d+a2] + lam[c][3*a1+d]*lam[a3][3*d+a2])/8.*lam[c][3*ci2 + ci1]/2.*gamma_ab;
+              }
+              else if (A.particle_type[i] == 2) {
+                J[key] += gs*gs*gs*(lam[a3][3*a1+d]*lam[c][3*d+a2] + lam[c][3*a1+d]*lam[a3][3*d+a2])/8.*I*fabc[c][8*ci2 + ci1]*gamma_ab;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return J;
+}
+
+std::complex<double> soft_g(double *pp_full, std::unordered_map<std::string, std::complex<double>> J,
+    std::unordered_map<std::string, std::complex<double>> M,
+    std::vector<int> helicities_full, std::vector<int> colors_full, amplitude& A) {
+
+  double q[4];
+  part(pp_full, q, A.process.size() * 4, A.process.size() * 4 + 4);
+  std::vector<std::complex<double>> eps = polarization(q, helicities_full[A.process.size()]);
+
+  std::complex<double> M_eikonal = 0;
+
+  for (int i = 0; i < A.process.size(); i++) { // Particle sum
+    for(int c = 0; c < A.process[i]; c++) { // Color summataton
+      std::string key = "";
+      for (int l = 0; l < A.process.size(); l++) {
+        key += std::to_string(helicities_full[l]);
+      }
+      for (int l = 0; l < A.process.size(); l++) {
+        key += std::to_string(colors_full[l]);
+      }
+      key.replace(key.size() - A.process.size() + i, 1, std::to_string(c));
+      for(int mu = 0; mu < 4; mu++) {
+        std::string key1 = std::to_string(i) + std::to_string(mu) + std::to_string(colors_full[A.process.size()]) + std::to_string(colors_full[i]) + std::to_string(c);
+        M_eikonal += J[key1]*M[key]*eps[mu]*metric[mu][mu];
+      }
+    }
+  }
+  return M_eikonal;
+}
+
+std::complex<double> soft_gg(double *pp_full, std::unordered_map<std::string, std::complex<double>> J1,
+    std::unordered_map<std::string, std::complex<double>> J2, std::unordered_map<std::string, std::complex<double>> J12,
+    std::unordered_map<std::string, std::complex<double>> M,
+    std::vector<int> helicities_full, std::vector<int> colors_full, amplitude& A) {
+
+  double q1[4], q2[4];
+  part(pp_full, q1, A.process.size() * 4, A.process.size() * 4 + 4);
+  part(pp_full, q2, A.process.size() * 4 + 4, A.process.size() * 4 + 8);
+  std::vector<std::complex<double>> eps1 = polarization(q1, helicities_full[A.process.size()]);
+  std::vector<std::complex<double>> eps2 = polarization(q2, helicities_full[A.process.size() + 1]);
+
+  std::complex<double> M_eikonal = 0;
+
+  for (int i1 = 0; i1 < A.process.size(); i1++) {
+    double pi1[4];
+    part(pp_full, pi1, i1 * 4, i1 * 4 + 4);
+    for (int i2 = 0; i2 < A.process.size(); i2++) {
+      double pi2[4];
+      part(pp_full, pi2, i2 * 4, i2 * 4 + 4);
+      for (int c1 = 0; c1 < A.process[i1]; c1++) {
+        for (int c2 = 0; c2 < A.process[i2]; c2++) {
+          std::string key = "";
+          for (int l = 0; l < A.process.size(); l++) {
+            key += std::to_string(helicities_full[l]);
+          }
+
+          for (int l = 0; l < A.process.size(); l++) {
+            key += std::to_string(colors_full[l]);
+          }
+
+          if (i1 == i2) {
+            key.replace(key.size() - A.process.size() + i1, 1, std::to_string(c2));
+          }
+          else {
+            key.replace(key.size() - A.process.size() + i1, 1, std::to_string(c1));
+            key.replace(key.size() - A.process.size() + i2, 1, std::to_string(c2));
+          }
+
+          for (int mu1 = 0; mu1 < 4; mu1++) {
+            for (int mu2 = 0; mu2 < 4; mu2++) {
+              if (i1 == i2) {
+                std::string key1 = std::to_string(i1) + std::to_string(mu1) + std::to_string(colors_full[A.process.size()]) + std::to_string(colors_full[i1]) + std::to_string(c1);
+                std::string key2 = std::to_string(i2) + std::to_string(mu2) + std::to_string(colors_full[A.process.size() + 1]) +  std::to_string(c1) + std::to_string(c2);
+                M_eikonal += 1./2. * J1[key1] * J2[key2] * M[key] * eps1[mu1] * eps2[mu2] * metric[mu1][mu1] * metric[mu2][mu2];
+                key1 = std::to_string(i1) + std::to_string(mu1) + std::to_string(colors_full[A.process.size()]) +  std::to_string(c1) + std::to_string(c2) ;
+                key2 = std::to_string(i2) + std::to_string(mu2) + std::to_string(colors_full[A.process.size() + 1]) + std::to_string(colors_full[i2]) + std::to_string(c1);
+                M_eikonal += 1./2. * J2[key2] * J1[key1] * M[key] * eps1[mu1] * eps2[mu2] * metric[mu1][mu1] * metric[mu2][mu2];
+              }
+              else  {
+                std::string key1 = std::to_string(i1) + std::to_string(mu1) + std::to_string(colors_full[A.process.size()]) +  std::to_string(colors_full[i1]) + std::to_string(c1) ;
+                std::string key2 = std::to_string(i2) + std::to_string(mu2) + std::to_string(colors_full[A.process.size() + 1]) + std::to_string(colors_full[i2]) + std::to_string(c2);
+                M_eikonal += 2 * 1./2. * J1[key1] * J2[key2] * M[key] * eps1[mu1] * eps2[mu2] * metric[mu1][mu1] * metric[mu2][mu2];
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (int i = 0; i < A.process.size(); i++) {
+    double pi[4];
+    part(pp_full, pi, i * 4, i * 4 + 4);
+    for (int c = 0; c < A.process[i]; c++) {
+      std::string key = "";
+      for (int l = 0; l < A.process.size(); l++) {
+        key += std::to_string(helicities_full[l]);
+      }
+
+      for (int l = 0; l < A.process.size(); l++) {
+        key += std::to_string(colors_full[l]);
+      }
+      key.replace(key.size() - A.process.size() + i, 1, std::to_string(c));
+
+      for (int mu1 = 0; mu1 < 4; mu1++) for (int mu2 = 0; mu2 < 4; mu2++) {
+        std::string key12 = std::to_string(i) + std::to_string(mu1) + std::to_string(mu2) + std::to_string(colors_full[A.process.size()]) + std::to_string(colors_full[A.process.size() + 1]) + std::to_string(colors_full[i]) + std::to_string(c);
+        M_eikonal += J12[key12] * M[key] * eps1[mu1] * eps2[mu2] * metric[mu1][mu1] * metric[mu2][mu2];
+      }
+    }
+  }
+  return M_eikonal;
+}
+
+std::complex<double> soft_qq(double *pp_full, std::unordered_map<std::string, std::complex<double>> J12,
+    std::unordered_map<std::string, std::complex<double>> M,
+    std::vector<int> helicities_full, std::vector<int> colors_full, amplitude& A) {
+
+  if(helicities_full[A.process.size()] != helicities_full[A.process.size()])
+    return 0.;
+
+  std::complex<double> M_eikonal = 0;
+
+  for (int i = 0; i < A.process.size(); i++) { // Particle sum
+    for(int c = 0; c < A.process[i]; c++) { // Color summataton
+      std::string key = "";
+      for (int l = 0; l < A.process.size(); l++) {
+        key += std::to_string(helicities_full[l]);
+      }
+      for (int l = 0; l < A.process.size(); l++) {
+        key += std::to_string(colors_full[l]);
+      }
+      key.replace(key.size() - A.process.size() + i, 1, std::to_string(c));
+      std::string key1 = std::to_string(i) + std::to_string(helicities_full[A.process.size()]) + std::to_string(colors_full[A.process.size()]) + std::to_string(colors_full[A.process.size() + 1]) + std::to_string(colors_full[i]) + std::to_string(c);
+      M_eikonal += J12[key1]*M[key];
+    }
+  }
+  return M_eikonal;
+}
+
+std::complex<double> soft_qqg(double *pp_full, std::unordered_map<std::string, std::complex<double>> J12, std::unordered_map<std::string, std::complex<double>> J3,
+    std::unordered_map<std::string, std::complex<double>> J123, std::unordered_map<std::string, std::complex<double>> M,
+    std::vector<int> helicities_full, std::vector<int> colors_full, amplitude& A) {
+
+  double q1[4], q2[4], q3[4];
+  part(pp_full, q1, A.process.size() * 4, A.process.size() * 4 + 4);
+  part(pp_full, q2, A.process.size() * 4 + 4, A.process.size() * 4 + 8);
+  part(pp_full, q3, A.process.size() * 4 + 8, A.process.size() * 4 + 12);
+  std::vector<std::complex<double>> eps = polarization(q3, helicities_full[A.process.size() + 2]);
+  std::complex<double> M_eikonal = 0;
+
+  for(int i = 0; i < A.process.size(); i++) for(int j = 0; j < A.process.size(); j++) {
+    double pi[4], pj[4];
+    part(pp_full, pi, i*4, i*4 + 4);
+    part(pp_full, pj, j*4, j*4 + 4);
+    for(int ci = 0; ci < A.process[i]; ci++) for(int cj = 0; cj < A.process[j]; cj++) {
+      std::string key = "";
+      for (int l = 0; l < A.process.size(); l++) {
+        key += std::to_string(helicities_full[l]);
+      }
+
+      for (int l = 0; l < A.process.size(); l++) {
+        key += std::to_string(colors_full[l]);
+      }
+
+      if (i == j) {
+        key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
+      }
+      else {
+        key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
+        key.replace(key.size() - A.process.size() + j, 1, std::to_string(cj));
+      }
+      for (int mu = 0; mu < 4; mu++) {
+        if (i == j) {
+          std::string key1 = std::to_string(i) + std::to_string(mu) + std::to_string(colors_full[A.process.size()+2]) + std::to_string(colors_full[i]) + std::to_string(cj);
+          std::string key2 = std::to_string(i) + std::to_string(helicities_full[A.process.size()]) + std::to_string(colors_full[A.process.size()]) + std::to_string(colors_full[A.process.size() + 1]) +  std::to_string(cj) + std::to_string(ci);
+          M_eikonal += 1./2.*J3[key1]*J12[key2]*M[key]*eps[mu]*metric[mu][mu];
+          key1 = std::to_string(i) + std::to_string(mu) + std::to_string(colors_full[A.process.size()+2]) + std::to_string(cj) + std::to_string(ci);
+          key2 = std::to_string(i) + std::to_string(helicities_full[A.process.size()]) + std::to_string(colors_full[A.process.size()]) + std::to_string(colors_full[A.process.size() + 1]) +  std::to_string(colors_full[i]) + std::to_string(cj);
+          M_eikonal += 1./2.*J12[key2]*J3[key1]*M[key]*eps[mu]*metric[mu][mu];
+        }
+        else  {
+          std::string key1 = std::to_string(i) + std::to_string(mu) + std::to_string(colors_full[A.process.size()+2]) + std::to_string(colors_full[i]) + std::to_string(ci);
+          std::string key2 = std::to_string(j) + std::to_string(helicities_full[A.process.size()]) + std::to_string(colors_full[A.process.size()]) + std::to_string(colors_full[A.process.size() + 1]) +  std::to_string(colors_full[j]) + std::to_string(cj);
+          M_eikonal += 2.*1./2.*J3[key1]*J12[key2]*M[key]*eps[mu]*metric[mu][mu];
+        }
+      }
+    }
+  }
+  for(int i = 0; i < A.process.size(); i++) {
+    double pi[4], pj[4];
+    part(pp_full, pi, i*4, i*4 + 4);
+    for(int ci = 0; ci < A.process[i]; ci++) {
+      std::string key = "";
+      for (int l = 0; l < A.process.size(); l++) {
+        key += std::to_string(helicities_full[l]);
+      }
+
+      for (int l = 0; l < A.process.size(); l++) {
+        key += std::to_string(colors_full[l]);
+      }
+      key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
+      for (int mu = 0; mu < 4; mu++) {
+        std::string key1 = std::to_string(i) + std::to_string(helicities_full[A.process.size()]) + std::to_string(mu) + std::to_string(colors_full[A.process.size()]) + std::to_string(colors_full[A.process.size() + 1]) + std::to_string(colors_full[A.process.size() + 2]) +  std::to_string(colors_full[i]) + std::to_string(ci);
+        M_eikonal += J123[key1]*M[key]*eps[mu]*metric[mu][mu];
+      }
+    }
+  }
+  return M_eikonal;
+}
+
+
+std::complex<double> double_soft_tree(double *pp_full, std::unordered_map<std::string, std::complex<double>> J1,
+    std::unordered_map<std::string, std::complex<double>> J2, std::unordered_map<std::string, std::complex<double>> M,
+    std::vector<int> helicities_full, std::vector<int> colors_full, amplitude& A) {
+
+  double q1[4], q2[4];
+  part(pp_full, q1, A.process.size() * 4, A.process.size() * 4 + 4);
+  part(pp_full, q2, A.process.size() * 4 + 4, A.process.size() * 4 + 8);
+  std::vector<std::complex<double>> eps1 = polarization(q1, helicities_full[A.process.size()]);
+  std::vector<std::complex<double>> eps2 = polarization(q2, helicities_full[A.process.size() + 1]);
+
+  std::complex<double> M_eikonal = 0;
+
+  for (int i1 = 0; i1 < A.process.size(); i1++) {
+    double pi1[4];
+    part(pp_full, pi1, i1 * 4, i1 * 4 + 4);
+    for (int i2 = 0; i2 < A.process.size(); i2++) {
+      double pi2[4];
+      part(pp_full, pi2, i2 * 4, i2 * 4 + 4);
+      for (int c1 = 0; c1 < A.process[i1]; c1++) {
+        for (int c2 = 0; c2 < A.process[i2]; c2++) {
+          std::string key = "";
+          for (int l = 0; l < A.process.size(); l++) {
+            key += std::to_string(helicities_full[l]);
+          }
+
+          for (int l = 0; l < A.process.size(); l++) {
+            key += std::to_string(colors_full[l]);
+          }
+
+          if (i1 == i2) {
+            key.replace(key.size() - A.process.size() + i1, 1, std::to_string(c2));
+          }
+          else {
+            key.replace(key.size() - A.process.size() + i1, 1, std::to_string(c1));
+            key.replace(key.size() - A.process.size() + i2, 1, std::to_string(c2));
+          }
+
+          for (int mu1 = 0; mu1 < 4; mu1++) {
+            for (int mu2 = 0; mu2 < 4; mu2++) {
+              if (i1 == i2) {
+                std::string key1 = std::to_string(i1) + std::to_string(mu1) + std::to_string(colors_full[A.process.size()]) + std::to_string(colors_full[i1]) + std::to_string(c1);
+                std::string key2 = std::to_string(i2) + std::to_string(mu2) + std::to_string(colors_full[A.process.size() + 1]) +  std::to_string(c1) + std::to_string(c2);
+                M_eikonal += 1./2. * J1[key1] * J2[key2] * M[key] * eps1[mu1] * eps2[mu2] * metric[mu1][mu1] * metric[mu2][mu2];
+                key1 = std::to_string(i1) + std::to_string(mu1) + std::to_string(colors_full[A.process.size()]) +  std::to_string(c1) + std::to_string(c2) ;
+                key2 = std::to_string(i2) + std::to_string(mu2) + std::to_string(colors_full[A.process.size() + 1]) + std::to_string(colors_full[i2]) + std::to_string(c1);
+                M_eikonal += 1./2. * J2[key2] * J1[key1] * M[key] * eps1[mu1] * eps2[mu2] * metric[mu1][mu1] * metric[mu2][mu2];
+              }
+              else  {
+                std::string key1 = std::to_string(i1) + std::to_string(mu1) + std::to_string(colors_full[A.process.size()]) +  std::to_string(colors_full[i1]) + std::to_string(c1) ;
+                std::string key2 = std::to_string(i2) + std::to_string(mu2) + std::to_string(colors_full[A.process.size() + 1]) + std::to_string(colors_full[i2]) + std::to_string(c2);
+                M_eikonal += 2 * 1./2. * J1[key1] * J2[key2] * M[key] * eps1[mu1] * eps2[mu2] * metric[mu1][mu1] * metric[mu2][mu2];
+                //key1 = std::to_string(i1) + std::to_string(mu1) + std::to_string(colors_full[A.process.size()])+  std::to_string(colors_full[i1]) + std::to_string(c1) ;
+                //key2 = std::to_string(i2) + std::to_string(mu2) + std::to_string(colors_full[A.process.size() + 1]) + std::to_string(colors_full[i2]) + std::to_string(c2);
+                //M_eikonal += 1./2. * J2[key2] * J1[key1] * M[key] * eps1[mu1] * eps2[mu2] * metric[mu1][mu1] * metric[mu2][mu2];
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (int i = 0; i < A.process.size(); i++) {
+    double pi[4];
+    part(pp_full, pi, 4 * i, 4 * i + 4);
+    std::string key = "";
+    for (int l = 0; l < A.process.size(); l++) {
+      key += std::to_string(helicities_full[l]);
+    }
+
+    for (int l = 0; l < A.process.size(); l++) {
+      key += std::to_string(colors_full[l]);
+    }
+    std::complex<double> nonabel = 0;
+    for (int mu1 = 0; mu1 < 4; mu1++) {
+      for (int mu2 = 0; mu2 < 4; mu2++) {
+        nonabel += gs * gs * ((pi[mu1] * q1[mu2] - pi[mu2] * q2[mu1])/minkovski(q1, q2)/(minkovski(pi, q1) + minkovski(pi, q2))
+        - (minkovski(pi, q1) - minkovski(pi, q2))/2./(minkovski(pi, q1) + minkovski(pi, q2))
+            * (pi[mu1] * pi[mu2]/minkovski(pi, q1)/minkovski(pi, q2) + metric[mu1][mu2]/minkovski(q1, q2))) * eps1[mu1] * eps2[mu2] * metric[mu1][mu1] * metric[mu2][mu2];
+      }
+    }
+    std::complex<double> colfac = 0;
+    for (int a = 0; a < 8; a++) {
+      for (int ci = 0; ci < A.process[i]; ci++) {
+        std::complex<double> colfac_con = 0;
+        if (A.particle_type[i] == 1) {
+          colfac_con = lam[a][3 * colors_full[i] + ci]/2.;
+        }
+        else if (A.particle_type[i] == -1) {
+          colfac_con = -lam[a][3 * ci + colors_full[i]]/2.;
+        }
+        else if (A.particle_type[i] == 2) {
+          colfac_con = I * fabc[a][8 * ci + colors_full[i]];
+        }
+        key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
+        colfac_con *= M[key] * I * fabc[a][8 * colors_full[A.process.size()] + colors_full[A.process.size() + 1]];
+        colfac += colfac_con;
+      }
+    }
+    M_eikonal += colfac * nonabel;
+  }
+  return M_eikonal;
+}
+
+std::complex<double> double_soft_tree_qq(double *pp_full, std::unordered_map<std::string, std::complex<double>> M,
+                     std::vector<int> helicities_full, std::vector<int> colors_full, amplitude& A) {
+  double q1[4], q2[4];
+  part(pp_full, q1, A.process.size() * 4, A.process.size() * 4 + 4);
+  part(pp_full, q2, A.process.size() * 4 + 4, A.process.size() * 4 + 8);
+  std::vector<std::complex<double>> eps1 = polarization(q1, helicities_full[A.process.size()]);
+  std::vector<std::complex<double>> eps2 = polarization(q2, helicities_full[A.process.size() + 1]);
+  std::vector<std::complex<double>> u = spinor(q1, helicities_full[A.process.size()]);
+  std::vector<std::complex<double>> v = spinor(q2, -helicities_full[A.process.size() + 1]);
+
+  std::complex<double> M_eikonal = 0;
+
+  for (int i = 0; i < A.process.size(); i++) {
+    double pi[4];
+    part(pp_full, pi, 4 * i, 4 * i + 4);
+    std::string key = "";
+    for (int l = 0; l < A.process.size(); l++) {
+      key += std::to_string(helicities_full[l]);
+    }
+
+    for (int l = 0; l < A.process.size(); l++) {
+      key += std::to_string(colors_full[l]);
+    }
+    std::complex<double> nonabel = 0;
+
+    nonabel += gs * gs * (u * (gamma0 * p_slash(pi) * v))/2./minkovski(q1, q2)/(minkovski(pi, q1) + minkovski(pi, q2));
+    std::complex<double> colfac = 0;
+    for (int a = 0; a < 8; a++) {
+      for (int ci = 0; ci < A.process[i]; ci++) {
+        std::complex<double> colfac_con = 0;
+        if (A.particle_type[i] == 1) {
+          colfac_con = lam[a][3 * colors_full[i] + ci]/2.;
+        }
+        else if (A.particle_type[i] == -1) {
+          colfac_con = -lam[a][3 * ci + colors_full[i]]/2.;
+        }
+        else if (A.particle_type[i] == 2) {
+          colfac_con = I * fabc[a][8 * ci + colors_full[i]];
+        }
+        key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
+        colfac_con *= M[key] * lam[a][3 * colors_full[A.process.size()] + colors_full[A.process.size() + 1]]/2.;
+        colfac += colfac_con;
+      }
+    }
+    M_eikonal += colfac * nonabel;
+  }
+  return M_eikonal;
+}
+
+double soft_g_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> M_ij, amplitude& A) {
+  double q[4];
+  part(pp_full, q, A.process.size()*4, A.process.size()*4 + 4);
+  double approx = 0;
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.process[i] == 1) continue;
+    double pi[4];
+    part(pp_full, pi, i*4, i*4 + 4);
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.process[j] == 1) continue;
+      if(i == j) continue;
+      double pj[4];
+      part(pp_full, pj, j*4, j*4 + 4);
+      approx += -gs*gs*minkovski(pi, pj)/minkovski(pi, q)/minkovski(pj, q)*std::real(M_ij[std::to_string(i) + std::to_string(j)]);
+    }
+  }
+  return approx;
+}
