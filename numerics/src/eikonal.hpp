@@ -38,4 +38,12 @@ std::complex<double> soft_qqg(double *pp_full, std::unordered_map<std::string, s
 
 double soft_g_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> M_ij, amplitude& A);
 
+double soft_qq_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> M_ij, amplitude& A);
+
+double soft_gg_squared(double*pp_full, std::unordered_map<std::string, std::complex<double>> Mij, std::unordered_map<std::string, std::complex<double>> Mijkl, amplitude& A);
+
+double soft_gqq_squared(double* pp_full, std::unordered_map<std::string, std::complex<double>> M_ij,
+                                         std::unordered_map<std::string, std::complex<double>> M_ijkl,
+                                         std::unordered_map<std::string, std::complex<double>> dM_ijk, amplitude& A);
+
 #endif

@@ -1,15 +1,15 @@
 #include "main.hpp"
 
 // Evaluation of input
-std::string process_str = "d d~ -> g g";
-std::string unresolved_str = " g";
+std::string process_str = "e- e+ -> u u~";
+std::string unresolved_str = " g d d~";
 std::string process_full_str = process_str + unresolved_str;
 
 
 const int nBorn = 4;
-const int nUnresolved = 1;
-const int power = 2;
-const std::vector<int> flavor = {1,1,1,1};
+const int nUnresolved = 3;
+const int power = 0;
+const std::vector<int> flavor = {0,0,1,1};
 
 int main() {
   std::cout.precision(8);
@@ -70,13 +70,13 @@ int main() {
   std::cout << "Found non zero helicity configurations of Born process" << std::endl;
   std::vector<std::vector<int> > colors = non0col(1, power, "LO", A, helicities);
   std::cout << "Found non zero color configurations of Born process" << std::endl;
-  std::vector<std::vector<int> > helicities_full = non0hel(2, power + nUnresolved, "LO", A_full);
+  /*std::vector<std::vector<int> > helicities_full = non0hel(2, power + nUnresolved, "LO", A_full);
   std::cout << "Found non zero helicity configurations of Full process" << std::endl;
-  std::vector<std::vector<int> > colors_full = non0col(2, power + nUnresolved, "LO", A_full, helicities_full);
+  std::vector<std::vector<int> > colors_full = non0col(2, power + nUnresolved, "LO", A_full, helicities_full);*/
   std::cout << "Found non zero color configurations of Full process" << std::endl;
   // Create Hashmap for all non-zero amplitudes that only need to be caluculated once per data set
   std::unordered_map<std::string, std::complex<double>> M; // hel + col is the key as string
-  std::unordered_map<std::string, std::complex<double>> M_ij, fM_ijk, dM_ijk; // color correlators
+  std::unordered_map<std::string, std::complex<double>> M_ij, ifM_ijk, dM_ijk, M_ijkl; // color correlators
 
   // fill the Hashmaps
   for (int i = 0; i < helicities.size(); i++) {
@@ -107,6 +107,7 @@ int main() {
   }
   double average_factor = 1./4.; // Spin of the initial state
   double average_factor_full = 1./4.;
+  {
   for(int i = 0; i < 2; i++) {
     average_factor *= 1./double(A.process[i]);
     average_factor_full *= 1./double(A_full.process[i]);
@@ -115,7 +116,6 @@ int main() {
   std::vector<std::string> particles_full = A_full.process_particles;
   particles.erase(particles.begin(), particles.begin() + 2);
   particles_full.erase(particles_full.begin(), particles_full.begin() + 2);
-
   while(particles.size() > 0) {
     std::string particle = particles[0];
     int occurances = 1;
@@ -151,6 +151,10 @@ int main() {
     particles_full.erase(particles_full.begin());
     average_factor_full *= 1./factorial(occurances);
   }
+  }
+
+  // Get color correlators
+  // <M|Ti.Tj|M>
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
     for(int j = 0; j < A.process.size(); j++) {
@@ -215,6 +219,173 @@ int main() {
       std::cout << "M2 = " << M2_averaged << "\tcontrol = " << M2_averaged_control << "\tratio = " << M2_averaged/M2_averaged_control << std::endl;
     }
   }
+  // <M|Ti.Tj Tk.Tl|M>
+  for (int i = 0; i < A.process.size(); i++) {
+    if(A.particle_type[i] == 0) continue;
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.particle_type[j] == 0) continue;
+      for(int k = 0; k < A.process.size(); k++) {
+        if(A.particle_type[k] == 0) continue;
+        for(int l = 0; l < A.process.size(); l++) {
+          if(A.particle_type[l] == 0) continue;
+          std::complex<double> Mijkl = 0.;
+          for(std::vector<int> hel_full : helicities) {  // color and helicity of the bra <M|
+            std::string hel_string;
+            for (int dummy = 0; dummy < hel_full.size(); dummy++) {
+              hel_string += std::to_string(hel_full[dummy]);
+            }
+            for(std::vector<int> col_full : colors) {
+              std::string col_string;
+              for(int dummy = 0; dummy < col_full.size(); dummy++) {
+                col_string += std::to_string(col_full[dummy]);
+              }
+              std::string key = hel_string + col_string;
+              std::complex<double> M_bra = std::conj(M[key]);
+              std::vector<int> output_colors = {col_full[i], col_full[j], col_full[k], col_full[l]};
+              for(int a = 0; a < 8; a++) for(int b = 0; b < 8; b++) {
+                for(int ci = 0; ci < A.process[i]; ci++) for(int cj = 0; cj < A.process[j]; cj++) for(int ck = 0; ck < A.process[k]; ck++) for(int cl = 0; cl < A.process[l]; cl++) {
+                  key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
+                  key.replace(key.size() - A.process.size() + j, 1, std::to_string(cj));
+                  key.replace(key.size() - A.process.size() + k, 1, std::to_string(ck));
+                  key.replace(key.size() - A.process.size() + l, 1, std::to_string(cl));
+
+                  if(j == i)
+                    output_colors[1] = ci;
+                  else if(k == i)
+                    output_colors[2] = ci;
+                  else if(l == i)
+                    output_colors[3] = ci;
+
+                  if(k == j)
+                    output_colors[2] = cj;
+                  else if(l == j)
+                    output_colors[3] = cj;
+
+                  if(l == k)
+                    output_colors[3] = ck;
+
+                  std::complex<double> col_factor = 1;
+                  if(A.particle_type[l] == 1)
+                    col_factor *= lam[a][3*output_colors[3] + cl]/2.;
+                  else if(A.particle_type[l] == -1)
+                    col_factor *= -lam[a][3*cl + output_colors[3]]/2.;
+                  else if(A.particle_type[l] == 2)
+                    col_factor *= I*fabc[a][8*cl + output_colors[3]];
+
+                  if(A.particle_type[k] == 1)
+                    col_factor *= lam[a][3*output_colors[2] + ck]/2.;
+                  else if(A.particle_type[k] == -1)
+                    col_factor *= -lam[a][3*ck + output_colors[2]]/2.;
+                  else if(A.particle_type[k] == 2)
+                    col_factor *= I*fabc[a][8*ck + output_colors[2]];
+
+                  if(A.particle_type[j] == 1)
+                    col_factor *= lam[b][3*output_colors[1] + cj]/2.;
+                  else if(A.particle_type[j] == -1)
+                    col_factor *= -lam[b][3*cj + output_colors[1]]/2.;
+                  else if(A.particle_type[j] == 2)
+                    col_factor *= I*fabc[b][8*cj + output_colors[1]];
+
+                  if(A.particle_type[i] == 1)
+                    col_factor *= lam[b][3*output_colors[0] + ci]/2.;
+                  else if(A.particle_type[i] == -1)
+                    col_factor *= -lam[b][3*ci + output_colors[0]]/2.;
+                  else if(A.particle_type[i] == 2)
+                    col_factor *= I*fabc[b][8*ci + output_colors[0]];
+
+                  Mijkl += col_factor*M_bra*M[key];
+                }
+              }
+            }
+          }
+
+          M_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)] = Mijkl*average_factor;
+          double M2_averaged;
+          Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged);
+          std::cout << "i = " << i << ", j = " << j << ", k = " << k << ", l = " << l << ": <M|T_i.T_j T_k.T_l|M> = " << Mijkl*average_factor << "\t" << Mijkl*average_factor/M2_averaged << std::endl;
+        }
+      }
+    }
+  }
+
+  // d^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
+  // f^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
+  for (int i = 0; i < A.process.size(); i++) {
+    if(A.particle_type[i] == 0) continue;
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.particle_type[j] == 0) continue;
+      for(int k = 0; k < A.process.size(); k++) {
+        if(A.particle_type[k] == 0) continue;
+        std::complex<double> fMijk = 0.;
+        std::complex<double> dMijk = 0.;
+
+        for(std::vector<int> hel_full : helicities) {  // color and helicity of the bra <M|
+          std::string hel_string;
+          for (int dummy = 0; dummy < hel_full.size(); dummy++) {
+            hel_string += std::to_string(hel_full[dummy]);
+          }
+          for(std::vector<int> col_full : colors) {
+            std::string col_string;
+            for(int dummy = 0; dummy < col_full.size(); dummy++) {
+              col_string += std::to_string(col_full[dummy]);
+            }
+            std::string key = hel_string + col_string;
+            std::complex<double> M_bra = std::conj(M[key]);
+            std::vector<int> output_colors = {col_full[i], col_full[j], col_full[k]};
+            for(int a = 0; a < 8; a++) for(int b = 0; b < 8; b++) for(int c = 0; c < 8; c++) {
+              for(int ci = 0; ci < A.process[i]; ci++) for(int cj = 0; cj < A.process[j]; cj++) for(int ck = 0; ck < A.process[k]; ck++) {
+                key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
+                key.replace(key.size() - A.process.size() + j, 1, std::to_string(cj));
+                key.replace(key.size() - A.process.size() + k, 1, std::to_string(ck));
+
+                if(j == i)
+                  output_colors[1] = ci;
+                else if(k == i)
+                  output_colors[2] = ci;
+
+                if(k == j)
+                  output_colors[2] = cj;
+
+                std::complex<double> col_factor = 1;
+
+                if(A.particle_type[k] == 1)
+                  col_factor *= lam[a][3*output_colors[2] + ck]/2.;
+                else if(A.particle_type[k] == -1)
+                  col_factor *= -lam[a][3*ck + output_colors[2]]/2.;
+                else if(A.particle_type[k] == 2)
+                  col_factor *= I*fabc[a][8*ck + output_colors[2]];
+
+                if(A.particle_type[j] == 1)
+                  col_factor *= lam[b][3*output_colors[1] + cj]/2.;
+                else if(A.particle_type[j] == -1)
+                  col_factor *= -lam[b][3*cj + output_colors[1]]/2.;
+                else if(A.particle_type[j] == 2)
+                  col_factor *= I*fabc[b][8*cj + output_colors[1]];
+
+                if(A.particle_type[i] == 1)
+                  col_factor *= lam[c][3*output_colors[0] + ci]/2.;
+                else if(A.particle_type[i] == -1)
+                  col_factor *= -lam[c][3*ci + output_colors[0]]/2.;
+                else if(A.particle_type[i] == 2)
+                  col_factor *= I*fabc[c][8*ci + output_colors[0]];
+
+                fMijk += col_factor*M_bra*M[key]*fabc[a][8*b+c];
+                dMijk += col_factor*M_bra*M[key]*dabc[a][8*b+c];
+              }
+            }
+          }
+          ifM_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)] = I*fMijk*average_factor;
+          dM_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)] = dMijk*average_factor;
+
+          double M2_averaged;
+          Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged);
+          std::cout << "i = " << i << ", j = " << j << ", k = " << k << ": f^{abc} <M|Ti Tj Tk|M> = " << I*fMijk*average_factor << "\t" << I*fMijk*average_factor/M2_averaged << std::endl;
+          std::cout << "i = " << i << ", j = " << j << ", k = " << k << ": d^{abc} <M|Ti Tj Tk|M> = " << dMijk*average_factor << "\t" << dMijk*average_factor/M2_averaged << std::endl;
+
+        }
+      }
+    }
+  }
 
   std::cout << "Filled the Hashmaps" << std::endl;
 
@@ -226,13 +397,13 @@ int main() {
     clusterTree.print();
     std::cout << "#########################################################################" << std::endl;
   }
-  for(int tree_counter = 0; tree_counter < 1; tree_counter++) {
+  for(int tree_counter = 2; tree_counter < 3; tree_counter++) {
   Tree<Cluster>& tree = trees[tree_counter];
   tree.print();
   if(tree.getRoot()->children.size() > 1) continue; // Remove multiple reference, as they are trivial
   std::vector<Tree<Cluster>> sectors = GenSectors(flavor, tree, nBorn);
 
-  for(int sec_counter = 2; sec_counter < 3; sec_counter++) {
+  for(int sec_counter = 0; sec_counter < 1; sec_counter++) {
   Tree<Cluster> clusterTree = sectors[sec_counter];
   std::cout << "reference = " << clusterTree.getRoot()->children[0]->data.reference << std::endl;
 
@@ -272,7 +443,24 @@ int main() {
         ppFull_rcl[i][j] = (i<2?-1.:1.)*ppFull.momenta[i].components[j];
       }
     }
-    std::vector<std::unordered_map<std::string, std::complex<double>>> J_g, J_gg, J_qq, J_qqg;
+
+    Recola::compute_process_rcl(2, ppFull_rcl, std::string("LO"));
+    double M2_Full;
+    Recola::get_squared_amplitude_rcl(2, power + nUnresolved, "LO", M2_Full);
+    double M2_approx;
+    if(unresolved_str == " g")
+      M2_approx = soft_g_squared(pp_full, M_ij, A)*average_factor_full/average_factor;
+    else if(unresolved_str == " d d~")
+      M2_approx = soft_qq_squared(pp_full, M_ij, A)*average_factor_full/average_factor;
+    else if(unresolved_str == " g g")
+      M2_approx = soft_gg_squared(pp_full, M_ij, M_ijkl, A)*average_factor_full/average_factor;
+    else if(unresolved_str == " g d d~") {
+      M2_approx = soft_gqq_squared(pp_full, M_ij, M_ijkl, dM_ijk, A)*average_factor_full/average_factor;
+    }
+
+    std::cout << M2_Full << "\t" << M2_approx << "\t" << M2_Full/M2_approx << "\t" << std::abs(1. - M2_Full/M2_approx) << "\t" << scale << std::endl;
+
+    /*std::vector<std::unordered_map<std::string, std::complex<double>>> J_g, J_gg, J_qq, J_qqg;
 
     if((unresolved_str == " g") or (unresolved_str == " g g")) {
       for(int i = 0; i < nUnresolved; i++) J_g.push_back(J_g_eikonal(pp_arr, ppFull_rcl[A.process.size() + i], A));
@@ -291,11 +479,7 @@ int main() {
       J_qqg.push_back(J_qqg_eikonal(pp_arr, ppFull_rcl[A.process.size()], ppFull_rcl[A.process.size() + 1], ppFull_rcl[A.process.size() + 2], A));
     }
 
-    Recola::compute_process_rcl(2, ppFull_rcl, std::string("LO"));
-    double M2_Full;
-    Recola::get_squared_amplitude_rcl(2, power + nUnresolved, "LO", M2_Full);
-    double M2_approx = soft_g_squared(pp_full, M_ij, A)*average_factor_full/average_factor;
-    std::cout << M2_Full << "\t" << M2_approx << "\t" << std::abs(1. - M2_Full/M2_approx) << "\t" << M2_Full/M2_approx << "\t" << scale << std::endl;
+
     double diff = 0.;
     int counter = 0;
     for (int i = 0; i < helicities_full.size(); i++) {
@@ -338,7 +522,7 @@ int main() {
         counter++;
       }
     }
-    outfile1 << scale << ", " << diff/double(counter) << std::endl;
+    outfile1 << scale << ", " << diff/double(counter) << std::endl;*/
   }
   }}
   outfile1.close();

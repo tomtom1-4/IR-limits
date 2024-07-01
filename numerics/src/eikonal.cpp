@@ -536,3 +536,495 @@ double soft_g_squared(double *pp_full, std::unordered_map<std::string, std::comp
   }
   return approx;
 }
+
+double soft_qq_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> M_ij, amplitude& A) {
+  double q1[4], q2[4];
+  part(pp_full, q1, A.process.size()*4, A.process.size()*4 + 4);
+  part(pp_full, q2, A.process.size()*4 + 4, A.process.size()*4 + 8);
+  double q12[4];
+  add_arr(q1, q2, q12, 4);
+  double approx = 0;
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.process[i] == 1) continue;
+    double pi[4];
+    part(pp_full, pi, 4*i, 4*i + 4);
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.process[j] == 1) continue;
+      double pj[4];
+      part(pp_full, pj, 4*j, 4*j + 4);
+      approx += T_F*std::pow(gs, 4)*(minkovski(pi, q1)*minkovski(pj, q2) + minkovski(pi, q2)*minkovski(pj, q1) - minkovski(pi, pj)*minkovski(q1, q2))/std::pow(minkovski(q1, q2), 2)/minkovski(pi, q12)/minkovski(pj, q12)
+        *std::real(M_ij[std::to_string(i) + std::to_string(j)]);
+    }
+  }
+  return approx;
+}
+
+double soft_gg_squared(double*pp_full, std::unordered_map<std::string, std::complex<double>> Mij, std::unordered_map<std::string, std::complex<double>> Mijkl, amplitude& A) {
+  double q1[4], q2[4];
+  part(pp_full, q1, A.process.size()*4, A.process.size()*4 + 4);
+  part(pp_full, q2, A.process.size()*4 + 4, A.process.size()*4 + 8);
+  double q12[4];
+  add_arr(q1, q2, q12, 4);
+  double approx = 0;
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.process[i] == 1) continue;
+    double pi[4];
+    part(pp_full, pi, i*4, i*4 + 4);
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.process[j] == 1) continue;
+      double pj[4];
+      part(pp_full, pj, 4*j, 4*j + 4);
+      double piq1 = minkovski(pi, q1);
+      double piq2 = minkovski(pi, q2);
+      double piq12 = minkovski(pi, q12);
+      double pjq1 = minkovski(pj, q1);
+      double pjq2 = minkovski(pj, q2);
+      double pjq12 = minkovski(pj, q12);
+      double q1q2 = minkovski(q1, q2);
+      double pipj = minkovski(pi, pj);
+
+      // Reducible part
+      double Sij = minkovski(pi, pj)/minkovski(pi, q1)/minkovski(pj, q1);
+      for(int k = 0; k < A.process.size(); k++) {
+        if(A.process[k] == 1) continue;
+        double pk[4];
+        part(pp_full, pk, 4*k, 4*k + 4);
+        for(int l = 0; l < A.process.size(); l++) {
+          if(A.process[l] == 1) continue;
+          double pl[4];
+          part(pp_full, pl, 4*l, 4*l + 4);
+          double Skl = minkovski(pk, pl)/minkovski(pk, q2)/minkovski(pl, q2);
+          approx += std::pow(gs, 4)*Sij*Skl*(std::real(Mijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)])
+                                                   + std::real(Mijkl[std::to_string(k) + std::to_string(l) + std::to_string(i) + std::to_string(j)]))/2. ;
+        }
+      }
+      // Irreducible part
+      double Sij2_3_control = 1./q1q2/q1q2*(piq1*pjq2 + piq2*pjq1)/piq12/pjq12 - pipj*pipj/2./piq1/pjq2/piq2/pjq1*(2. - (piq1*pjq2 + piq2*pjq1)/piq12/pjq12)
+        + pipj/2./q1q2*(2./piq1/pjq2 + 2./pjq1/piq2 - 1./piq12/pjq12*(4 + std::pow(piq1*pjq2 + piq2*pjq1, 2)/piq1/pjq2/piq2/pjq1));
+
+      approx += -std::pow(gs, 4)*C_A*Sij2_3_control*std::real(Mij[std::to_string(i) + std::to_string(j)]);
+    }
+  }
+  return approx;
+}
+
+double den(double arg) {
+  return 1./arg;
+}
+
+double soft_gqq_squared(double* pp_full, std::unordered_map<std::string, std::complex<double>> M_ij,
+                                         std::unordered_map<std::string, std::complex<double>> M_ijkl,
+                                         std::unordered_map<std::string, std::complex<double>> dM_ijk, amplitude& A) {
+  double q1[4], q2[4], q3[4], q12[4], q13[4], q23[4], q123[4];
+  part(pp_full, q1, A.process.size()*4, A.process.size()*4 + 4);
+  part(pp_full, q2, A.process.size()*4 + 4, A.process.size()*4 + 8);
+  part(pp_full, q3, A.process.size()*4 + 8, A.process.size()*4 + 12);
+  add_arr(q1, q2, q12, 4);
+  add_arr(q1, q3, q13, 4);
+  add_arr(q2, q3, q23, 4);
+  add_arr(q12, q3, q123, 4);
+  double q1q2 = minkovski(q1, q2);
+  double q1q3 = minkovski(q1, q3);
+  double q2q3 = minkovski(q2, q3);
+
+  double approx = 0.;
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.process[i] == 1) continue;
+    double pi[4];
+    part(pp_full, pi, i*4, i*4 + 4);
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.process[j] == 1) continue;
+      double pj[4];
+      part(pp_full, pj, 4*j, 4*j + 4);
+      double piq1 = minkovski(pi, q1);
+      double piq2 = minkovski(pi, q2);
+      double piq3 = minkovski(pi, q3);
+      double piq12 = minkovski(pi, q12);
+      double piq13 = minkovski(pi, q13);
+      double pjq1 = minkovski(pj, q1);
+      double pjq2 = minkovski(pj, q2);
+      double pjq12 = minkovski(pj, q12);
+      double pipj = minkovski(pi, pj);
+      double piq23 = minkovski(pi, q23);
+      double mi2 = minkovski(pi, pi);
+      double pjq3 = minkovski(pj, q3);
+      double pjq23 = minkovski(pj, q23);
+      double piq123 = minkovski(pi, q123);
+      double q123q123 = minkovski(q123, q123);
+
+      double Sij1_1 = pipj/piq1/pjq1;
+      for(int k = 0; k < A.process.size(); k++) {
+        if(A.process[k] == 1) continue;
+        double pk[4];
+        part(pp_full, pk, 4*k, 4*k + 4);
+        double pkq1 = minkovski(pk, q1);
+        double pkq2 = minkovski(pk, q2);
+        double pkq3 = minkovski(pk, q3);
+        double pipk = minkovski(pi, pk);
+        double pjpk = minkovski(pj, pk);
+
+        double Sijk =
+          + den(q1q3*q2q3)*den(2*piq1*pjq3*q2q3*pkq3 + 2*piq1*pjq3*q2q3*pkq2 + 2*
+          piq1*pjq3*q2q3*pkq1 + 2*piq1*pjq3*q1q3*pkq3 + 2*piq1*pjq3*q1q3*pkq2 + 2*
+          piq1*pjq3*q1q3*pkq1 + 2*piq1*pjq3*q1q2*pkq3 + 2*piq1*pjq3*q1q2*pkq2 + 2*
+          piq1*pjq3*q1q2*pkq1 + 2*piq1*pjq2*q2q3*pkq3 + 2*piq1*pjq2*q2q3*pkq2 + 2*
+          piq1*pjq2*q2q3*pkq1 + 2*piq1*pjq2*q1q3*pkq3 + 2*piq1*pjq2*q1q3*pkq2 + 2*
+          piq1*pjq2*q1q3*pkq1 + 2*piq1*pjq2*q1q2*pkq3 + 2*piq1*pjq2*q1q2*pkq2 + 2*
+          piq1*pjq2*q1q2*pkq1) * (  - q1q2*pipj*pkq3 + pjq3*q1q2*pipk + piq3*q1q2*
+            pjpk - 2*piq3*pjq3*pkq2 - 2*piq3*pjq2*pkq3 - piq3*pjq2*pkq1 - piq3*
+            pjq1*pkq2 - piq2*pjq3*pkq1 + piq2*pjq1*pkq3 - piq1*pjq3*pkq2 - piq1*
+            pjq2*pkq3 );
+
+          Sijk +=  + den(q1q2*q2q3)*den(2*piq1*pjq3*q2q3*pkq3 + 2*piq1*pjq3*q2q3*
+          pkq2 + 2*piq1*pjq3*q2q3*pkq1 + 2*piq1*pjq3*q1q3*pkq3 + 2*piq1*pjq3*q1q3*
+          pkq2 + 2*piq1*pjq3*q1q3*pkq1 + 2*piq1*pjq3*q1q2*pkq3 + 2*piq1*pjq3*q1q2*
+          pkq2 + 2*piq1*pjq3*q1q2*pkq1 + 2*piq1*pjq2*q2q3*pkq3 + 2*piq1*pjq2*q2q3*
+          pkq2 + 2*piq1*pjq2*q2q3*pkq1 + 2*piq1*pjq2*q1q3*pkq3 + 2*piq1*pjq2*q1q3*
+          pkq2 + 2*piq1*pjq2*q1q3*pkq1 + 2*piq1*pjq2*q1q2*pkq3 + 2*piq1*pjq2*q1q2*
+          pkq2 + 2*piq1*pjq2*q1q2*pkq1) * ( q1q3*pipj*pkq2 - pjq2*q1q3*pipk + piq3
+            *pjq2*pkq1 - piq3*pjq1*pkq2 - piq2*q1q3*pjpk + 2*piq2*pjq3*pkq2 +
+            piq2*pjq3*pkq1 + 2*piq2*pjq2*pkq3 + piq2*pjq1*pkq3 + piq1*pjq3*pkq2
+              + piq1*pjq2*pkq3 );
+
+          Sijk +=  + den(q1q2)*den(2*piq1*pjq3*q2q3*pkq3 + 2*piq1*pjq3*q2q3*pkq2
+          + 2*piq1*pjq3*q2q3*pkq1 + 2*piq1*pjq3*q1q3*pkq3 + 2*piq1*pjq3*q1q3*pkq2
+          + 2*piq1*pjq3*q1q3*pkq1 + 2*piq1*pjq3*q1q2*pkq3 + 2*piq1*pjq3*q1q2*pkq2
+          + 2*piq1*pjq3*q1q2*pkq1 + 2*piq1*pjq2*q2q3*pkq3 + 2*piq1*pjq2*q2q3*pkq2
+          + 2*piq1*pjq2*q2q3*pkq1 + 2*piq1*pjq2*q1q3*pkq3 + 2*piq1*pjq2*q1q3*pkq2
+          + 2*piq1*pjq2*q1q3*pkq1 + 2*piq1*pjq2*q1q2*pkq3 + 2*piq1*pjq2*q1q2*pkq2
+          + 2*piq1*pjq2*q1q2*pkq1) * (  - pipj*pkq1 + pjq1*pipk - 2*piq2*pjpk -
+            piq1*pjpk );
+
+          Sijk +=  + den(q1q3)*den(2*piq1*pjq3*q2q3*pkq3 + 2*piq1*pjq3*q2q3*pkq2
+          + 2*piq1*pjq3*q2q3*pkq1 + 2*piq1*pjq3*q1q3*pkq3 + 2*piq1*pjq3*q1q3*pkq2
+          + 2*piq1*pjq3*q1q3*pkq1 + 2*piq1*pjq3*q1q2*pkq3 + 2*piq1*pjq3*q1q2*pkq2
+          + 2*piq1*pjq3*q1q2*pkq1 + 2*piq1*pjq2*q2q3*pkq3 + 2*piq1*pjq2*q2q3*pkq2
+          + 2*piq1*pjq2*q2q3*pkq1 + 2*piq1*pjq2*q1q3*pkq3 + 2*piq1*pjq2*q1q3*pkq2
+          + 2*piq1*pjq2*q1q3*pkq1 + 2*piq1*pjq2*q1q2*pkq3 + 2*piq1*pjq2*q1q2*pkq2
+          + 2*piq1*pjq2*q1q2*pkq1) * ( pipj*pkq1 - pjq1*pipk + 2*piq3*pjpk + piq1
+            *pjpk );
+
+          Sijk +=  + den(q2q3)*den(2*piq1*pjq3*q2q3*pkq3 + 2*piq1*pjq3*q2q3*pkq2
+          + 2*piq1*pjq3*q2q3*pkq1 + 2*piq1*pjq3*q1q3*pkq3 + 2*piq1*pjq3*q1q3*pkq2
+          + 2*piq1*pjq3*q1q3*pkq1 + 2*piq1*pjq3*q1q2*pkq3 + 2*piq1*pjq3*q1q2*pkq2
+          + 2*piq1*pjq3*q1q2*pkq1 + 2*piq1*pjq2*q2q3*pkq3 + 2*piq1*pjq2*q2q3*pkq2
+          + 2*piq1*pjq2*q2q3*pkq1 + 2*piq1*pjq2*q1q3*pkq3 + 2*piq1*pjq2*q1q3*pkq2
+          + 2*piq1*pjq2*q1q3*pkq1 + 2*piq1*pjq2*q1q2*pkq3 + 2*piq1*pjq2*q1q2*pkq2
+          + 2*piq1*pjq2*q1q2*pkq1) * (  - pipj*pkq3 + pipj*pkq2 - pjq3*pipk +
+            pjq2*pipk + piq3*pjpk - piq2*pjpk );
+
+        approx += - std::pow(gs, 6)*T_F*Sijk*std::real(dM_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]);
+        for(int l = 0; l < A.process.size(); l++) {
+          if(A.process[l] == 1) continue;
+          double pl[4];
+          part(pp_full, pl, 4*l, 4*l + 4);
+          double pkq2 = minkovski(pk, q2);
+          double pkq3 = minkovski(pk, q3);
+          double pkq23 = minkovski(pk, q23);
+          double plq2 = minkovski(pl, q2);
+          double plq3 = minkovski(pl, q3);
+          double plq23 = minkovski(pl, q23);
+          double plpk = minkovski(pl, pk);
+
+          double Ikl = (pkq2*plq3 + pkq3*plq2 - plpk*q2q3)/q2q3/q2q3/pkq23/plq23;
+          // reducible part
+          approx += -std::pow(gs, 6)*T_F*Sij1_1*Ikl*(std::real(M_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)])
+                                                 + std::real(M_ijkl[std::to_string(k) + std::to_string(l) + std::to_string(i) + std::to_string(j)]))/2.;
+
+        }
+      }
+      double Sij1_3 = piq2/4./q2q3/q2q3/piq1/piq23*(pipj/pjq1*(3*pjq3/pjq23 - 2.*piq3/piq23) - 2.*mi2*pjq3/piq1/pjq23)
+        + pipj/8./q2q3/piq1/piq23*(-3.*pipj/pjq1/pjq23 + 2.*mi2*(1./piq1/pjq23 + 1./pjq1/piq23))
+        + piq3/4./q2q3/q2q3/piq1/piq23*(pipj/pjq1*(3*pjq2/pjq23 - 2.*piq2/piq23) - 2.*mi2*pjq2/piq1/pjq23)
+        + pipj/8./q2q3/piq1/piq23*(-3.*pipj/pjq1/pjq23 + 2.*mi2*(1./piq1/pjq23 + 1./pjq1/piq23));
+
+
+      approx += -std::pow(gs, 6)*T_F*C_A*Sij1_3*std::real(M_ij[std::to_string(i) + std::to_string(j)]);
+
+      double Sij2_3 =
+        +1./2./q2q3/piq123*(2./q123q123/q2q3*(pjq2*(2.*mi2*q1q3 - piq123*piq3)/piq1/pjq23
+        - piq2*(2.*pipj*q1q3 - (piq1 - piq2 + 3.*piq3)*pjq3)/pjq1/piq23)
+        + 1./q123q123/q1q2*((2.*piq12*(pipj*q2q3 - piq2*pjq3 - piq3*pjq2) + mi2*(pjq2*q1q3 - pjq1*q2q3))/piq1/pjq23
+        - (mi2*((pjq1 + 2.*pjq2)*q2q3 + pjq2*q1q3) - 2.*(piq2*pjq1 + (piq1 + 2.*piq2)*pjq2)*piq3)/pjq1/piq23)
+        + 1./q123q123*((pipj*piq123 + mi2*(pjq2 - 2.*pjq1))/piq1/pjq23 - (3.*mi2*pjq2 - pipj*piq1)/pjq1/piq23)
+        + 1./q2q3*(piq2*(1./piq1 - 1./piq23)*(mi2*pjq3/piq1/pjq23 - pipj*piq3/pjq1/piq23))
+        + 1./2.*mi2*pipj*(1./piq23 - 1./piq1)*(1./piq1/pjq23 - 1./pjq1/piq23))
+
+        + 1./2./q2q3/piq123*(2./q123q123/q2q3*(pjq3*(2.*mi2*q1q2 - piq123*piq2)/piq1/pjq23
+        - piq3*(2.*pipj*q1q2 - (piq1 - piq3 + 3.*piq2)*pjq2)/pjq1/piq23)
+        + 1./q123q123/q1q3*((2.*piq13*(pipj*q2q3 - piq3*pjq2 - piq2*pjq3) + mi2*(pjq3*q1q2 - pjq1*q2q3))/piq1/pjq23
+        - (mi2*((pjq1 + 2.*pjq3)*q2q3 + pjq3*q1q2) - 2.*(piq3*pjq1 + (piq1 + 2.*piq3)*pjq3)*piq2)/pjq1/piq23)
+        + 1./q123q123*((pipj*piq123 + mi2*(pjq3 - 2.*pjq1))/piq1/pjq23 - (3.*mi2*pjq3 - pipj*piq1)/pjq1/piq23)
+        + 1./q2q3*(piq3*(1./piq1 - 1./piq23)*(mi2*pjq2/piq1/pjq23 - pipj*piq2/pjq1/piq23))
+        + 1./2.*mi2*pipj*(1./piq23 - 1./piq1)*(1./piq1/pjq23 - 1./pjq1/piq23));
+
+
+      approx += - std::pow(gs, 6)*T_F*C_A*Sij2_3*std::real(M_ij[std::to_string(i) + std::to_string(j)]);
+
+      double d = 4.;
+      double Sij3_3_ab =
+       + den(4*pow(q2q3,2) + 8*q1q3*q2q3 + 4*pow(q1q3,2) + 8*q1q2*q2q3 + 8*
+      q1q2*q1q3 + 4*pow(q1q2,2))*den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*
+      pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * (
+          - 16*pipj + 4*d*pipj );
+
+      Sij3_3_ab +=  + den(q1q2*q1q3)*den(4*pow(q2q3,2) + 8*q1q3*q2q3 + 4*pow(
+      q1q3,2) + 8*q1q2*q2q3 + 8*q1q2*q1q3 + 4*pow(q1q2,2))*den(piq3*pjq3 +
+      piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 +
+      piq1*pjq2 + piq1*pjq1) * ( 8*pow(q2q3,2)*pipj - 8*piq3*pjq2*q2q3 - 4*
+         piq3*pjq1*q2q3 - 8*piq2*pjq3*q2q3 - 4*piq2*pjq1*q2q3 - 4*piq1*pjq3*
+         q2q3 - 4*piq1*pjq2*q2q3 - 16*piq1*pjq1*q2q3 + 4*d*piq1*pjq1*q2q3 );
+
+      Sij3_3_ab +=  + den(q1q2)*den(4*pow(q2q3,2) + 8*q1q3*q2q3 + 4*pow(q1q3,2)
+       + 8*q1q2*q2q3 + 8*q1q2*q1q3 + 4*pow(q1q2,2))*den(piq3*pjq3 + piq3*pjq2
+       + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 + piq1*pjq2
+       + piq1*pjq1) * ( 8*q2q3*pipj - 4*q1q3*pipj - 4*piq3*pjq2 + 4*piq3*pjq1
+          - 4*piq2*pjq3 + 8*piq2*pjq2 + 8*piq2*pjq1 + 4*piq1*pjq3 + 8*piq1*
+         pjq2 + 2*d*q1q3*pipj - 2*d*piq3*pjq1 - 2*d*piq2*pjq1 - 2*d*piq1*pjq3
+          - 2*d*piq1*pjq2 );
+
+      Sij3_3_ab +=  + den(q1q3)*den(4*pow(q2q3,2) + 8*q1q3*q2q3 + 4*pow(q1q3,2)
+       + 8*q1q2*q2q3 + 8*q1q2*q1q3 + 4*pow(q1q2,2))*den(piq3*pjq3 + piq3*pjq2
+       + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 + piq1*pjq2
+       + piq1*pjq1) * ( 8*q2q3*pipj - 4*q1q2*pipj + 8*piq3*pjq3 - 4*piq3*pjq2
+          + 8*piq3*pjq1 - 4*piq2*pjq3 + 4*piq2*pjq1 + 8*piq1*pjq3 + 4*piq1*
+         pjq2 + 2*d*q1q2*pipj - 2*d*piq3*pjq1 - 2*d*piq2*pjq1 - 2*d*piq1*pjq3
+          - 2*d*piq1*pjq2 );
+
+      double dF = 3.;
+      approx += - std::pow(gs, 6)*T_F/2*(C_F - T_F/dF)*Sij3_3_ab*std::real(M_ij[std::to_string(i) + std::to_string(j)]);
+
+      double Sij3_3_nab =
+       + den(4*q2q3)*den(piq3 + piq2)*den(pjq3 + pjq2)*den(piq3*pjq3 + piq3*
+      pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 + piq1*
+      pjq2 + piq1*pjq1) * (  - 4*pow(pipj,2) );
+
+      Sij3_3_nab +=  + den(pow(q2q3,2))*den(4*pow(q2q3,2) + 8*q1q3*q2q3 + 4*pow(
+      q1q3,2) + 8*q1q2*q2q3 + 8*q1q2*q1q3 + 4*pow(q1q2,2))*den(piq3*pjq3 +
+      piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 +
+      piq1*pjq2 + piq1*pjq1) * ( 32*q1q2*q1q3*pipj );
+
+      Sij3_3_nab +=  + den(pow(q2q3,2))*den(pjq3 + pjq2)*den(2*q2q3 + 2*q1q3 + 2*
+      q1q2)*den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 +
+      piq2*pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * (  - 4*pjq3*q1q2*pipj
+          - 4*pjq2*q1q3*pipj + 4*piq3*pow(pjq2,2) + 4*piq2*pow(pjq3,2) + 4*
+         piq1*pjq2*pjq3 );
+
+      Sij3_3_nab +=  + den(pow(q2q3,2))*den(piq3 + piq2)*den(2*q2q3 + 2*q1q3 + 2*
+      q1q2)*den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 +
+      piq2*pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * (  - 4*piq3*q1q2*pipj
+          + 4*pow(piq3,2)*pjq2 - 4*piq2*q1q3*pipj + 4*piq2*piq3*pjq1 + 4*pow(
+         piq2,2)*pjq3 );
+
+      Sij3_3_nab +=  + den(2*pow(q2q3,2))*den(piq3 + piq2)*den(pjq3 + pjq2)*den(
+      piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 +
+      piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * ( 2*piq3*pjq2*pipj + 2*piq2*pjq3*
+         pipj );
+
+      Sij3_3_nab +=  + den(4*pow(q2q3,2) + 8*q1q3*q2q3 + 4*pow(q1q3,2) + 8*q1q2*
+      q2q3 + 8*q1q2*q1q3 + 4*pow(q1q2,2))*den(piq3*pjq3 + piq3*pjq2 + piq3*
+      pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*
+      pjq1) * ( 16*pipj - 4*d*pipj );
+
+      Sij3_3_nab +=  + den(q1q3*q2q3)*den(pjq3 + pjq2)*den(2*q2q3 + 2*q1q3 + 2*
+      q1q2)*den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 +
+      piq2*pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * (  - 2*pjq3*q1q2*pipj
+          + piq3*q1q2*mi2 + 2*piq3*pjq2*pjq3 + 2*piq2*pow(pjq3,2) + 2*piq2*
+         pjq1*pjq3 + 2*piq1*pjq2*pjq3 );
+
+      Sij3_3_nab +=  + den(q1q3*q2q3)*den(piq3 + piq2)*den(2*q2q3 + 2*q1q3 + 2*
+      q1q2)*den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 +
+      piq2*pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * ( pjq3*q1q2*mi2 - 2*
+         piq3*q1q2*pipj + 2*pow(piq3,2)*pjq2 + 2*piq2*piq3*pjq3 + 2*piq2*piq3*
+         pjq1 + 2*piq1*piq3*pjq2 );
+
+      Sij3_3_nab +=  + den(q1q2*q2q3)*den(pjq3 + pjq2)*den(2*q2q3 + 2*q1q3 + 2*
+      q1q2)*den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 +
+      piq2*pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * (  - 2*pjq2*q1q3*pipj
+          + 2*piq3*pow(pjq2,2) + 2*piq3*pjq1*pjq2 + piq2*q1q3*mi2 + 2*piq2*
+         pjq2*pjq3 + 2*piq1*pjq2*pjq3 );
+
+      Sij3_3_nab +=  + den(q1q2*q2q3)*den(piq3 + piq2)*den(2*q2q3 + 2*q1q3 + 2*
+      q1q2)*den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 +
+      piq2*pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * ( pjq2*q1q3*mi2 - 2*
+         piq2*q1q3*pipj + 2*piq2*piq3*pjq2 + 2*piq2*piq3*pjq1 + 2*pow(piq2,2)*
+         pjq3 + 2*piq1*piq2*pjq3 );
+
+      Sij3_3_nab +=  + den(q1q2*q1q3)*den(4*pow(q2q3,2) + 8*q1q3*q2q3 + 4*pow(
+      q1q3,2) + 8*q1q2*q2q3 + 8*q1q2*q1q3 + 4*pow(q1q2,2))*den(piq3*pjq3 +
+      piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 +
+      piq1*pjq2 + piq1*pjq1) * (  - 8*pow(q2q3,2)*pipj + 8*piq3*pjq2*q2q3 + 4*
+         piq3*pjq1*q2q3 + 8*piq2*pjq3*q2q3 + 4*piq2*pjq1*q2q3 + 4*piq1*pjq3*
+         q2q3 + 4*piq1*pjq2*q2q3 + 16*piq1*pjq1*q2q3 - 4*d*piq1*pjq1*q2q3 );
+
+      Sij3_3_nab +=  + den(piq1)*den(4*q2q3)*den(pjq3 + pjq2)*den(piq3*pjq3 +
+      piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 +
+      piq1*pjq2 + piq1*pjq1) * ( 4*pow(pipj,2) );
+
+      Sij3_3_nab +=  + den(piq1)*den(pow(q2q3,2))*den(2*q2q3 + 2*q1q3 + 2*q1q2)*
+      den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*
+      pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * ( 4*piq3*q1q2*pipj - 4*pow(
+         piq3,2)*pjq2 + 4*piq2*q1q3*pipj - 4*piq2*piq3*pjq1 - 4*pow(piq2,2)*
+         pjq3 );
+
+      Sij3_3_nab +=  + den(piq1)*den(2*pow(q2q3,2))*den(pjq3 + pjq2)*den(piq3*
+      pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*
+      pjq3 + piq1*pjq2 + piq1*pjq1) * (  - 2*piq3*pjq2*pipj - 2*piq2*pjq3*pipj
+          );
+
+      Sij3_3_nab +=  + den(piq1)*den(q1q3*q2q3)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*
+      den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*
+      pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * (  - pjq3*q1q2*mi2 + 2*piq3*
+         q1q2*pipj - 2*pow(piq3,2)*pjq2 - 2*piq2*piq3*pjq3 - 2*piq2*piq3*pjq1
+          - 2*piq1*piq3*pjq2 );
+
+      Sij3_3_nab +=  + den(piq1)*den(q1q2*q2q3)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*
+      den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*
+      pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * (  - pjq2*q1q3*mi2 + 2*piq2*
+         q1q3*pipj - 2*piq2*piq3*pjq2 - 2*piq2*piq3*pjq1 - 2*pow(piq2,2)*pjq3
+          - 2*piq1*piq2*pjq3 );
+
+      Sij3_3_nab +=  + den(piq1)*den(pjq1)*den(4*q2q3)*den(piq3*pjq3 + piq3*pjq2
+       + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 + piq1*pjq2
+       + piq1*pjq1) * (  - 4*pow(pipj,2) );
+
+      Sij3_3_nab +=  + den(piq1)*den(pjq1)*den(2*pow(q2q3,2))*den(piq3*pjq3 +
+      piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 +
+      piq1*pjq2 + piq1*pjq1) * ( 2*piq3*pjq2*pipj + 2*piq2*pjq3*pipj );
+
+      Sij3_3_nab +=  + den(piq1)*den(q1q2)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*den(piq3
+      *pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1
+      *pjq3 + piq1*pjq2 + piq1*pjq1) * ( pjq1*mi2 + 2*piq2*pipj );
+
+      Sij3_3_nab +=  + den(piq1)*den(q1q3)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*den(piq3
+      *pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1
+      *pjq3 + piq1*pjq2 + piq1*pjq1) * ( pjq1*mi2 + 2*piq3*pipj );
+
+      Sij3_3_nab +=  + den(piq1)*den(q2q3)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*den(piq3
+      *pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1
+      *pjq3 + piq1*pjq2 + piq1*pjq1) * (  - pjq3*mi2 - pjq2*mi2 + 2*pjq1*mi2
+          + 4*piq3*pipj + 4*piq2*pipj - 4*piq1*pipj );
+
+      Sij3_3_nab +=  + den(pjq1)*den(4*q2q3)*den(piq3 + piq2)*den(piq3*pjq3 +
+      piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 +
+      piq1*pjq2 + piq1*pjq1) * ( 4*pow(pipj,2) );
+
+      Sij3_3_nab +=  + den(pjq1)*den(pow(q2q3,2))*den(2*q2q3 + 2*q1q3 + 2*q1q2)*
+      den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*
+      pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * ( 4*pjq3*q1q2*pipj + 4*pjq2*
+         q1q3*pipj - 4*piq3*pow(pjq2,2) - 4*piq2*pow(pjq3,2) - 4*piq1*pjq2*
+         pjq3 );
+
+      Sij3_3_nab +=  + den(pjq1)*den(2*pow(q2q3,2))*den(piq3 + piq2)*den(piq3*
+      pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*
+      pjq3 + piq1*pjq2 + piq1*pjq1) * (  - 2*piq3*pjq2*pipj - 2*piq2*pjq3*pipj
+          );
+
+      Sij3_3_nab +=  + den(pjq1)*den(q1q3*q2q3)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*
+      den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*
+      pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * ( 2*pjq3*q1q2*pipj - piq3*
+         q1q2*mi2 - 2*piq3*pjq2*pjq3 - 2*piq2*pow(pjq3,2) - 2*piq2*pjq1*pjq3
+          - 2*piq1*pjq2*pjq3 );
+
+      Sij3_3_nab +=  + den(pjq1)*den(q1q2*q2q3)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*
+      den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*
+      pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * ( 2*pjq2*q1q3*pipj - 2*piq3*
+         pow(pjq2,2) - 2*piq3*pjq1*pjq2 - piq2*q1q3*mi2 - 2*piq2*pjq2*pjq3 - 2
+         *piq1*pjq2*pjq3 );
+
+      Sij3_3_nab +=  + den(pjq1)*den(q1q2)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*den(piq3
+      *pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1
+      *pjq3 + piq1*pjq2 + piq1*pjq1) * ( 2*pjq2*pipj + piq1*mi2 );
+
+      Sij3_3_nab +=  + den(pjq1)*den(q1q3)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*den(piq3
+      *pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1
+      *pjq3 + piq1*pjq2 + piq1*pjq1) * ( 2*pjq3*pipj + piq1*mi2 );
+
+      Sij3_3_nab +=  + den(pjq1)*den(q2q3)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*den(piq3
+      *pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1
+      *pjq3 + piq1*pjq2 + piq1*pjq1) * ( 4*pjq3*pipj + 4*pjq2*pipj - 4*pjq1*
+         pipj - piq3*mi2 - piq2*mi2 + 2*piq1*mi2 );
+
+      Sij3_3_nab +=  + den(q1q2)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*den(piq3*pjq3 +
+      piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 +
+      piq1*pjq2 + piq1*pjq1) * (  - 8*pipj );
+
+      Sij3_3_nab +=  + den(q1q2)*den(4*pow(q2q3,2) + 8*q1q3*q2q3 + 4*pow(q1q3,2)
+       + 8*q1q2*q2q3 + 8*q1q2*q1q3 + 4*pow(q1q2,2))*den(piq3*pjq3 + piq3*pjq2
+       + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 + piq1*pjq2
+       + piq1*pjq1) * (  - 8*q2q3*pipj - 4*q1q3*pipj + 20*piq3*pjq2 + 8*piq3*
+         pjq1 + 20*piq2*pjq3 - 8*piq2*pjq2 - 4*piq2*pjq1 + 8*piq1*pjq3 - 4*
+         piq1*pjq2 + 24*piq1*pjq1 + 2*d*q1q3*pipj + 4*d*piq2*pjq1 + 4*d*piq1*
+         pjq2 - 4*d*piq1*pjq1 );
+
+      Sij3_3_nab +=  + den(q1q2)*den(pjq3 + pjq2)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*
+      den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*
+      pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * (  - 2*pjq2*pipj - piq1*mi2
+          );
+
+      Sij3_3_nab +=  + den(q1q2)*den(piq3 + piq2)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*
+      den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*
+      pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * (  - pjq1*mi2 - 2*piq2*pipj
+          );
+
+      Sij3_3_nab +=  + den(q1q2)*den(q2q3)*den(4*pow(q2q3,2) + 8*q1q3*q2q3 + 4*
+      pow(q1q3,2) + 8*q1q2*q2q3 + 8*q1q2*q1q3 + 4*pow(q1q2,2))*den(piq3*pjq3
+       + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3
+       + piq1*pjq2 + piq1*pjq1) * ( 12*piq3*pjq2*q1q3 + 12*piq2*pjq3*q1q3 - 8*
+         piq2*pjq2*q1q3 - 12*piq2*pjq1*q1q3 - 12*piq1*pjq2*q1q3 - 2*d*piq3*
+         pjq2*q1q3 - 2*d*piq2*pjq3*q1q3 - 4*d*piq2*pjq2*q1q3 + 2*d*piq2*pjq1*
+         q1q3 + 2*d*piq1*pjq2*q1q3 );
+
+      Sij3_3_nab +=  + den(q1q3)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*den(piq3*pjq3 +
+      piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 +
+      piq1*pjq2 + piq1*pjq1) * (  - 8*pipj );
+
+      Sij3_3_nab +=  + den(q1q3)*den(4*pow(q2q3,2) + 8*q1q3*q2q3 + 4*pow(q1q3,2)
+       + 8*q1q2*q2q3 + 8*q1q2*q1q3 + 4*pow(q1q2,2))*den(piq3*pjq3 + piq3*pjq2
+       + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 + piq1*pjq2
+       + piq1*pjq1) * (  - 8*q2q3*pipj - 4*q1q2*pipj - 8*piq3*pjq3 + 20*piq3*
+         pjq2 - 4*piq3*pjq1 + 20*piq2*pjq3 + 8*piq2*pjq1 - 4*piq1*pjq3 + 8*
+         piq1*pjq2 + 24*piq1*pjq1 + 2*d*q1q2*pipj + 4*d*piq3*pjq1 + 4*d*piq1*
+         pjq3 - 4*d*piq1*pjq1 );
+
+      Sij3_3_nab +=  + den(q1q3)*den(pjq3 + pjq2)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*
+      den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*
+      pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * (  - 2*pjq3*pipj - piq1*mi2
+          );
+
+      Sij3_3_nab +=  + den(q1q3)*den(piq3 + piq2)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*
+      den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*
+      pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * (  - pjq1*mi2 - 2*piq3*pipj
+          );
+
+      Sij3_3_nab +=  + den(q1q3)*den(q2q3)*den(4*pow(q2q3,2) + 8*q1q3*q2q3 + 4*
+      pow(q1q3,2) + 8*q1q2*q2q3 + 8*q1q2*q1q3 + 4*pow(q1q2,2))*den(piq3*pjq3
+       + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3
+       + piq1*pjq2 + piq1*pjq1) * (  - 8*piq3*pjq3*q1q2 + 12*piq3*pjq2*q1q2 -
+         12*piq3*pjq1*q1q2 + 12*piq2*pjq3*q1q2 - 12*piq1*pjq3*q1q2 - 4*d*piq3*
+         pjq3*q1q2 - 2*d*piq3*pjq2*q1q2 + 2*d*piq3*pjq1*q1q2 - 2*d*piq2*pjq3*
+         q1q2 + 2*d*piq1*pjq3*q1q2 );
+
+      Sij3_3_nab +=  + den(q2q3)*den(4*pow(q2q3,2) + 8*q1q3*q2q3 + 4*pow(q1q3,2)
+       + 8*q1q2*q2q3 + 8*q1q2*q1q3 + 4*pow(q1q2,2))*den(piq3*pjq3 + piq3*pjq2
+       + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*pjq1 + piq1*pjq3 + piq1*pjq2
+       + piq1*pjq1) * ( 16*q1q3*pipj + 16*q1q2*pipj - 16*piq3*pjq3 + 16*piq3*
+         pjq2 - 12*piq3*pjq1 + 16*piq2*pjq3 - 16*piq2*pjq2 - 12*piq2*pjq1 - 12
+         *piq1*pjq3 - 12*piq1*pjq2 + 8*piq1*pjq1 + 2*d*piq3*pjq1 + 2*d*piq2*
+         pjq1 + 2*d*piq1*pjq3 + 2*d*piq1*pjq2 - 4*d*piq1*pjq1 );
+
+      Sij3_3_nab +=  + den(q2q3)*den(pjq3 + pjq2)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*
+      den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*
+      pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * (  - 4*pjq3*pipj - 4*pjq2*
+         pipj + 4*pjq1*pipj + piq3*mi2 + piq2*mi2 - 2*piq1*mi2 );
+
+      Sij3_3_nab +=  + den(q2q3)*den(piq3 + piq2)*den(2*q2q3 + 2*q1q3 + 2*q1q2)*
+      den(piq3*pjq3 + piq3*pjq2 + piq3*pjq1 + piq2*pjq3 + piq2*pjq2 + piq2*
+      pjq1 + piq1*pjq3 + piq1*pjq2 + piq1*pjq1) * ( pjq3*mi2 + pjq2*mi2 - 2*
+         pjq1*mi2 - 4*piq3*pipj - 4*piq2*pipj + 4*piq1*pipj );
+
+      approx += -std::pow(gs, 6)*T_F*C_A/4.*Sij3_3_nab*std::real(M_ij[std::to_string(i) + std::to_string(j)]);
+    }
+  }
+  return approx;
+}

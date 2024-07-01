@@ -1,6 +1,9 @@
-*.o 
+*.o
 *.exe
 .vscode
 *.str
 numerics/results
 *.sav
+*.rcl
+*.cll
+*.coli

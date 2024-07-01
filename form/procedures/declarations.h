@@ -71,8 +71,7 @@ f G;
 * flavor and color
 
 s nl;                    * number of massless quarks running in a closed loop
-s CA, CF, TF, NF, NA;    * S(NF) with fundamental representation trace TF
-i j;
+s CA, CF, TF, NF, NA, dF;    * S(NF) with fundamental representation trace TF
 *dimension NA;            * safeguard for loops of adjoint representation deltas
 i c0, c1, c2, c3, c4, c5;        * colors of the external partons
 auto i cOli, cOlj, cOlk; * other color indices
@@ -86,7 +85,7 @@ f T;
 cf sum;
 v pi, pj, pa, pb;
 v q1, q2, q3;
-i i,j, a, b;
+s i,j, a, b;
 s ranktag, numtag, Quad;
 cf den, den2, rat, tensor;
 s b1,...,b4;
