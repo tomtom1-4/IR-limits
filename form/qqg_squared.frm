@@ -2,6 +2,7 @@
 #: IncDir procedures
 #: SmallExtension 100M
 #: WorkSpace      2G
+*#: MaxTermSize 2M
 Off Statistics;
 
 #include declarations.h
@@ -45,168 +46,179 @@ l Sij3AB = den(4*(q1.q2 + q1.q3 + q2.q3)^2)*den((pi.q1 + pi.q2 + pi.q3)*(pj.q1 +
   - 2*pi.q1*(pj.q2 + pj.q3) - 4*pi.q2*pj.q3) + den(q1.q2)*(pi.pj*((d - 2)*q1.q3 + 4*q2.q3) + 2*(4 - d)*pi.q1*pj.q2
   + 2*(2 - d)*pi.q1*pj.q3 + 4*pi.q2*(pj.q2 - pj.q3)) + (d - 4)*pi.pj)*(1 + replace_(q2, q3, q3, q2))*(1 + replace_(pi, pj, pj, pi));
 
+
+*#call cppFormat
+*brackets den;
+*.sort
+*keep Brackets;
+*format Mathematica;
+*#write <results/gqq.m> "den[x_]:= 1/x;";
+*#write <results/gqq.m> "Sgqqij1:= (%+E);", Sij1;
+*#write <results/gqq.m> "Sgqqij2 = (%+E);", Sij2;
+*#write <results/gqq.m> "Sgqqij3AB = (%+E);", Sij3AB;
+*#write <results/gqq.m> "Sgqqij3NAB = (%+E);", Sij3NAB;
+*#write <results/gqq.m> "Sgqqija = (%+E);", Sija;
+*#write <results/gqq.m> "Sgqq = Sgij Sqqab (Ti.Tj * Ta.Tb + Ta.Tb * Ti.Tj) - TF*Ti.Tj*(CA*(Sgqqij1 + Sgqqij2 + 1/4*(Sgqqij3NAB - Sgqqij3AB)) + CF*Sgqqij3AB) + dsym*Ti*Tj*Ta*Sgqqija;"
+
 .sort
 
-* rewrite to c++ format
-s piq1, piq2, piq3, pjq1, pjq2, pjq3, q1q2, q1q3, q2q3, pipj, mi2, pkq1, pkq2, pkq3, pipk, pjpk;
-*id pi.q1 = piq1;
-*id pi.q2 = piq2;
-*id pi.q3 = piq3;
-*id pj.q1 = pjq1;
-*id pj.q2 = pjq2;
-*id pj.q3 = pjq3;
-*id pa.q1 = pkq1;
-*id pa.q2 = pkq2;
-*id pa.q3 = pkq3;
-*id q1.q2 = q1q2;
-*id q1.q3 = q1q3;
-*id q2.q3 = q2q3;
-*id pi.pj = pipj;
-*id pi.pa = pipk;
-*id pj.pa = pjpk;
-*id pi.pi = mi2;
-*argument den;
-*  id pi.q1 = piq1;
-*  id pi.q2 = piq2;
-*  id pi.q3 = piq3;
-*  id pj.q1 = pjq1;
-*  id pj.q2 = pjq2;
-*  id pj.q3 = pjq3;
-*  id pa.q1 = pkq1;
-*  id pa.q2 = pkq2;
-*  id pa.q3 = pkq3;
-*  id q1.q2 = q1q2;
-*  id q1.q3 = q1q3;
-*  id q2.q3 = q2q3;
-*  id pi.pj = pipj;
-*  id pi.pa = pipk;
-*  id pj.pa = pjpk;
-*  id pi.pi = mi2;
-*endargument;
-*id sum(i?) = 1;
-*id T(i?, cOli1?) = 1;
-*id mi^2 = mi2;
-*format C;
-*b den;
-*print reducible;
-*.end
+l reducible = TF*summe(i)*summe(j)*summe(a)*summe(b)*(-pi.pb*den(pi.q1*pb.q1)*g_(0,q2, pj, q3, pa)*den(pj.q2 + pj.q3)*den(pa.q2 + pa.q3)*den(4*(q2.q3)^2))*1/4*(T(i,cOli1)*T(j,cOli2)*T(a,cOli2)*T(b,cOli1) + T(j,cOli2)*T(i,cOli1)*T(b,cOli1)*T(a,cOli2) + T(i,cOli1)*T(j,cOli2)*T(b,cOli1)*T(a,cOli2) + T(j,cOli2)*T(i,cOli1)*T(a,cOli2)*T(b,cOli1));
 
-l reducible = TF*sum(i)*sum(j)*sum(a)*sum(b)*(-pi.pb*den(pi.q1*pb.q1)*g_(0,q2, pj, q3, pa)*den(pj.q2 + pj.q3)*den(pa.q2 + pa.q3)/s23^2)*1/4*(T(i,cOli1)*T(j,cOli2)*T(a,cOli2)*T(b,cOli1) + T(j,cOli2)*T(i,cOli1)*T(b,cOli1)*T(a,cOli2) + T(i,cOli1)*T(j,cOli2)*T(b,cOli1)*T(a,cOli2) + T(j,cOli2)*T(i,cOli1)*T(a,cOli2)*T(b,cOli1));
-
-l reducibleCatani = TF*sum(i)*sum(j)*sum(a)*sum(b)*(-pi.pb*den(pi.q1*pb.q1)*(pj.q2*pa.q3 + pj.q3*pa.q2 - pj.pa*q2.q3)*den(pj.q2 + pj.q3)*den(pa.q2 + pa.q3)*den(q2.q3^2))*1/2*(T(i, cOli1)*T(b, cOli1)*T(j, cOli2)*T(a, cOli2) + T(j, cOli2)*T(a, cOli2)*T(i, cOli1)*T(b, cOli1))
-  - TF*CA*sum(i)*sum(j)*T(i, cOli1)*T(j, cOli1)*Sij1;
+l reducibleCatani = TF*summe(i)*summe(j)*summe(a)*summe(b)*(-pi.pb*den(pi.q1*pb.q1)*(pj.q2*pa.q3 + pj.q3*pa.q2 - pj.pa*q2.q3)*den(pj.q2 + pj.q3)*den(pa.q2 + pa.q3)*den(q2.q3^2))*1/2*(T(i, cOli1)*T(b, cOli1)*T(j, cOli2)*T(a, cOli2) + T(j, cOli2)*T(a, cOli2)*T(i, cOli1)*T(b, cOli1))
+  - TF*CA*summe(i)*summe(j)*T(i, cOli1)*T(j, cOli1)*Sij1;
 
 l reducibleDifference = reducible - reducibleCatani;
 
-l interference = -1/2*sum(i)*sum(j)*sum(a)*1/2*TF*dsym(cOli1, cOli2, cOli3)*((T(i, cOli1)*T(j, cOli2) + T(j, cOli2)*T(i, cOli1))*T(a, cOli3) + T(a, cOli3)*(T(i, cOli1)*T(j, cOli2) + T(j, cOli2)*T(i, cOli1)))
+l interference = 1/2*summe(i)*summe(j)*summe(a)*1/2*TF*dsym(cOli1, cOli2, cOli3)*((T(i, cOli1)*T(j, cOli2) + T(j, cOli2)*T(i, cOli1))*T(a, cOli3) + T(a, cOli3)*(T(i, cOli1)*T(j, cOli2) + T(j, cOli2)*T(i, cOli1)))
   *den(2*(q1.q2 + q1.q3 + q2.q3)*(pa.q1 + pa.q2 + pa.q3))*(g_(0, q2, pa, q13, pi, q3, pj)*den(2*q1.q3) - g_(0, q2, pi, q12, pa, q3, pj)*den(2*q1.q2))
   /s23*den(pj.q2 + pj.q3)*den(pi.q1)*replace_(q13, q1 + q3, q12, q1 + q2, q23, q2 + q3)
-  - 1/2*sum(i)*sum(j)*sum(a)*TF*i_*cOlf(cOli1, cOli2, cOli3)*((T(i, cOli1)*T(j, cOli2) + T(j, cOli2)*T(i, cOli1))*T(a, cOli3) + T(a, cOli3)*(T(i, cOli1)*T(j, cOli2) + T(j, cOli2)*T(i, cOli1)))
+  - 1/2*summe(i)*summe(j)*summe(a)*TF*1/2*i_*cOlf(cOli1, cOli2, cOli3)*((T(i, cOli1)*T(j, cOli2) + T(j, cOli2)*T(i, cOli1))*T(a, cOli3) - T(a, cOli3)*(T(i, cOli1)*T(j, cOli2) + T(j, cOli2)*T(i, cOli1)))
   *den(pa.q1 + pa.q2 + pa.q3)*den(2*q2.q3)*den(pi.q1)*den(pj.q2 + pj.q3)*(g_(0, q2, pa, q3, pj)*den(2*q2.q3)*pa.pi*(den(pa.q1) - den(pa.q2 + pa.q3))
     + den(2*(q1.q2 + q1.q3 + q2.q3))*(den(2*q2.q3)*(2*(pa.q2 + pa.q3 - pa.q1)*g_(0, q2, pi, q3, pj) - 4*(pi.q2 + pi.q3)*g_(0, q2, pa, q3, pj) + 4*pa.pi*g_(0, q2, q1, q3, pj))
       - den(2*q1.q2)*g_(0, q2, pi, q12, pa, q3, pj) - den(2*q1.q3)*g_(0, q2, pa, q13, pi, q3, pj)))*replace_(q12, q1 + q2, q13, q1 + q3, q23, q2 + q3);
 
-l interferenceCatani = - sum(i)*sum(j)*sum(a)*TF*dsym(cOli1, cOli2, cOli3)*T(i, cOli1)*T(j, cOli2)*T(a, cOli3)*Sija
-                       - sum(i)*sum(j)*TF*CA*T(i, cOli1)*T(j, cOli1)*Sij2;
+l interferenceCatani = - summe(i)*summe(j)*summe(a)*TF*dsym(cOli1, cOli2, cOli3)*T(i, cOli1)*T(j, cOli2)*T(a, cOli3)*Sija
+                       - summe(i)*summe(j)*TF*CA*T(i, cOli1)*T(j, cOli1)*Sij2;
 
-l interferenceDifference = interference + interferenceCatani;
+l interferenceDifference = interference - interferenceCatani;
 
-l irreducibleNAB = sum(i)*sum(j)*1/2*i_*cOlf(cOli1, cOli2, cOli3)*T(i, cOli2)*1/2*(-i_)*cOlf(cOli1, cOli4, cOli3)*T(j, cOli4)*TF
+l irreducibleNAB = summe(i)*summe(j)*1/2*i_*cOlf(cOli1, cOli2, cOli3)*T(i, cOli2)*1/2*(-i_)*cOlf(cOli1, cOli4, cOli3)*T(j, cOli4)*TF
   *g_(0, q2)*(den(pi.q1 + pi.q2 + pi.q3)*(pi(mu)*den(2*q2.q3)*(den(pi.q1) - den(pi.q2 + pi.q3))*g_(0, pi)
     + den(2*q1.q2 + 2*q1.q3 + 2*q2.q3)*(den(2*q2.q3)*(2*(pi.q2 + pi.q3 - pi.q1)*g_(0, mu) - 4*(q2(mu) + q3(mu))*g_(0, pi) + 4*pi(mu)*g_(0, q1)) - g_(0, mu, q12, pi)*den(2*q1.q2) - g_(0, pi, q13, mu)*den(2*q1.q3))))
   *g_(0, q3)*(den(pj.q1 + pj.q2 + pj.q3)*(pj(mu)*den(2*q2.q3)*(den(pj.q1) - den(pj.q2 + pj.q3))*g_(0, pj)
     + den(2*q1.q2 + 2*q1.q3 + 2*q2.q3)*(den(2*q2.q3)*(2*(pj.q2 + pj.q3 - pj.q1)*g_(0, mu) - 4*(q2(mu) + q3(mu))*g_(0, pj) + 4*pj(mu)*g_(0, q1)) - g_(0, pj, q12, mu)*den(2*q1.q2) - g_(0, mu, q13, pj)*den(2*q1.q3))))
   *(-1)*replace_(q12, q1 + q2, q13, q1 + q3);
 
-l irreducibleNABCatani = -sum(i)*sum(j)*TF*CA/4*T(i, cOli1)*T(j, cOli1)*Sij3NAB;
+l irreducibleNABCatani = -summe(i)*summe(j)*TF*CA/4*T(i, cOli1)*T(j, cOli1)*Sij3NAB;
 
 l irreducibleNABDifference = irreducibleNAB - irreducibleNABCatani;
 
-l irreducibleAB = replace_(q13, q1 + q3)*replace_(q12, q1 + q2)*sum(i)*sum(j)*colFac*T(i, cOli1)*T(j, cOli1)*(-1)*den(4*(q1.q2 + q1.q3 + q2.q3)^2*(pi.q1 + pi.q2 + pi.q3)*(pj.q1 + pj.q2 + pj.q3))
+l irreducibleAB = replace_(q13, q1 + q3)*replace_(q12, q1 + q2)*summe(i)*summe(j)*colFac*T(i, cOli1)*T(j, cOli1)*(-1)*den(4*(q1.q2 + q1.q3 + q2.q3)^2*(pi.q1 + pi.q2 + pi.q3)*(pj.q1 + pj.q2 + pj.q3))
   *g_(0, q2)*(g_(0, pi, q13, mu)*den(2*q1.q3) - g_(0, mu, q12, pi)*den(2*q1.q2))*g_(0, q3)*(g_(0, mu, q13, pj)*den(2*q1.q3) - g_(0, pj, q12, mu)*den(2*q1.q2));
 
-l irreducibleABCatani = sum(i)*sum(j)*T(i, cOli1)*T(j, cOli1)*(-colFac)*Sij3AB;
+l irreducibleABCatani = summe(i)*summe(j)*T(i, cOli1)*T(j, cOli1)*(-colFac)*Sij3AB;
 
 l irreducibleABDifference = irreducibleAB - irreducibleABCatani;
+.sort
+drop Sij1, Sija, Sij2, Sij3AB, Sij3NAB;
+drop reducible, reducibleCatani; *works
+drop interference, interferenceCatani; *works
+drop irreducibleNAB, irreducibleNABCatani; *works
+drop irreducibleAB, irreducibleABCatani; *works
 
 tracen 0;
-sum cOli1,...,cOli3, mu;
+sum cOli1,...,cOli4, mu;
 .sort
 *drop Sij1;
 
-#do i=1,2
+#do i=1,5
 repeat;
-  id T(j, cOli2?)*T(i, cOli1?)*sum(i)*sum(j) =  T(i, cOli1)*T(j, cOli2)*sum(i)*sum(j) + i_*cOlf(cOli2, cOli1, cOli10)*T(i, cOli10)*sum(i)*replace_(j, i, pj, pi, sj1, si1, sj2, si2, sj3, si3, sja, sia, sjb, sib, sij, 4*mi^2, mj, mi);
+  id T(j, cOli2?)*T(i, cOli1?)*summe(i)*summe(j) =  T(i, cOli1)*T(j, cOli2)*summe(i)*summe(j) + i_*cOlf(cOli2, cOli1, cOli10)*T(i, cOli10)*summe(i)*replace_(j, i, pj, pi, sj1, si1, sj2, si2, sj3, si3, sja, sia, sjb, sib, sij, 4*mi^2, mj, mi);
   sum cOli10;
-  id T(a, cOli2?)*T(i, cOli1?)*sum(i)*sum(a) =  T(i, cOli1)*T(a, cOli2)*sum(i)*sum(a) + i_*cOlf(cOli2, cOli1, cOli11)*T(i, cOli11)*sum(i)*replace_(a, i, pa, pi, sa1, si1, sa2, si2, sa3, si3, sia, 4*mi^2, sja, sij, sab, sib, ma, mi);
+  id T(a, cOli2?)*T(i, cOli1?)*summe(i)*summe(a) =  T(i, cOli1)*T(a, cOli2)*summe(i)*summe(a) + i_*cOlf(cOli2, cOli1, cOli11)*T(i, cOli11)*summe(i)*replace_(a, i, pa, pi, sa1, si1, sa2, si2, sa3, si3, sia, 4*mi^2, sja, sij, sab, sib, ma, mi);
   sum cOli11;
 endrepeat;
 .sort
 repeat;
-  id T(j, cOli2?)*T(b, cOli1?)*sum(b)*sum(j) =  T(b, cOli1)*T(j, cOli2)*sum(b)*sum(j) + i_*cOlf(cOli2, cOli1, cOli10)*T(j, cOli10)*sum(j)*replace_(b, j, pb, pj, sb1, sj1, sb2, sj2, sb3, sj3, sjb, 4*mj^2, sab, sja, sib, sij, mb, mj);
+  id T(j, cOli2?)*T(b, cOli1?)*summe(b)*summe(j) =  T(b, cOli1)*T(j, cOli2)*summe(b)*summe(j) + i_*cOlf(cOli2, cOli1, cOli10)*T(j, cOli10)*summe(j)*replace_(b, j, pb, pj, sb1, sj1, sb2, sj2, sb3, sj3, sjb, 4*mj^2, sab, sja, sib, sij, mb, mj);
   sum cOli10;
-  id T(a, cOli2?)*T(b, cOli1?)*sum(b)*sum(a) =  T(b, cOli1)*T(a, cOli2)*sum(b)*sum(a) + i_*cOlf(cOli2, cOli1, cOli11)*T(a, cOli11)*sum(a)*replace_(b, a, pb, pa, sb1, sa1, sb2, sa2, sb3, sa3, sab, 4*ma^2, sib, sia, sjb, sja, mb, ma);
+  id T(a, cOli2?)*T(b, cOli1?)*summe(b)*summe(a) =  T(b, cOli1)*T(a, cOli2)*summe(b)*summe(a) + i_*cOlf(cOli2, cOli1, cOli11)*T(a, cOli11)*summe(a)*replace_(b, a, pb, pa, sb1, sa1, sb2, sa2, sb3, sa3, sab, 4*ma^2, sib, sia, sjb, sja, mb, ma);
   sum cOli11;
 endrepeat;
+repeat;
+  id T(a, cOli2?)*T(j, cOli1?)*summe(a)*summe(j) = T(j, cOli1)*T(a, cOli2)*summe(a)*summe(j) + i_*cOlf(cOli2, cOli1, cOli10)*T(j, cOli10)*summe(j)*replace_(a, j, pa, pj, sa1, sj1, sa2, sj2, sa3, sj3, sja, 4*mj^2, sia, sij, sab, sjb, ma, mj);
+  sum cOli10;
+endrepeat;
 .sort
-
-id T(j, cOli2?)*T(a, cOli3?)*cOlf(cOli1?, cOli2?, cOli3?)*sum(j)*sum(a) = sum(j)*1/2*i_*cOlf(cOli2, cOli3, cOli4)*T(j, cOli4)*replace_(a, j, pa, pj, sa1, sj1, sa2, sj2, sa3, sj3, sja, 4*mj^2, sia, sij, sab, sjb, ma, mj)*cOlf(cOli1, cOli2, cOli3);
-sum cOli4;
-id T(a, cOli2?)*T(j, cOli3?)*cOlf(cOli1?, cOli2?, cOli3?)*sum(j)*sum(a) = sum(j)*1/2*i_*cOlf(cOli2, cOli3, cOli4)*T(j, cOli4)*replace_(a, j, pa, pj, sa1, sj1, sa2, sj2, sa3, sj3, sja, 4*mj^2, sia, sij, sab, sjb, ma, mj)*cOlf(cOli1, cOli2, cOli3);
-sum cOli4;
-id T(b, cOli2?)*T(j, cOli3?)*cOlf(cOli1?, cOli2?, cOli3?)*sum(b)*sum(j) = sum(b)*1/2*i_*cOlf(cOli2, cOli3, cOli4)*T(b, cOli4)*replace_(j, b, pj, pb, sj1, sb1, sj2, sb2, sj3, sb3, sja, sab, sjb, 4*mb^2, mj, mb, sij, sib)*cOlf(cOli1, cOli2, cOli3);
-sum cOli4;
-id T(b, cOli2?)*T(a, cOli3?)*cOlf(cOli1?, cOli2?, cOli3?)*sum(b)*sum(a) = sum(b)*1/2*i_*cOlf(cOli2, cOli3, cOli4)*T(b, cOli4)*replace_(a, b, pa, pb, sa1, sb1, sa2, sb2, sa3, sb3, sab, 4*mb^2, sia, sib, sja, sjb, ma, mb)*cOlf(cOli1, cOli2, cOli3);
-sum cOli4;
 id T(a,cOli2?)*T(j,cOli3?)*dsym(cOli1?,cOli2?,cOli3?) = T(j,cOli3)*T(a,cOli2)*dsym(cOli1,cOli2,cOli3);
 id cOlf(cOli1?, cOli2?, cOli3?)*cOlf(cOli1?, cOli2?, cOli4?) = CA*delta(cOli3, cOli4);
 id delta(cOli1?, cOli2?)*T(i?, cOli2?) = T(i, cOli1);
 id delta(cOli1?, cOli2?)*cOlf(cOli1?, cOli3?, cOli4?) = cOlf(cOli2, cOli3, cOli4);
 id cOlf(cOli1?, cOli2?, cOli3?)*dsym(cOli4?, cOli2?, cOli3?) = 0;
 
-if(match(sum(b)) && (match(sum(j))==0));
+* rename
+if(match(summe(b)) && (match(summe(j))==0));
   mul replace_(b, j, pb, pj, sb1, sj1, sb2, sj2, sb3, sj3, sab, sja, sib, sij, mb, mj);
-else if(match(sum(a)) && (match(sum(j))==0));
+else if(match(summe(a)) && (match(summe(j))==0));
   mul replace_(a, j, pa, pj, sa1, sj1, sa2, sj2, sa3, sj3, sia, sij, sab, sjb, ma, mj);
+else if(match(summe(b)) && (match(summe(a))==0));
+  mul replace_(b, a, pb, pa, sb1, sa1, sb2, sa2, sb3, sa3, sib, sia, sjb, sja, mb, ma);
 endif;
+
 .sort
 #call Kinematics
 #call FullSimplify
 #call Simplify
 .sort
-#if `i'==1
-if((match(sum(a)) == 0) && (match(sum(b)) == 0));
+repeat;
+  id sa3*den(sa1 + sa2 + sa3) = 1 - sa2*den(sa1 + sa2 + sa3) - sa1*den(sa1 + sa2 + sa3);
+endrepeat;
+repeat;
+  id sa3*den(sa2 + sa3) = 1 - sa2*den(sa2 + sa3);
+endrepeat;
+if(occurs(sa1, sa2, sa3, sia, sja, ma) == 0) id summe(a) = 0;
+.sort
+repeat;
+  id sj3*den(sj1 + sj2 + sj3) = 1 - sj2*den(sj1 + sj2 + sj3) - sj1*den(sj1 + sj2 + sj3);
+endrepeat;
+repeat;
+  id sj3*den(sj2 + sj3) = 1 - sj2*den(sj2 + sj3);
+endrepeat;
+if(occurs(sj1, sj2, sj3, sij, sja, mj) == 0) id summe(j) = 0;
+.sort
+repeat;
+  id si3*den(si1 + si2 + si3) = 1 - si2*den(si1 + si2 + si3) - si1*den(si1 + si2 + si3);
+endrepeat;
+repeat;
+  id si3*den(si2 + si3) = 1 - si2*den(si2 + si3);
+endrepeat;
+if(occurs(si1, si2, si3, sij, sia, mi) == 0) id summe(i) = 0;
+*symmetrize result
+#if((`i'==2)||(`i'==4))
+if((match(summe(a)) == 0) && (match(summe(b)) == 0));
   mul 1/2*(1 + replace_(i, j, j, i, pi, pj, pj, pi, si1, sj1, sj1, si1, si2, sj2, sj2, si2, si3, sj3, sj3, si3, mi, mj, mj, mi));
 endif;
 .sort
+*#call Kinematics
+*#call FullSimplify
+*#call Simplify
+#else if(`i'==3)
+if(match(summe(i)) && match(summe(j)) && match(summe(a)) && (match(summe(b)) == 0));
+  mul 1/3*(1 + replace_(i, j, j, a, a, i, pi, pj, pj, pa, pa, pi, si1, sj1, sj1, sa1, sa1, si1, si2, sj2, sj2, sa2, sa2, si2, si3, sj3, sj3, sa3, sa3, si3, sij, sja, sia, sij, sja, sia, mi, mj, mj, ma, ma, mi)
+             + replace_(i, a, a, j, j, i, pi, pa, pa, pj, pj, pi, si1, sa1, sa1, sj1, sj1, si1, si2, sa2, sa2, sj2, sj2, si2, si3, sa3, sa3, sj3, sj3, si3, sia, sja, sij, sia, sja, sij, mi, ma, ma, mj, mj, mi) );
+endif;
+*.sort
+*#call Kinematics
+*#call FullSimplify
+*#call Simplify
+*.sort
 #endif
 #enddo
 .sort
-#do i={si1, si2, si3, sij, sia, sib}
-  mul replace_(`i', marker*`i');
-#enddo
 
-#call FullSimplify
-#call Simplify
+*#call FullSimplify
+*#call Simplify
+*mul replace_(si1, piq1*2);
+*mul replace_(si2, piq2*2);
+*mul replace_(si3, piq3*2);
+*mul replace_(sj1, pjq1*2);
+*mul replace_(sj2, pjq2*2);
+*mul replace_(sj3, pjq3*2);
+*mul replace_(s12, q1q2*2);
+*mul replace_(s13, q1q3*2);
+*mul replace_(s23, q2q3*2);
+*mul replace_(sij, pipj*2);
+*
+*id T(i?, cOli1?) = 1;
+*id summe(i?) = 1;
+*id TF = 1;
+*id CF = 1;
+*id CA = 1;
+*format C;
 
-mul replace_(si1, piq1/2);
-mul replace_(si2, piq2/2);
-mul replace_(si3, piq3/2);
-mul replace_(sj1, pjq1/2);
-mul replace_(sj2, pjq2/2);
-mul replace_(sj3, pjq3/2);
-mul replace_(s12, q1q2/2);
-mul replace_(s13, q1q3/2);
-mul replace_(s23, q2q3/2);
-mul replace_(sij, pipj/2);
-
-
-
-
-
-format C;
-b T, cOlf, TF, sum, i_, pb, den, mi, mj, dsym, marker, d, CA, colFac;
-print+s reducible, reducibleCatani, reducibleDifference;
+format Mathematica;
+b den, cOlT, cOlf, T, summe, CA, TF, d, dsym, marker, sij, sia, sij, sja;
+print+s ;
 .sort
 
 .end

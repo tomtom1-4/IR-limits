@@ -82,7 +82,7 @@ f T;
 *CommuteInSet{T1,T2};
 ****************************************
 * utilities
-cf sum;
+cf summe;
 v pi, pj, pa, pb;
 v q1, q2, q3;
 s i,j, a, b;

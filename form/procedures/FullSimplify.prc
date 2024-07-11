@@ -2,7 +2,7 @@
 .sort
 PolyRatFun rat;
 
-#do x = {s12, s13, s14, s15, s23, s24, s25, s34, s35, s45, m1, m2, si1, si2, si3, sj1, sj2, sj3, sa1, sa2, sa3, sb1, sb2, sb3, mi, mj, ma, mb, sij, sia, sib, sja, sjb, sab, marker}
+#do x = {s12, s13, s14, s15, s23, s24, s25, s34, s35, s45, m1, m2, si1, si2, si3, sj1, sj2, sj3, sa1, sa2, sa3, sb1, sb2, sb3, mi, mj, ma, mb, marker}
     b `x', rat;
     .sort
     keep brackets;
