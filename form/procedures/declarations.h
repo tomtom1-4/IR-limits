@@ -31,6 +31,7 @@ ct t0,...,t4;
 
 s s12, s13, s14, s23, s24, s34, s15, s25, s35, s45;
 s si1, si2, si3, sj1, sj2, sj3, sa1, sa2, sa3, sb1, sb2, sb3, sij, sia, sib, sja, sjb, sab;
+auto s si;
 s m1, m2;
 s mi, mj, ma, mb;
 s p1n, p2n, p3n, p4n;
@@ -82,10 +83,15 @@ f T;
 *CommuteInSet{T1,T2};
 ****************************************
 * utilities
+s marker;
 cf summe;
 v pi, pj, pa, pb;
+auto i mui;
+auto v pi;
+v E1, E2, E3;
 v q1, q2, q3;
 s i,j, a, b;
+auto s i;
 s ranktag, numtag, Quad;
 cf den, den2, rat, tensor;
 s b1,...,b4;

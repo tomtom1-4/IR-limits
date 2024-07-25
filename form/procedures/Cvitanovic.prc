@@ -31,6 +31,7 @@ endrepeat;
 repeat id cOlT(cOli1?,cOli2?,?a)*cOlT(cOli2?,cOli3?,?b) = cOlT(cOli1,cOli3,?a,?b);
 id cOlT(cOli1?,cOli1?,?a) = cOlTr(?a);
 id cOlTr(cOli1?) = 0;
+id cOlTr(cOli1?, cOli2?) = TF*delta(cOli1, cOli2);
 
 ****************************************
 * QCD values
