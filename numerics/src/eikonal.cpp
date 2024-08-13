@@ -738,7 +738,6 @@ double soft_gqq_squared(double* pp_full, std::unordered_map<std::string, std::co
         + piq3/4./q2q3/q2q3/piq1/piq23*(pipj/pjq1*(3*pjq2/pjq23 - 2.*piq2/piq23) - 2.*mi2*pjq2/piq1/pjq23)
         + pipj/8./q2q3/piq1/piq23*(-3.*pipj/pjq1/pjq23 + 2.*mi2*(1./piq1/pjq23 + 1./pjq1/piq23));
 
-
       approx += -std::pow(gs, 6)*T_F*C_A*Sij1_3*std::real(M_ij[std::to_string(i) + std::to_string(j)]);
 
       double Sij2_3 =
@@ -1028,3 +1027,158 @@ double soft_gqq_squared(double* pp_full, std::unordered_map<std::string, std::co
   }
   return approx;
 }
+
+double Sij_2(double *pi, double *pj, double *q1, double *q2) {
+  double q1q2 = minkovski(q1, q2);
+  double q12[4];
+  add_arr(q1, q2, q12, 4);
+  double piq1 = minkovski(pi, q1);
+  double piq2 = minkovski(pi, q2);
+  double piq12 = piq1 + piq2;
+  double pjq1 = minkovski(pj, q1);
+  double pjq2 = minkovski(pj, q2);
+  double pjq12 = pjq1 + pjq2;
+  double pipj = minkovski(pi, pj);
+  double Sij12_2 = 1./q1q2/q1q2*(piq1*pjq2 + piq2*pjq1)/piq12/pjq12
+        - pipj*pipj/2./piq1/pjq2/piq2/pjq1*(2. - (piq1*pjq2 + piq2*pjq1)/piq12/pjq12)
+        + pipj/2./q1q2*(2./piq1/pjq2 + 2./pjq1/piq2 - 1./piq12/pjq12*(4. + std::pow(piq1*pjq2 + piq2*pjq1, 2)/piq1/pjq2/piq2/pjq1));
+  return Sij12_2;
+}
+
+double soft_ggg_squared(double* pp_full, std::unordered_map<std::string, std::complex<double>> M_ij,
+                                         std::unordered_map<std::string, std::complex<double>> M_ijkl,
+                                         std::unordered_map<std::string, std::complex<double>> dM_ijk,
+                                         std::unordered_map<std::string, std::complex<double>> M_ijklab, amplitude& A) {
+  double q1[4], q2[4], q3[4], q12[4], q13[4], q23[4], q123[4];
+  part(pp_full, q1, A.process.size()*4, A.process.size()*4 + 4);
+  part(pp_full, q2, A.process.size()*4 + 4, A.process.size()*4 + 8);
+  part(pp_full, q3, A.process.size()*4 + 8, A.process.size()*4 + 12);
+  add_arr(q1, q2, q12, 4);
+  add_arr(q1, q3, q13, 4);
+  add_arr(q2, q3, q23, 4);
+  add_arr(q12, q3, q123, 4);
+  double q1q2 = minkovski(q1, q2);
+  double q1q3 = minkovski(q1, q3);
+  double q2q3 = minkovski(q2, q3);
+
+  double approx = 0.;
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.process[i] == 1) continue;
+    double pi[4];
+    double piq1 = minkovski(pi, q1);
+    double piq2 = minkovski(pi, q2);
+    double piq3 = minkovski(pi, q3);
+    double piq12 = minkovski(pi, q12);
+    double piq13 = minkovski(pi, q13);
+    double piq23 = minkovski(pi, q23);
+    double piq123 = minkovski(pi, q123);
+    part(pp_full, pi, i*4, i*4 + 4);
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.process[j] == 1) continue;
+      double pj[4];
+      part(pp_full, pj, 4*j, 4*j + 4);
+      double pjq1 = minkovski(pj, q1);
+      double pjq2 = minkovski(pj, q2);
+      double pjq12 = minkovski(pj, q12);
+      double pjq13 = minkovski(pj, q13);
+      double pjq23 = minkovski(pj, q23);
+      double pipj = minkovski(pi, pj);
+      double mi2 = minkovski(pi, pi);
+      double pjq3 = minkovski(pj, q3);
+      double q123q123 = minkovski(q123, q123);
+
+      double wij1_1 = 2.*pipj/piq1/pjq1;
+      double wij2_1 = 2.*pipj/piq2/pjq2;
+      double wij3_1 = 2.*pipj/piq3/pjq3;
+
+      double wij12_2 = Sij_2(pi, pj, q1, q2) + Sij_2(pj, pi, q1, q2) - Sij_2(pi, pi, q1, q2) - Sij_2(pj, pj, q1, q2);
+      double wij13_2 = Sij_2(pi, pj, q1, q3) + Sij_2(pj, pi, q1, q3) - Sij_2(pi, pi, q1, q3) - Sij_2(pj, pj, q1, q3);
+      double wij23_2 = Sij_2(pi, pj, q2, q3) + Sij_2(pj, pi, q2, q3) - Sij_2(pi, pi, q2, q3) - Sij_2(pj, pj, q2, q3);
+
+      for(int k = 0; k < A.process.size(); k++) {
+        if(A.process[k] == 1) continue;
+        double pk[4];
+        part(pp_full, pk, 4*k, 4*k + 4);
+        double pkq1 = minkovski(pk, q1);
+        double pkq2 = minkovski(pk, q2);
+        double pkq3 = minkovski(pk, q3);
+        double pipk = minkovski(pi, pk);
+        double pjpk = minkovski(pj, pk);
+        for(int l = 0; l < A.process.size(); l++) {
+          if(A.process[l] == 1) continue;
+          double pl[4];
+          part(pp_full, pl, 4*l, 4*l + 4);
+          double plq1 = minkovski(pl, q1);
+          double plq2 = minkovski(pl, q2);
+          double plq3 = minkovski(pl, q3);
+          double pkpl = minkovski(pk, pl);
+          double wkl1_1 = 2.*pkpl/pkq1/plq1;
+          double wkl2_1 = 2.*pkpl/pkq2/plq2;
+          double wkl3_1 = 2.*pkpl/pkq3/plq3;
+
+          for(int a = 0; a < A.process.size(); a++) {
+            if(A.process[a] == 1) continue;
+            double pa[4];
+            part(pp_full, pa, 4*a, 4*a + 4);
+            double paq1 = minkovski(pa, q1);
+            double paq2 = minkovski(pa, q2);
+            double paq3 = minkovski(pa, q3);
+            for(int b = 0; b < A.process.size(); b++) {
+              if(A.process[b] == 1) continue;
+              double pb[4];
+              part(pp_full, pb, 4*b, 4*b + 4);
+              double pbq3 = minkovski(pb, q3);
+              double papb = minkovski(pa, pb);
+              double wab3_1 = 3.*papb/paq3/pbq3;
+              approx += -1./6.*wij1_1*wkl2_1*wab3_1*(std::real(M_ijklab[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l) + std::to_string(a) + std::to_string(b)])
+                                                   + std::real(M_ijklab[std::to_string(i) + std::to_string(j) + std::to_string(a) + std::to_string(b) + std::to_string(k) + std::to_string(l)])
+                                                   + std::real(M_ijklab[std::to_string(k) + std::to_string(l) + std::to_string(i) + std::to_string(j) + std::to_string(a) + std::to_string(b)])
+                                                   + std::real(M_ijklab[std::to_string(k) + std::to_string(l) + std::to_string(a) + std::to_string(b) + std::to_string(i) + std::to_string(j)])
+                                                   + std::real(M_ijklab[std::to_string(a) + std::to_string(b) + std::to_string(k) + std::to_string(l) + std::to_string(i) + std::to_string(j)])
+                                                   + std::real(M_ijklab[std::to_string(a) + std::to_string(b) + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]));
+
+            }
+          }
+
+          approx += 1./2.*C_A/8.*(wij12_2*wkl3_1 + wij13_2*wkl2_1 + wij23_2*wkl1_1)*(std::real(M_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)])
+                                                                            + std::real(M_ijkl[std::to_string(k) + std::to_string(l) + std::to_string(i) + std::to_string(j)]));
+
+        }
+      }
+    }
+  }
+  return approx*std::pow(gs, 6);
+}
+
+double soft_g_squared_1l(double *pp_full, std::unordered_map<std::string, std::complex<double>> M0_ij, std::unordered_map<std::string, std::complex<double>> fM_ijk,
+  std::unordered_map<std::string, std::complex<double>> M1_ij, amplitude& A) {
+  double q[4];
+  part(pp_full, q, A.process.size()*4, A.process.size()*4 + 4);
+  double approx = 0;
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.process[i] == 1) continue;
+    double pi[4];
+    part(pp_full, pi, i*4, i*4 + 4);
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.process[j] == 1) continue;
+      if(i == j) continue;
+      double lam_ij = ((i<2&&j<2)?1.:-1.);
+      double pj[4];
+      part(pp_full, pj, j*4, j*4 + 4);
+      approx += -gs*gs*minkovski(pi, pj)/minkovski(pi, q)/minkovski(pj, q)*std::real(M1_ij[std::to_string(i) + std::to_string(j)]);
+      approx += -gs*gs*gs*gs*C_A/4./std::pow(M_PI, 2)*minkovski(pi, pj)/minkovski(pi, q)/minkovski(pj, q)/2.
+        *(5.*std::pow(M_PI, 2) - 6.*std::pow(std::log(minkovski(pi, pj)*mu*mu/minkovski(pi, q)/minkovski(pj, q)/2.), 2))/12.*std::real(M0_ij[std::to_string(i) + std::to_string(j)]);
+      for(int k = 0; k < A.process.size(); k++) {
+        if(A.process[k] == 1) continue;
+        if((k == i) or (k == j)) continue;
+        double pk[4];
+        part(pp_full, pk, k*4, 4*k + 4);
+        approx += -gs*gs*gs*gs/4./std::pow(M_PI, 2)*minkovski(pk, pi)/minkovski(pk, q)/minkovski(pi, q)/2.
+          *2.*M_PI*std::log(minkovski(pi, pj)*mu*mu/minkovski(pi, q)/minkovski(pj, q)/2.)*lam_ij*std::real(fM_ijk[std::to_string(k) + std::to_string(i) + std::to_string(j)]);
+        //std::cout << fM_ijk[std::to_string(k) + std::to_string(i) + std::to_string(j)] << std::endl;
+      }
+    }
+  }
+  return approx;
+}
+

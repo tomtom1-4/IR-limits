@@ -46,4 +46,9 @@ double soft_gqq_squared(double* pp_full, std::unordered_map<std::string, std::co
                                          std::unordered_map<std::string, std::complex<double>> M_ijkl,
                                          std::unordered_map<std::string, std::complex<double>> dM_ijk, amplitude& A);
 
+double soft_g_squared_1l(double *pp_full, std::unordered_map<std::string, std::complex<double>> M0_ij, std::unordered_map<std::string, std::complex<double>> fM_ijk,
+                                          std::unordered_map<std::string, std::complex<double>> M1_ij, amplitude& A);
+
+
+
 #endif

@@ -76,6 +76,7 @@ s CA, CF, TF, NF, NA, dF;    * S(NF) with fundamental representation trace TF
 *dimension NA;            * safeguard for loops of adjoint representation deltas
 i c0, c1, c2, c3, c4, c5;        * colors of the external partons
 auto i cOli, cOlj, cOlk; * other color indices
+cf Tc;
 t delta(symmetric), cOlf(antisymmetric), cOlT, cOlTr(cyclic), dsym(symmetric);
 f T1, T2;
 t TTsym(symmetric);
@@ -84,7 +85,7 @@ f T;
 ****************************************
 * utilities
 s marker;
-cf summe;
+cf summe(symmetric);
 v pi, pj, pa, pb;
 auto i mui;
 auto v pi;

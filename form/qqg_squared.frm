@@ -8,7 +8,6 @@ Off Statistics;
 #include declarations.h
 s colFac; * = TF/2*(CF - TF/dF) = 7/24
 v q13, q12, q23, q123;
-s marker;
 
 l Sij1 = (pi.q2/4*den(q2.q3*q2.q3*pi.q1*(pi.q2 + pi.q3))*(pi.pj*den(pj.q1)*(3*pj.q3*den(pj.q2 + pj.q3) - 2*pi.q3*den(pi.q2 + pi.q3)) - 2*pi.pi*pj.q3*den(pi.q1*(pj.q2 + pj.q3)))
   + pi.pj/8*den(q2.q3*pi.q1*(pi.q2 + pi.q3))*(-3*pi.pj*den(pj.q1*(pj.q2 + pj.q3)) + 2*pi.pi*(den(pi.q1*(pj.q2 + pj.q3)) + den(pj.q1*(pi.q2 + pi.q3)))))*(1 + replace_(q2, q3, q3, q2));
