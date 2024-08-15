@@ -312,7 +312,7 @@ std::vector<std::vector<int> > non0col(int id, int power, std::string loop_order
                 std::cout << col[0] << ", " << col[1] << ", " << col[2] << ", " << col[3] << "\t";
                 std::cout << m_full << std::endl;
             }
-            if ( m_full != 0. ) {
+            if ( std::abs(m_full) > 1.e-17 ) {
                 std::vector<int> col_vec;
                 for (int k = 0; k < A.process.size(); k++) {
                     col_vec.push_back(col[k]);

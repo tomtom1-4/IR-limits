@@ -106,7 +106,8 @@ std::vector<int> scan_process_type(std::string name_str){
         int length_of_name;
         int particle_name = scan_next_number_type(name_str, i, &length_of_name);
         if (out.size() < 2) {
-           out.push_back(-particle_name);
+            if(particle_name==2) particle_name = -2;
+            out.push_back(-particle_name);
         }
         else {
             out.push_back(particle_name);
