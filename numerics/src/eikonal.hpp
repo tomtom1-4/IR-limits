@@ -37,28 +37,28 @@ std::complex<double> soft_qqg(double *pp_full, std::unordered_map<std::string, s
     std::unordered_map<std::string, std::complex<double>> J123, std::unordered_map<std::string, std::complex<double>> M,
     std::vector<int> helicities_full, std::vector<int> colors_full, amplitude& A);
 
-double soft_g_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> M_ij, amplitude& A);
+double soft_g_squared(double *pp_full, std::unordered_map<std::string, double> M_ij, amplitude& A);
 
-double soft_qq_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> M_ij, amplitude& A);
+double soft_qq_squared(double *pp_full, std::unordered_map<std::string, double> M_ij, amplitude& A);
 
-double soft_gg_squared(double*pp_full, std::unordered_map<std::string, std::complex<double>> Mij, std::unordered_map<std::string, std::complex<double>> Mijkl, amplitude& A);
+double soft_gg_squared(double*pp_full, std::unordered_map<std::string, double> Mij, std::unordered_map<std::string, double> Mijkl, amplitude& A);
 
 
-double soft_gqq_squared(double* pp_full, std::unordered_map<std::string, std::complex<double>> M_ij,
-                                         std::unordered_map<std::string, std::complex<double>> M_ijkl,
-                                         std::unordered_map<std::string, std::complex<double>> dM_ijk, amplitude& A);
+double soft_gqq_squared(double* pp_full, std::unordered_map<std::string, double> M_ij,
+                                         std::unordered_map<std::string, double> M_ijkl,
+                                         std::unordered_map<std::string, double> dM_ijk, amplitude& A);
 
-double soft_g_squared_1l(double *pp_full, std::unordered_map<std::string, std::complex<double>> M0_ij, std::unordered_map<std::string, std::complex<double>> fM_ijk,
-                                          std::unordered_map<std::string, std::complex<double>> M1_ij, amplitude& A);
+double soft_g_squared_1l(double *pp_full, std::unordered_map<std::string, double> M0_ij, std::unordered_map<std::string, double> fM_ijk,
+                                          std::unordered_map<std::string, double> M1_ij, amplitude& A);
 
-double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, std::complex<double>> M0ij,
-    std::unordered_map<std::string, std::complex<double>> M1ij, std::unordered_map<std::string, std::complex<double>> M0ijkl,
-    std::unordered_map<std::string, std::complex<double>> M1ijkl, std::unordered_map<std::string, std::complex<double>> M0ijkla,
-    std::unordered_map<std::string, std::complex<double>> Q0ijkl, amplitude& A, int nl);
+double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, double> M0ij,
+    std::unordered_map<std::string, double> M1ij, std::unordered_map<std::string, double> M0ijkl,
+    std::unordered_map<std::string, double> M1ijkl, std::unordered_map<std::string, double> M0ijkla,
+    std::unordered_map<std::string, double> Q0ijkl, amplitude& A, int nl);
 
-//double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, std::complex<double>> M0ij,
-//    std::unordered_map<std::string, std::complex<double>> M1ij, std::unordered_map<std::string, std::complex<double>> M0ijkla,
-//    std::unordered_map<std::string, std::complex<double>> M0ijkl, std::unordered_map<std::string, std::complex<double>> M1ijkl,
-//    amplitude& A);
+double soft_gg_squared_1l_quad(double*pp_full, std::unordered_map<std::string, double> M0ij,
+    std::unordered_map<std::string, double> M1ij, std::unordered_map<std::string, double> M0ijkl,
+    std::unordered_map<std::string, double> M1ijkl, std::unordered_map<std::string, double> M0ijkla,
+    std::unordered_map<std::string, double> Q0ijkl, amplitude& A, int nl);
 
 #endif

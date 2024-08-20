@@ -15,7 +15,7 @@
  ***********************************************************
                                                             
         file containing the info output of COLLIER          
-                created  20/08/2024  13:42
+                created  20/08/2024  17:36
                                                             
  ***********************************************************
                                                             
@@ -100,3 +100,173 @@
  in routine: SetMuUV2_cll
  UV scale set to
     muUV2 = 0.100000000000000000D+05
+
+
+
+ ***********************************************************
+ Info-output NO.           7
+ in routine: clearminf2_cll
+ list of infinitesimal masses cleared
+
+
+
+ ***********************************************************
+ Info-output NO.           8
+ in routine: SetDeltaUV_cll
+ UV pole set to
+    deltaUV = 0.000000000000000000D+00
+
+
+
+ ***********************************************************
+ Info-output NO.           9
+ in routine: SetMuUV2_cll
+ UV scale set to
+    muUV2 = 0.100000000000000000D+05
+
+
+
+ ***********************************************************
+ Info-output NO.          10
+ in routine: SetDeltaIR_cll
+ IR single and double pole set to
+    deltaIR1 = 0.000000000000000000D+00
+    deltaIR2 = 0.822467033424113203D+00
+
+
+
+ ***********************************************************
+ Info-output NO.          11
+ in routine: SetMuIR2_cll
+ IR scale set to
+    muIR2 = 0.100000000000000000D+05
+
+
+
+ ***********************************************************
+ Info-output NO.          12
+ in routine: SetMuUV2_cll
+ UV scale set to
+    muUV2 = 0.100000000000000000D+05
+
+
+
+ ***********************************************************
+ Info-output NO.          13
+ in routine: SetMuIR2_cll
+ IR scale set to
+    muIR2 = 0.100000000000000000D+05
+
+
+
+ ***********************************************************
+ Info-output NO.          14
+ in routine: SetDeltaIR_cll
+ IR single and double pole set to
+    deltaIR1 = 0.000000000000000000D+00
+    deltaIR2 = 0.822467033424113203D+00
+
+
+
+ ***********************************************************
+ Info-output NO.          15
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          16
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          17
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          18
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          19
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          20
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          21
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          22
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          23
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          24
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          25
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          26
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          27
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          28
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off
+
+
+
+ ***********************************************************
+ Info-output NO.          29
+ in routine: SwitchOffCacheSystem_cll
+ cache system switched off

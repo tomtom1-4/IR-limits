@@ -793,7 +793,7 @@ std::complex<double> double_soft_tree_qq(double *pp_full, std::unordered_map<std
   return M_eikonal;
 }
 
-double soft_g_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> M_ij, amplitude& A) {
+double soft_g_squared(double *pp_full, std::unordered_map<std::string, double> M_ij, amplitude& A) {
   double q[4];
   part(pp_full, q, A.process.size()*4, A.process.size()*4 + 4);
   double approx = 0;
@@ -812,7 +812,7 @@ double soft_g_squared(double *pp_full, std::unordered_map<std::string, std::comp
   return approx;
 }
 
-double soft_qq_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> M_ij, amplitude& A) {
+double soft_qq_squared(double *pp_full, std::unordered_map<std::string, double> M_ij, amplitude& A) {
   double q1[4], q2[4];
   part(pp_full, q1, A.process.size()*4, A.process.size()*4 + 4);
   part(pp_full, q2, A.process.size()*4 + 4, A.process.size()*4 + 8);
@@ -834,7 +834,7 @@ double soft_qq_squared(double *pp_full, std::unordered_map<std::string, std::com
   return approx;
 }
 
-double soft_gg_squared(double*pp_full, std::unordered_map<std::string, std::complex<double>> Mij, std::unordered_map<std::string, std::complex<double>> Mijkl, amplitude& A) {
+double soft_gg_squared(double*pp_full, std::unordered_map<std::string, double> Mij, std::unordered_map<std::string, double> Mijkl, amplitude& A) {
   double q1_arr[4], q2_arr[4];
   part(pp_full, q1_arr, A.process.size()*4, A.process.size()*4 + 4);
   part(pp_full, q2_arr, A.process.size()*4 + 4, A.process.size()*4 + 8);
@@ -884,9 +884,9 @@ double den(double arg) {
   return 1./arg;
 }
 
-double soft_gqq_squared(double* pp_full, std::unordered_map<std::string, std::complex<double>> M_ij,
-                                         std::unordered_map<std::string, std::complex<double>> M_ijkl,
-                                         std::unordered_map<std::string, std::complex<double>> dM_ijk, amplitude& A) {
+double soft_gqq_squared(double* pp_full, std::unordered_map<std::string, double> M_ij,
+                                         std::unordered_map<std::string, double> M_ijkl,
+                                         std::unordered_map<std::string, double> dM_ijk, amplitude& A) {
   double q1[4], q2[4], q3[4], q12[4], q13[4], q23[4], q123[4];
   part(pp_full, q1, A.process.size()*4, A.process.size()*4 + 4);
   part(pp_full, q2, A.process.size()*4 + 4, A.process.size()*4 + 8);
@@ -1317,10 +1317,10 @@ double Sij_2(double *pi, double *pj, double *q1, double *q2) {
   return Sij12_2;
 }
 
-double soft_ggg_squared(double* pp_full, std::unordered_map<std::string, std::complex<double>> M_ij,
-                                         std::unordered_map<std::string, std::complex<double>> M_ijkl,
-                                         std::unordered_map<std::string, std::complex<double>> dM_ijk,
-                                         std::unordered_map<std::string, std::complex<double>> M_ijklab, amplitude& A) {
+double soft_ggg_squared(double* pp_full, std::unordered_map<std::string, double> M_ij,
+                                         std::unordered_map<std::string, double> M_ijkl,
+                                         std::unordered_map<std::string, double> dM_ijk,
+                                         std::unordered_map<std::string, double> M_ijklab, amplitude& A) {
   double q1[4], q2[4], q3[4], q12[4], q13[4], q23[4], q123[4];
   part(pp_full, q1, A.process.size()*4, A.process.size()*4 + 4);
   part(pp_full, q2, A.process.size()*4 + 4, A.process.size()*4 + 8);
@@ -1422,8 +1422,8 @@ double soft_ggg_squared(double* pp_full, std::unordered_map<std::string, std::co
   return approx*std::pow(gs, 6);
 }
 
-double soft_g_squared_1l(double *pp_full, std::unordered_map<std::string, std::complex<double>> M0_ij, std::unordered_map<std::string, std::complex<double>> fM_ijk,
-  std::unordered_map<std::string, std::complex<double>> M1_ij, amplitude& A) {
+double soft_g_squared_1l(double *pp_full, std::unordered_map<std::string, double> M0_ij, std::unordered_map<std::string, double> fM_ijk,
+  std::unordered_map<std::string, double> M1_ij, amplitude& A) {
   double q_arr[4];
   part(pp_full, q_arr, A.process.size()*4, A.process.size()*4 + 4);
   LV<double> q(q_arr);
@@ -1457,10 +1457,10 @@ double soft_g_squared_1l(double *pp_full, std::unordered_map<std::string, std::c
   return approx;
 }
 
-double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, std::complex<double>> M0ij,
-    std::unordered_map<std::string, std::complex<double>> M1ij, std::unordered_map<std::string, std::complex<double>> M0ijkl,
-    std::unordered_map<std::string, std::complex<double>> M1ijkl, std::unordered_map<std::string, std::complex<double>> M0ijkla,
-    std::unordered_map<std::string, std::complex<double>> Q0ijkl, amplitude& A, int nl) {
+double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, double> M0ij,
+    std::unordered_map<std::string, double> M1ij, std::unordered_map<std::string, double> M0ijkl,
+    std::unordered_map<std::string, double> M1ijkl, std::unordered_map<std::string, double> M0ijkla,
+    std::unordered_map<std::string, double> Q0ijkl, amplitude& A, int nl) {
   double q1_arr[4], q2_arr[4];
   part(pp_full, q1_arr, A.process.size()*4, A.process.size()*4 + 4);
   part(pp_full, q2_arr, A.process.size()*4 + 4, A.process.size()*4 + 8);
@@ -1514,14 +1514,14 @@ double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, std::c
           }
 
           // Quadupole operator contribution
-          approx += std::pow(gs, 6)*(-1.)*std::real((gamma11(pk, pl, q1)*j1(pi, q1))*(j1(pj, q2)*j1(pi, q2))/4.
-                                                   +(gamma11(pk, pl, q2)*j1(pi, q2))*(j1(pj, q1)*j1(pi, q1))/4.
-                                                   +(gamma11(pj, pk, q1)*(gamma20(pi, q1, q2)*j1(pl, q2)))/4.
-                                                   +(gamma11(pj, pk, q2)*(gamma20(pi, q2, q1)*j1(pl, q1)))/4.)
+          approx += std::pow(gs, 6)*(-1.)*2.*std::real((gamma11(pk, pl, q1)*j1(pi, q1))*(j1(pj, q2)*j1(pi, q2))/4.
+                                                      +(gamma11(pk, pl, q2)*j1(pi, q2))*(j1(pj, q1)*j1(pi, q1))/4.
+                                                      +(gamma11(pj, pk, q1)*(gamma20(pi, q1, q2)*j1(pl, q2)))/4.
+                                                      +(gamma11(pj, pk, q2)*(gamma20(pi, q2, q1)*j1(pl, q1)))/4.)
                     *std::real(Q0ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
           if(i != j)
-            approx += std::pow(gs, 6)*(-1.)*std::real(j1(pl, q1)*(gamma21(pi, pj, q1, q2, nl)*j1(pk, q2))
-                                                     +j1(pl, q2)*(gamma21(pi, pj, q2, q1, nl)*j1(pk, q1)))/8.
+            approx += std::pow(gs, 6)*2.*std::real(j1(pl, q1)*(gamma21(pi, pj, q1, q2, nl)*j1(pk, q2))
+                                                        +j1(pl, q2)*(gamma21(pi, pj, q2, q1, nl)*j1(pk, q1)))/8.
                     *std::real(Q0ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
 
 
@@ -1547,6 +1547,56 @@ double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, std::c
                                                                +(gamma20(pi, q1, q2)*gamma21(pi, pj, q1, q2).transpose()).trace()/4.
                                                                +(gamma20(pi, q2, q1)*gamma21(pi, pj, q2, q1).transpose()).trace()/4.)
                 *std::real(M0ij[std::to_string(i) + std::to_string(j)]);
+      }
+    }
+  }
+  return approx;
+}
+
+double soft_gg_squared_1l_quad(double*pp_full, std::unordered_map<std::string, double> M0ij,
+    std::unordered_map<std::string, double> M1ij, std::unordered_map<std::string, double> M0ijkl,
+    std::unordered_map<std::string, double> M1ijkl, std::unordered_map<std::string, double> M0ijkla,
+    std::unordered_map<std::string, double> Q0ijkl, amplitude& A, int nl) {
+  double q1_arr[4], q2_arr[4];
+  part(pp_full, q1_arr, A.process.size()*4, A.process.size()*4 + 4);
+  part(pp_full, q2_arr, A.process.size()*4 + 4, A.process.size()*4 + 8);
+  LV<double> q1(q1_arr);
+  LV<double> q2(q2_arr);
+  double approx = 0;
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.process[i] == 1) continue;
+    double pi_arr[4];
+    part(pp_full, pi_arr, i*4, i*4 + 4);
+    LV<double> pi(pi_arr);
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.process[j] == 1) continue;
+      double pj_arr[4];
+      part(pp_full, pj_arr, 4*j, 4*j + 4);
+      LV<double> pj(pj_arr);
+      for(int k = 0; k < A.process.size(); k++) {
+        if(A.process[k] == 1) continue;
+        double pk_arr[4];
+        part(pp_full, pk_arr, 4*k, 4*k + 4);
+        LV<double> pk(pk_arr);
+        for(int l = 0; l < A.process.size(); l++) {
+          if(A.process[l] == 1) continue;
+          double pl_arr[4];
+          part(pp_full, pl_arr, 4*l, 4*l + 4);
+          LV<double> pl(pl_arr);
+          // Quadupole operator contribution
+          approx += std::pow(gs, 6)*(-1.)*2.*std::real((gamma11(pk, pl, q1)*j1(pi, q1))*(j1(pj, q2)*j1(pi, q2))/4.
+                                                      +(gamma11(pk, pl, q2)*j1(pi, q2))*(j1(pj, q1)*j1(pi, q1))/4.
+                                                      +(gamma11(pj, pk, q1)*(gamma20(pi, q1, q2)*j1(pl, q2)))/4.
+                                                      +(gamma11(pj, pk, q2)*(gamma20(pi, q2, q1)*j1(pl, q1)))/4.)
+                    *std::real(Q0ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
+          if(i != j)
+            approx += std::pow(gs, 6)*2.*std::real(j1(pl, q1)*(gamma21(pi, pj, q1, q2, nl)*j1(pk, q2))
+                                                        +j1(pl, q2)*(gamma21(pi, pj, q2, q1, nl)*j1(pk, q1)))/8.
+                    *std::real(Q0ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
+
+
+
+        }
       }
     }
   }

@@ -6,6 +6,7 @@
 #include <fstream> // txt outstream
 #include <unordered_map> // hashmap
 
+#include "src/tinyxml2.h"
 #include "recola.hpp"
 #include "src/amplitude.hpp"
 #include "src/params.hpp"
@@ -14,3 +15,5 @@
 #include "/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Utilities.hpp"
 #include "/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Tree.hpp"
 #include "/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/PhaseSpace.hpp"
+
+using namespace tinyxml2;

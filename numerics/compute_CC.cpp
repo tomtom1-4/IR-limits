@@ -3,16 +3,26 @@
 
 using namespace tinyxml2;
 // Evaluation of input
-std::string process_str = "u u~ -> d d~";
+std::string process_str = "u u~ -> e- e+";
 std::string unresolved_str = " g g";
 std::string process_full_str = process_str + unresolved_str;
 
 
 const int nBorn = 4;
 const int nUnresolved = 2;
-const int power = 2;
+const int power = 0;
 const std::vector<int> flavor = {0,0,1,1};
 const std::string order = "NLO";
+
+void replace(std::string& str, const std::string& from, const std::string& to) {
+    if(from.empty())
+        return;
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
+}
 
 int main() {
   int delta_power = 0;
@@ -67,12 +77,18 @@ int main() {
   }
 
   XMLDocument xmlDoc;
-  XMLNode * pRoot = xmlDoc.NewElement(const_cast<char*>(process_str.c_str()));
+  std::string process_str_copy = process_str;
+  replace(process_str_copy, "-> ", "");
+  replace(process_str_copy, "~", "");
+  replace(process_str_copy, " " , "");
+  replace(process_str_copy, "-" , "");
+  replace(process_str_copy, "+" , "");
+  XMLNode * pRoot = xmlDoc.NewElement(const_cast<char*>(process_str_copy.c_str()));
   xmlDoc.InsertFirstChild(pRoot);
-  XMLElement * ppElement = xmlDoc.NewElement("Phase Phace Point");
+  XMLElement * ppElement = xmlDoc.NewElement("PhasePhacePoint");
   for(int i = 0; i < A.process.size(); i++) {
     for(int mu = 0; mu < 4; mu++) {
-      XMLElement * ppEntry = xmlDoc.NewElement(const_cast<char*>(("p" + std::to_string(i) + "[" + std::to_string(mu) + "]").c_str()));
+      XMLElement * ppEntry = xmlDoc.NewElement(const_cast<char*>(("p" + std::to_string(i) + "_" + std::to_string(mu)).c_str()));
       ppEntry->SetText(pp.momenta[i].components[mu]);
       ppElement->InsertEndChild(ppEntry);
     }
@@ -193,14 +209,14 @@ int main() {
   std::cout << std::endl;
   // Get color correlators
   // <M|Ti.Tj|M>
-  XMLElement * M0_ijElement = xmlDoc.NewElement("<M0|Ti.Tj|M0>");
-  XMLElement * M1_ijElement = xmlDoc.NewElement("<M0|Ti.Tj|M1> + c.c.");
+  XMLElement * M0_ijElement = xmlDoc.NewElement("M0_ij");
+  XMLElement * M1_ijElement = xmlDoc.NewElement("M1_ij");
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
     for(int j = 0; j < A.process.size(); j++) {
       if(A.particle_type[j] == 0) continue;
-      XMLElement * M0_ijEntry = xmlDoc.NewElement(const_cast<char*>((std::to_string(i) + std::to_string(j)).c_str()));
-      XMLElement * M1_ijEntry = xmlDoc.NewElement(const_cast<char*>((std::to_string(i) + std::to_string(j)).c_str()));
+      XMLElement * M0_ijEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
+      XMLElement * M1_ijEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
       if(std::abs(M0_ij[std::to_string(j) + std::to_string(i)]) + std::abs(M1_ij[std::to_string(j) + std::to_string(i)]) != 0.) {
         M0_ij[std::to_string(i) + std::to_string(j)] = M0_ij[std::to_string(j) + std::to_string(i)];
         M1_ij[std::to_string(i) + std::to_string(j)] = M1_ij[std::to_string(j) + std::to_string(i)];
@@ -286,8 +302,8 @@ int main() {
   pRoot->InsertEndChild(M1_ijElement);
 
   // <M|Ti.Tj Tk.Tl|M>
-  XMLElement * M0_ijklElement = xmlDoc.NewElement("<M0|Ti.Tj Tk.Tl|M0>");
-  XMLElement * M1_ijklElement = xmlDoc.NewElement("<M0|Ti.Tj Tk.Tl|M1> + c.c.");
+  XMLElement * M0_ijklElement = xmlDoc.NewElement("M0_ijkl");
+  XMLElement * M1_ijklElement = xmlDoc.NewElement("M1_ijkl");
   if(unresolved_str==" g g" || unresolved_str==" g g g") {
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
@@ -299,8 +315,8 @@ int main() {
           if(A.particle_type[l] == 0) continue;
           std::complex<double> M0ijkl = 0.;
           std::complex<double> M1ijkl = 0.;
-          XMLElement * M0_ijklEntry = xmlDoc.NewElement(const_cast<char*>((std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
-          XMLElement * M1_ijklEntry = xmlDoc.NewElement(const_cast<char*>((std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
+          XMLElement * M0_ijklEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
+          XMLElement * M1_ijklEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
           for(std::vector<int> hel_full : helicities) {  // color and helicity of the bra <M|
             std::string hel_string;
             for (int dummy = 0; dummy < hel_full.size(); dummy++) {
@@ -754,7 +770,7 @@ int main() {
   }
 
   // f^{a,d;b,c} <M|Ti^a {Tj^b, Tk^c} Tl^d|M> + h.c.
-  XMLElement * Q_ijklElement = xmlDoc.NewElement("f^{a,d;b,c} <M|Ti^a {Tj^b, Tk^c} Tl^d|M> + c.c.");
+  XMLElement * Q_ijklElement = xmlDoc.NewElement("Q_ijkl");
   if((order=="NLO" && unresolved_str==" g g") || unresolved_str==" g g g") {
   std::vector<std::vector<int>> configurations;
   for (int i = 0; i < A.process.size(); i++) {
@@ -767,7 +783,7 @@ int main() {
         for(int l = 0; l < A.process.size(); l++) {
           if(A.particle_type[l] == 0) continue;
           if(l == i) continue;
-          XMLElement * Q_ijklEntry = xmlDoc.NewElement((std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str());
+          XMLElement * Q_ijklEntry = xmlDoc.NewElement(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str());
           bool permutation = false;
           for(std::vector<int> configuration : configurations) {
             if(configuration==std::vector<int>({i,j,k,l})) {
@@ -922,6 +938,7 @@ int main() {
     }
   }
   }
+  pRoot->InsertEndChild(Q_ijklElement);
 
   std::cout << "Filled the Hashmaps" << std::endl;
   XMLError eResult = xmlDoc.SaveFile(const_cast<char*>(("results/ColorCorrelators/" + process_str + ".xml").c_str()));

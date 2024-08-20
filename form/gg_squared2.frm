@@ -266,9 +266,9 @@ id phase(i1?, i2?)*phaseConj(i1?, i2?) = 1;
 .sort
 *mul (1 - replace_(i_, -i_, phaseConj, phase, phase, phaseConj, gamma21Conj, gamma21, gamma21, gamma21Conj))/2;
 *mul replace_(i_, -i_, phaseConj, phase)/2;
-if(occurs(phaseConj) || occurs(gamma21Conj)); discard;
-else if((occurs(phase)==0) && (occurs(phaseConj)==0)); mul 1/2;
-endif;
+*if(occurs(phaseConj) || occurs(gamma21Conj)); discard;
+*else if((occurs(phase)==0) && (occurs(phaseConj)==0)); mul 1/2;
+*endif;
 
 if(count(Tsym, 1)==1);
   #do i=2,3
