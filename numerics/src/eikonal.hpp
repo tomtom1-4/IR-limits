@@ -3,6 +3,7 @@
 
 #include <complex>
 #include <unordered_map>
+#include <type_traits>
 #include "amplitude.hpp"
 #include "color.hpp"
 #include "dirac.hpp"
@@ -42,6 +43,7 @@ double soft_qq_squared(double *pp_full, std::unordered_map<std::string, std::com
 
 double soft_gg_squared(double*pp_full, std::unordered_map<std::string, std::complex<double>> Mij, std::unordered_map<std::string, std::complex<double>> Mijkl, amplitude& A);
 
+
 double soft_gqq_squared(double* pp_full, std::unordered_map<std::string, std::complex<double>> M_ij,
                                          std::unordered_map<std::string, std::complex<double>> M_ijkl,
                                          std::unordered_map<std::string, std::complex<double>> dM_ijk, amplitude& A);
@@ -49,6 +51,14 @@ double soft_gqq_squared(double* pp_full, std::unordered_map<std::string, std::co
 double soft_g_squared_1l(double *pp_full, std::unordered_map<std::string, std::complex<double>> M0_ij, std::unordered_map<std::string, std::complex<double>> fM_ijk,
                                           std::unordered_map<std::string, std::complex<double>> M1_ij, amplitude& A);
 
+double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, std::complex<double>> M0ij,
+    std::unordered_map<std::string, std::complex<double>> M1ij, std::unordered_map<std::string, std::complex<double>> M0ijkl,
+    std::unordered_map<std::string, std::complex<double>> M1ijkl, std::unordered_map<std::string, std::complex<double>> M0ijkla,
+    std::unordered_map<std::string, std::complex<double>> Q0ijkl, amplitude& A, int nl);
 
+//double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, std::complex<double>> M0ij,
+//    std::unordered_map<std::string, std::complex<double>> M1ij, std::unordered_map<std::string, std::complex<double>> M0ijkla,
+//    std::unordered_map<std::string, std::complex<double>> M0ijkl, std::unordered_map<std::string, std::complex<double>> M1ijkl,
+//    amplitude& A);
 
 #endif

@@ -54,8 +54,8 @@ InExpression J20Conj, J21Conj;
 EndInExpression;
 .sort
 l test1 = (T(i1, cOli1)*(T(i2, cOli2)*T(i3, cOli3) + T(i3, cOli3)*T(i2, cOli2))*T(i4, cOli4)
-        + T(i4, cOli4)*(T(i3, cOli3)*T(i2, cOli2) + T(i2, cOli2)*T(i3, cOli3))*T(i1, cOli1))
-        *cOlf(cOli1, cOli4, cOli5)*cOlf(cOli2, cOli3, cOli5)
+         + T(i4, cOli4)*(T(i3, cOli3)*T(i2, cOli2) + T(i2, cOli2)*T(i3, cOli3))*T(i1, cOli1))
+        *cOlf(cOli1, cOli4, cOli5)*cOlf(cOli2, cOli3, cOli5)*(1 + replace_(i_, -i_, phase, phaseConj, gamma21, gamma21Conj))
         *(summe(i1)*summe(i2)*summe(i3)*summe(i4)*(-gamma11(pi3,pi4,q1,N3_?)*j1(pi1,q1,N3_?)*j1(pi2,q2,N4_?)*j1(pi1,q2,N4_?)*phase(i3,i4)/4
                                                    -gamma11(pi3,pi4,q2,N3_?)*j1(pi1,q2,N3_?)*j1(pi2,q1,N4_?)*j1(pi1,q1,N4_?)*phase(i3,i4)/4
                                                    -gamma11(pi2,pi3,q1,N6_?)*gamma20(pi1,q1,q2,N6_?,N7_?)*j1(pi4,q2,N7_?)*phase(i2,i3)/4
@@ -64,23 +64,25 @@ l test1 = (T(i1, cOli1)*(T(i2, cOli2)*T(i3, cOli3) + T(i3, cOli3)*T(i2, cOli2))*
                                                       +gamma21(pi1,pi2,q2,q1,N6_?,N7_?)*j1(pi3,q1,N7_?)*j1(pi4,q2,N6_?)/8));
 
 l test2 = i_*cOlf(cOli1, cOli2, cOli3)*T(i1, cOli1)*T(i2, cOli2)*T(i3, cOli3)*(1 + replace_(q1,q2,q2,q1))*(1 + replace_(i_, -i_, phase, phaseConj, gamma21, gamma21Conj))
-  *(summe(i1)*summe(i2)*summe(i3)*(-gamma11(pi2,pi3,q1,N4_?)*gamma20(pi1,q1,q2,N4_?,N5_?)*j1(pi1,q2,N5_?)*phase(i2,i3)*CA/2
+  *(summeP(i1)*summeP(i2)*summeP(i3)*(-gamma11(pi2,pi3,q1,N4_?)*gamma20(pi1,q1,q2,N4_?,N5_?)*j1(pi1,q2,N5_?)*phase(i2,i3)*CA/2
                                    +gamma11(pi2,pi3,q1,N4_?)*gamma20(pi1,q1,q2,N4_?,N5_?)*j1(pi2,q2,N5_?)*phase(i2,i3)*CA/2
                                    +gamma11(pi2,pi3,q1,N4_?)*gamma20(pi2,q1,q2,N4_?,N5_?)*j1(pi1,q2,N5_?)*phase(i2,i3)*CA/2
                                    -gamma20(pi1,q1,q2,N4_?,N5_?)*gamma21(pi2,pi3,q1,q2,N4_?,N5_?)*CA/4
                                    +gamma11(pi2,pi3,q1,N4_?)*j1(pi1,q1,N4_?)*j1(pi1,q2,N5_?)*j1(pi2,q2,N5_?)*phase(i2,i3)*CA*3/4
                                    +gamma11(pi2,pi3,q1,N4_?)*j1(pi1,q1,N4_?)*j1(pi2,q2,N5_?)*j1(pi3,q2,N5_?)*phase(i2,i3)*CA*1/2
-                                   -gamma11(pi2,pi3,q1,N4_?)*j1(pi1,q2,N5_?)*j1(pi2,q1,N4_?)*j1(pi2,q2,N5_?)*phase(i2,i3)*CA*1/4)
-   +summeP(i1)*summeP(i2)*summeP(i3)*(-gamma21(pi1,pi2,q1,q2,N4_?,N5_?)*j1(pi1,q1,N4_?)*j1(pi3,q2,N5_?)*CA/2
-                                      +gamma21(pi1,pi2,q1,q2,N4_?,N5_?)*j1(pi2,q1,N4_?)*j1(pi3,q2,N5_?)*CA/4));
+                                   -gamma11(pi2,pi3,q1,N4_?)*j1(pi1,q2,N5_?)*j1(pi2,q1,N4_?)*j1(pi2,q2,N5_?)*phase(i2,i3)*CA*1/4
+                                   -gamma21(pi1,pi2,q1,q2,N4_?,N5_?)*j1(pi1,q1,N4_?)*j1(pi3,q2,N5_?)*CA/2
+                                   +gamma21(pi1,pi2,q1,q2,N4_?,N5_?)*j1(pi2,q1,N4_?)*j1(pi3,q2,N5_?)*CA/4));
 
 l test3= summeP(i1)*summeP(i2)*T(i1, cOli1)*T(i2, cOli1)*(1 + replace_(q1, q2, q2, q1))*(1 + replace_(i_, -i_, phase, phaseConj, gamma21, gamma21Conj))
   *(gamma21(pi1,pi2,q1,q2,N2_?,N3_?)*j1(pi1,q1,N2_?)*j1(pi1,q2,N3_?)*CA^2/8
-   -gamma21(pi1,pi2,q1,q2,N2_?,N3_?)*j1(pi1,q1,N2_?)*j1(pi2,q2,N3_?)*CA^2/8);
+   -gamma21(pi1,pi2,q1,q2,N2_?,N3_?)*j1(pi1,q1,N2_?)*j1(pi2,q2,N3_?)*CA^2/8
+   -gamma11(pi1,pi2,q1,N2_?)*j1(pi1,q1,N2_?)*j1(pi1,q2,N3_?)*j1(pi2,q2,N3_?)*phase(i1,i2)*CA^2
+   +gamma20(pi1,q1,q2,N2_?,N3_?)*gamma21(pi1,pi2,q1,q2,N2_?,N3_?)*CA^2/4);
 
-l TreeG = (T(i4,cOli1)*T(i5,cOli1)*j1(pi4,q1,N1_?)*j1(pi5,q1,N1_?))*summe(i4)*summe(i5);
-l InterferenceG = summeP(i1)*summeP(i2)*T(i1,cOli2)*T(i2,cOli2)*CA*(-gamma11(pi1,pi2,q2,N2_?)*j1(pi1,q2,N2_?))*(phase(i1,i2) + phaseConj(i1,i2))
-  +summeP(i1)*summeP(i2)*summeP(i3)*T(i1,cOli2)*T(i2,cOli3)*T(i3,cOli4)*i_*cOlf(cOli2,cOli3,cOli4)
+l TreeG = -(T(i4,cOli1)*T(i5,cOli1)*j1(pi4,q1,N1_?)*j1(pi5,q1,N1_?))*summe(i4)*summe(i5);
+l InterferenceG = -summeP(i1)*summeP(i2)*T(i1,cOli2)*T(i2,cOli2)*CA*(-gamma11(pi1,pi2,q2,N2_?)*j1(pi1,q2,N2_?))*(phase(i1,i2) + phaseConj(i1,i2))
+  -summeP(i1)*summeP(i2)*summeP(i3)*T(i1,cOli2)*T(i2,cOli3)*T(i3,cOli4)*i_*cOlf(cOli2,cOli3,cOli4)
     *gamma11(pi2,pi3,q2,N2_?)*j1(pi1,q2,N2_?)*(phase(i2,i3) - phaseConj(i2,i3));
 l test = (TreeG*InterferenceG + InterferenceG*TreeG)/2*(1 + replace_(q1,q2,q2,q1));
 l interference = J21Conj*J20 + J20Conj*J21 - test - test1 - test2 - test3;

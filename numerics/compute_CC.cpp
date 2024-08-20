@@ -1,5 +1,7 @@
 #include "main.hpp"
+#include "src/tinyxml2.h"
 
+using namespace tinyxml2;
 // Evaluation of input
 std::string process_str = "u u~ -> d d~";
 std::string unresolved_str = " g g";
@@ -64,7 +66,18 @@ int main() {
     }
   }
 
-
+  XMLDocument xmlDoc;
+  XMLNode * pRoot = xmlDoc.NewElement(const_cast<char*>(process_str.c_str()));
+  xmlDoc.InsertFirstChild(pRoot);
+  XMLElement * ppElement = xmlDoc.NewElement("Phase Phace Point");
+  for(int i = 0; i < A.process.size(); i++) {
+    for(int mu = 0; mu < 4; mu++) {
+      XMLElement * ppEntry = xmlDoc.NewElement(const_cast<char*>(("p" + std::to_string(i) + "[" + std::to_string(mu) + "]").c_str()));
+      ppEntry->SetText(pp.momenta[i].components[mu]);
+      ppElement->InsertEndChild(ppEntry);
+    }
+  }
+  pRoot->InsertEndChild(ppElement);
 
   // Compute process amplitudes
   Recola::compute_process_rcl(1, pp_rcl, order);
@@ -180,13 +193,21 @@ int main() {
   std::cout << std::endl;
   // Get color correlators
   // <M|Ti.Tj|M>
+  XMLElement * M0_ijElement = xmlDoc.NewElement("<M0|Ti.Tj|M0>");
+  XMLElement * M1_ijElement = xmlDoc.NewElement("<M0|Ti.Tj|M1> + c.c.");
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
     for(int j = 0; j < A.process.size(); j++) {
       if(A.particle_type[j] == 0) continue;
+      XMLElement * M0_ijEntry = xmlDoc.NewElement(const_cast<char*>((std::to_string(i) + std::to_string(j)).c_str()));
+      XMLElement * M1_ijEntry = xmlDoc.NewElement(const_cast<char*>((std::to_string(i) + std::to_string(j)).c_str()));
       if(std::abs(M0_ij[std::to_string(j) + std::to_string(i)]) + std::abs(M1_ij[std::to_string(j) + std::to_string(i)]) != 0.) {
         M0_ij[std::to_string(i) + std::to_string(j)] = M0_ij[std::to_string(j) + std::to_string(i)];
         M1_ij[std::to_string(i) + std::to_string(j)] = M1_ij[std::to_string(j) + std::to_string(i)];
+        M0_ijEntry->SetText(std::real(M0_ij[std::to_string(i) + std::to_string(j)]));
+        M1_ijEntry->SetText(std::real(M1_ij[std::to_string(i) + std::to_string(j)]));
+        M0_ijElement->InsertEndChild(M0_ijEntry);
+        M1_ijElement->InsertEndChild(M1_ijEntry);
         continue;
       }
       double control;
@@ -250,13 +271,23 @@ int main() {
       }
       M1_ij[std::to_string(i) + std::to_string(j)] = M1ij*average_factor;
       M0_ij[std::to_string(i) + std::to_string(j)] = M0ij*average_factor;
+      M0_ijEntry->SetText(std::real(M0_ij[std::to_string(i) + std::to_string(j)]));
+      M1_ijEntry->SetText(std::real(M1_ij[std::to_string(i) + std::to_string(j)]));
+
+      M0_ijElement->InsertEndChild(M0_ijEntry);
+      M1_ijElement->InsertEndChild(M1_ijEntry);
       std::cout << "M2Control = " << M2_averaged_control << "\t" << M2_averaged << "\t" << M2_averaged/M2_averaged_control << std::endl;
       std::cout << "i = " << i << ", j = " << j << ": <M|T_i.T_j|M> = " << M0ij*average_factor << "\t" << control;
       if(order == "NLO") std::cout << "\t" << M1ij*average_factor;
       std::cout << std::endl;
     }
   }
+  pRoot->InsertEndChild(M0_ijElement);
+  pRoot->InsertEndChild(M1_ijElement);
+
   // <M|Ti.Tj Tk.Tl|M>
+  XMLElement * M0_ijklElement = xmlDoc.NewElement("<M0|Ti.Tj Tk.Tl|M0>");
+  XMLElement * M1_ijklElement = xmlDoc.NewElement("<M0|Ti.Tj Tk.Tl|M1> + c.c.");
   if(unresolved_str==" g g" || unresolved_str==" g g g") {
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
@@ -268,6 +299,8 @@ int main() {
           if(A.particle_type[l] == 0) continue;
           std::complex<double> M0ijkl = 0.;
           std::complex<double> M1ijkl = 0.;
+          XMLElement * M0_ijklEntry = xmlDoc.NewElement(const_cast<char*>((std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
+          XMLElement * M1_ijklEntry = xmlDoc.NewElement(const_cast<char*>((std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
           for(std::vector<int> hel_full : helicities) {  // color and helicity of the bra <M|
             std::string hel_string;
             for (int dummy = 0; dummy < hel_full.size(); dummy++) {
@@ -342,6 +375,10 @@ int main() {
 
           M0_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)] = M0ijkl*average_factor;
           M1_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)] = M1ijkl*average_factor;
+          M0_ijklEntry->SetText(std::real(M0_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]));
+          M1_ijklEntry->SetText(std::real(M1_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]));
+          M0_ijklElement->InsertEndChild(M0_ijklEntry);
+          M1_ijklElement->InsertEndChild(M1_ijklEntry);
           double M2_averaged;
           Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged);
           std::cout << "i = " << i << ", j = " << j << ", k = " << k << ", l = " << l << ": <M|T_i.T_j T_k.T_l|M> = " << M0ijkl*average_factor << "\t" << M0ijkl*average_factor/M2_averaged << std::endl;
@@ -350,6 +387,9 @@ int main() {
     }
   }
   }
+
+  pRoot->InsertEndChild(M0_ijklElement);
+  pRoot->InsertEndChild(M1_ijklElement);
 
   // <M|Ti.Tj Tk.Tl Ta.Tb|M>
   if(unresolved_str==" g g g") {
@@ -714,6 +754,7 @@ int main() {
   }
 
   // f^{a,d;b,c} <M|Ti^a {Tj^b, Tk^c} Tl^d|M> + h.c.
+  XMLElement * Q_ijklElement = xmlDoc.NewElement("f^{a,d;b,c} <M|Ti^a {Tj^b, Tk^c} Tl^d|M> + c.c.");
   if((order=="NLO" && unresolved_str==" g g") || unresolved_str==" g g g") {
   std::vector<std::vector<int>> configurations;
   for (int i = 0; i < A.process.size(); i++) {
@@ -726,9 +767,12 @@ int main() {
         for(int l = 0; l < A.process.size(); l++) {
           if(A.particle_type[l] == 0) continue;
           if(l == i) continue;
+          XMLElement * Q_ijklEntry = xmlDoc.NewElement((std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str());
           bool permutation = false;
           for(std::vector<int> configuration : configurations) {
             if(configuration==std::vector<int>({i,j,k,l})) {
+              Q_ijklEntry->SetText(std::real(Q_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]));
+              Q_ijklElement->InsertEndChild(Q_ijklEntry);
               permutation = true;
               break;
             }
@@ -867,6 +911,9 @@ int main() {
           configurations.push_back(std::vector<int>({i,k,j,l}));
           configurations.push_back(std::vector<int>({l,k,j,i}));
 
+          Q_ijklEntry->SetText(std::real(Q_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]));
+          Q_ijklElement->InsertEndChild(Q_ijklEntry);
+
           double M2_averaged;
           Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged);
           std::cout << "i = " << i << ", j = " << j << ", k = " << k << ", l = " << l << ": f^{abc} f^{cde} <M|Ti^a {Tj^b, Tk^d} Tl^e|M> = " << ffMijkl*average_factor << "\t" << ffMijkl*average_factor/M2_averaged << std::endl;
@@ -877,82 +924,6 @@ int main() {
   }
 
   std::cout << "Filled the Hashmaps" << std::endl;
-
-  // Define ClusterTree
-  std::vector<Tree<Cluster>> trees = GenTrees(nUnresolved);
-  for(int tree_counter = 0; tree_counter < trees.size(); tree_counter++) {
-    Tree<Cluster> clusterTree = trees[tree_counter];
-    std::cout << "tree_counter = " << tree_counter << std:: endl;
-    clusterTree.print();
-    std::cout << "#########################################################################" << std::endl;
-  }
-  Tree<Cluster>& tree = trees[1];
-  tree.print();
-  std::vector<Tree<Cluster>> sectors = GenSectors(flavor, tree, nBorn);
-
-  for(int sec_counter = 0; sec_counter < 1; sec_counter++) {
-  Tree<Cluster> clusterTree = sectors[sec_counter];
-  std::cout << "reference = " << clusterTree.getRoot()->children[0]->data.reference << std::endl;
-
-  // Generate phase-space points
-  double scale = 1;
-  double increment = 0.1;//std::sqrt(0.1);
-  while (scale > 1.e-7) {
-    scale *= increment;
-    std::vector<std::vector<std::vector<double>>> xParFull;
-    int level_int = 1;
-    std::vector<TreeNode<Cluster>*> level = clusterTree.getLevel(level_int);
-    while(level.size() > 0) {
-      int unresolved_level = 0;
-      for(TreeNode<Cluster>* node : level){
-        unresolved_level += node->data.unresolved;
-
-        std::vector<std::vector<double>> xPar;
-        for(int c = 0; c < node->data.unresolved; c++) {
-          double xi = std::pow(scale, 1);
-          double eta = 0.5;
-          double phi = rnd(0., 1.);
-          std::vector<double> xPar_c = {eta, xi, phi};
-          xPar.push_back(xPar_c);
-        }
-        if(node->children.size() > 1)
-          xParFull.push_back(xPar);
-      }
-      level_int++;
-      level = clusterTree.getLevel(level_int);
-    }
-    PhaseSpace ppFull = GenMomenta2(pp, clusterTree, xParFull);
-    ppFull.print();
-    double pp_full[4*(nBorn+nUnresolved)];
-    for(int i = 0; i < ppFull.momenta.size(); i++) {
-      for(int j = 0; j < 4; j++) {
-        pp_full[4*i+j] = (i<2?-1.:1.)*ppFull.momenta[i].components[j];
-        ppFull_rcl[i][j] = (i<2?-1.:1.)*ppFull.momenta[i].components[j];
-      }
-    }
-
-    Recola::compute_process_rcl(2, ppFull_rcl, order);
-    double M2_Full;
-    Recola::get_squared_amplitude_rcl(2, power + nUnresolved + delta_power/2, order, M2_Full);
-
-    double M2_approx;
-    if(unresolved_str == " g") {
-      if(order=="LO") M2_approx = soft_g_squared(pp_full, M0_ij, A)*average_factor_full/average_factor;
-      else if(order=="NLO") M2_approx = soft_g_squared_1l(pp_full, M0_ij, fM0_ijk, M1_ij, A)*average_factor_full/average_factor;
-    }
-    else if(unresolved_str == " d d~")
-      M2_approx = soft_qq_squared(pp_full, M0_ij, A)*average_factor_full/average_factor;
-    else if(unresolved_str == " g g")
-      if(order=="LO") M2_approx = soft_gg_squared(pp_full, M0_ij, M0_ijkl, A)*average_factor_full/average_factor;
-      else if(order=="NLO") M2_approx = soft_gg_squared_1l(pp_full, M0_ij, M1_ij, M0_ijkl, M1_ijkl, M0_ijkla, Q_ijkl, A, n_f)*average_factor_full/average_factor;
-    else if(unresolved_str == " g d d~")
-      M2_approx = soft_gqq_squared(pp_full, M0_ij, M0_ijkl, dM_ijk, A)*average_factor_full/average_factor;
-    //else if(unresolved_str == " g g g")
-    //  M2_approx = soft_ggg_squared(pp_full, M_ij, M0_ijkl, M_ijklab, dM_ijk, fM_ijkl)*average_factor_full/average_factor;
-
-    std::cout << scale << "\t" << M2_Full << "\t" << M2_approx << "\t" << M2_Full/M2_approx << "\t" << std::abs(1. - M2_Full/M2_approx) << std::endl;
-    outfile1 << scale << ", " << std::abs(1. - M2_Full/M2_approx) << std::endl;
-  }
-  }
-  outfile1.close();
+  XMLError eResult = xmlDoc.SaveFile(const_cast<char*>(("results/ColorCorrelators/" + process_str + ".xml").c_str()));
+  return 0;
 }

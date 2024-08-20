@@ -1,5 +1,280 @@
 #include "eikonal.hpp"
 
+const unsigned nLi2dat = 7;
+const double li2dat[] = {
+  +1.0000000000000000e0,
+  +2.7777777777777418e-2,
+  -2.7777777776967998e-4,
+  +4.7241117865795084e-6,
+  -9.1857320746997598e-8,
+  +1.8967653373154463e-9,
+  -3.9078560491306871e-11,
+};
+
+const double zeta2 = M_PI*M_PI/6.;
+
+double li2(double x)
+{
+  if (x > 1.) std::cout << "out-of-range argument" << std::endl;
+  if (x == 1.) return zeta2;
+  if (x > 0.5) return -li2(1.-x)-log(x)*log(1.-x)+zeta2;
+  if (x < -1.) {
+    const double ln = log(-x);
+    return -li2(1./x)-0.5*ln*ln-zeta2;
+  }
+
+  double result = 0.0;
+  const double y = -log(1.-x);
+  const double y2 = y*y;
+  for (int i = nLi2dat-1; i > 0; --i)
+    {
+      result += li2dat[i];
+      result *= y2;
+    }
+  result += li2dat[0]-0.25*y;
+  result *= y;
+
+  return result;
+}
+
+template <typename Field> struct LV {
+  std::vector<Field> components = std::vector<Field>(4);
+  LV(){
+    components = std::vector<Field>(4);
+  }
+  LV(std::vector<Field> lv):components(lv){};
+  LV(Field* lv) {
+    for(int i = 0; i < 4; i++) components[i] = lv[i];
+  }
+  void print() const {
+    std::cout << "{" << components[0] << ", "
+                     << components[1] << ", "
+                     << components[2] << ", "
+                     << components[3] << "}" << std::endl;
+  }
+
+  // Define the multiplication operator for Field1 * LV<Field2>
+  template <typename Field1>
+  LV<typename std::common_type<Field1, Field>::type> operator*(const Field1& scalar) const {
+    LV<typename std::common_type<Field1, Field>::type> result;
+    for (int i = 0; i < 4; ++i) {
+      result.components[i] = scalar*components[i];
+    }
+    return result;
+  }
+};
+
+template <typename Field> struct LM {
+  std::vector<std::vector<Field>> components = std::vector<std::vector<Field>>(4, std::vector<Field>(4));
+  LM(){
+    components = std::vector<std::vector<Field>>(4, std::vector<Field>(4));
+  }
+  LM(std::vector<std::vector<Field>> lm):components(lm){};
+  void print() const {
+    std::cout << "{";
+    for(int i = 0; i < 4; i++) {
+      std::cout << "{";
+      for(int j = 0; j < 4; j++) {
+        std::cout << components[i][j] << ",";
+      }
+      std::cout << "}," << std::endl;
+    }
+    std::cout << std::endl;
+  }
+
+  // Define the multiplication operator for Field1 * LM<Field2>
+  template <typename Field1>
+  LM<typename std::common_type<Field1, Field>::type> operator*(const Field1& scalar) const {
+    LM<typename std::common_type<Field1, Field>::type> result;
+    for (int i = 0; i < 4; ++i) for(int j = 0; j < 4; j++) {
+      result.components[i][j] *= scalar;
+    }
+    return result;
+  }
+
+  // Define the multiplication operator for LM<Field1> * LM<Field2>
+  template <typename Field1>
+  LM<typename std::common_type<Field1, Field>::type> operator*(const LM<Field1>& m) const {
+    LM<typename std::common_type<Field1, Field>::type> result;
+    for (int i = 0; i < 4; ++i) for(int j = 0; j < 4; j++) for(int k = 0; k < 4; k++) {
+      result.components[i][j] += m.components[i][k]*this->components[k][j]*(k==0?1.:-1.);
+    }
+    return result;
+  }
+
+  LM<Field> transpose() {
+    LM<Field> output;
+    for(int mu1 = 0; mu1 < 4; mu1++) for(int mu2 = 0; mu2 < 4; mu2++) {
+      output.components[mu1][mu2] = this->components[mu2][mu1];
+    }
+    return output;
+  }
+
+  Field trace() {
+    Field output = 0;
+    for(int i = 0; i < 4; i++) {
+      output += (i==0?1.:-1.)*components[i][i];
+    }
+    return output;
+  }
+};
+
+template <typename Field1, typename Field2>
+LV<typename std::common_type<Field1, Field2>::type> operator*(const Field1& scalar, const LV<Field2>& v) {
+  LV<typename std::common_type<Field1, Field2>::type> output = v*scalar;
+  return output;
+}
+
+template <typename Field1, typename Field2>
+LV<typename std::common_type<Field1, Field2>::type> operator/(const LV<Field1>& v, const Field2& scalar) {
+  LV<typename std::common_type<Field1, Field2>::type> result;
+  for (size_t i = 0; i < 4; ++i) {
+    result.components[i] = v.components[i]/scalar;
+  }
+  return result;
+}
+
+template <class Field1, class Field2>
+LV<typename std::common_type<Field1, Field2>::type> operator+(const LV<Field1>& v1, const LV<Field2>& v2) {
+  LV<typename std::common_type<Field1, Field2>::type> output;
+  for(int i = 0; i < 4; i++) {
+    output.components[i] = v1.components[i] + v2.components[i];
+  }
+  return output;
+}
+
+template <class Field1, class Field2>
+LV<typename std::common_type<Field1, Field2>::type> operator-(const LV<Field1>& v1, const LV<Field2>& v2) {
+  LV<typename std::common_type<Field1, Field2>::type> output;
+  for(int i = 0; i < 4; i++) {
+    output.components[i] = v1.components[i] - v2.components[i];
+  }
+  return output;
+}
+
+template <class Field1, class Field2>
+typename std::common_type<Field1, Field2>::type operator*(const LV<Field1>& v1, const LV<Field2>& v2) {
+  typename std::common_type<Field1, Field2>::type output;
+  for(int i = 0; i < 4; i++) {
+    output += (i==0?1.:-1.)*v1.components[i]*v2.components[i];
+  }
+  return output;
+}
+
+template <class Field1, class Field2>
+LV<typename std::common_type<Field1, Field2>::type> operator*(const LM<Field1>& m, const LV<Field2>& v) {
+  LV<typename std::common_type<Field1, Field2>::type> output;
+  for(int i = 0; i < 4; i++) for(int j = 0; j < 4; j++) {
+    output.components[i] += m.components[i][j]*v.components[j]*(j==0?1.:-1.);
+  }
+  return output;
+}
+
+LV<double> j1(const LV<double>& p, const LV<double>& q) {
+  return p/(p*q);
+}
+
+LV<std::complex<double>> gamma11(const LV<double>& p1, const LV<double>& p2, const LV<double>& q) {
+  if(p1*p2<1.e-8) return LV<std::complex<double>>({0.,0.,0.,0.});
+  std::complex<double> log = std::log((p1*p2)*mu*mu/(p1*q)/(p2*q)/2.);
+  if((p1.components[0] < 0) and (p2.components[0] < 0)) log = log + I*M_PI;
+  else log = log - I*M_PI;
+  std::complex<double> prefactor = -1./12.*(std::pow(M_PI, 2) + 6.*std::pow(log, 2))/std::pow(4.*M_PI, 2);
+  LV<std::complex<double>> output = prefactor*(p1/(p1*q) - p2/(p2*q));
+
+  return output;
+}
+
+LM<double> gamma20(const LV<double>& p, const LV<double>& q1, const LV<double>& q2) {
+  LM<double> output;
+  for(int mu1 = 0; mu1 < 4; mu1++) for(int mu2 = 0; mu2 < 4; mu2++) {
+    output.components[mu1][mu2] = 1./(p*(q1 + q2))*(p.components[mu1]*p.components[mu2]/2.*(1./(p*q1) - 1./(p*q2))
+        + 1./(q1*q2)*(p.components[mu1]*q1.components[mu2] - p.components[mu2]*q2.components[mu1] + 1./2.*(p*q2 - p*q1)*metric[mu1][mu2]));
+  }
+  return output;
+}
+
+LM<std::complex<double>> gamma21(const LV<double>& pi, const LV<double>& pj, const LV<double>& q1, const LV<double>& q2, int nl=5) {
+  LV<double> pi_perp = pi - (pi*q2)/(q1*q2)*q1 - (pi*q1)/(q1*q2)*q2;
+  LV<double> pj_perp = pj - (pj*q2)/(q1*q2)*q1 - (pj*q1)/(q1*q2)*q2;
+  LM<double> g_perp;
+  for(int mu1 = 0; mu1 < 4; mu1++) for(int mu2 = 0; mu2 < 4; mu2++) {
+    g_perp.components[mu1][mu2] = (metric[mu1][mu2] - (q1.components[mu1]*q2.components[mu2] + q1.components[mu2]*q2.components[mu1])/(q1*q2));
+  }
+
+  LM<std::complex<double>> output;
+  bool analytic_continuation = false;
+  if((pi.components[0] < 0.) and (pj.components[0] < 0.)) analytic_continuation = true;
+  std::complex<double> logc = std::log(2.*q1*q2/mu/mu) - I*M_PI;
+  double l1 = std::log((pi*q1)/(pi*q1 + pi*q2));
+  double l2 = std::log((pj*q2)/(pj*q1 + pj*q2));
+  double L1 = li2(1. - pj*q2/(pj*q1 + pj*q2));
+  double L2 = li2(1. - pi*q1/(pi*q1 + pi*q2));
+  std::complex<double> L3 = li2(1. - (pi*pj)*(q1*q2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2));
+  if(analytic_continuation) L3 = L3 + 2.*M_PI*I*std::log(1. - (pi*pj)*(q1*q2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2));
+
+  double s1j = 2.*(pj*q1);
+  double s1i = 2.*(pi*q1);
+  double s2j = 2.*(pj*q2);
+  double s2i = 2.*(pi*q2);
+  double sij = 2.*(pi*pj);
+  double s12 = 2.*(q1*q2);
+
+  std::complex<double> l3 = std::log(sij*s12/s1i/s2j);
+  if(analytic_continuation) l3 = l3 - 2.*M_PI*I;
+  std::vector<std::complex<double>> JHat(3);
+  JHat[0] = (-2*(-(s1j*s2i) + s1i*s2j + s12*sij))/(s1i*s2j);
+  JHat[1] = -((l3*(-(s1j*s2i) + s1i*s2j + s12*sij))/(s1i*s2j));
+  JHat[2] = (-3.*(2*std::pow(l2,2) + 2*l2*l3 + std::pow(l3,2) + 2.*(L2 + L3)) - (6*std::pow(l1,2)*(-(s1j*s2i) + s1i*s2j + s12*sij))/(s1i*s2j) - (6*l1*(l2 + l3)*(-(s1j*s2i) + s1i*s2j + s12*sij))/(s1i*s2j) +
+     (-4*C_A*s1i*s1j*s2i*s2j + 4*C_A*std::pow(s1i,2)*std::pow(s2j,2) + 6*C_A*L1*s1j*s2i*(s1i + s2i)*(s1j + s2j) + 6*C_A*std::pow(l2,2)*s1j*s2i*(s1i + s2i)*(s1j + s2j) + 6*C_A*L2*s1j*s2i*(s1i + s2i)*(s1j + s2j) +
+        6*C_A*l2*l3*s1j*s2i*(s1i + s2i)*(s1j + s2j) + 3*C_A*std::pow(l3,2)*s1j*s2i*(s1i + s2i)*(s1j + s2j) + 6*C_A*L3*s1j*s2i*(s1i + s2i)*(s1j + s2j) - 6*C_A*L1*s1i*(s1i + s2i)*s2j*(s1j + s2j) - 6*C_A*L1*s12*(s1i + s2i)*(s1j + s2j)*sij -
+        6*C_A*std::pow(l2,2)*s12*(s1i + s2i)*(s1j + s2j)*sij - 6*C_A*L2*s12*(s1i + s2i)*(s1j + s2j)*sij - 6*C_A*l2*l3*s12*(s1i + s2i)*(s1j + s2j)*sij - 3*C_A*std::pow(l3,2)*s12*(s1i + s2i)*(s1j + s2j)*sij -
+        6*C_A*L3*s12*(s1i + s2i)*(s1j + s2j)*sij + 8*nl*s1i*s2j*(s1j*s2i - s1i*s2j)*T_F)/(C_A*s1i*(s1i + s2i)*s2j*(s1j + s2j)))/6.;
+
+  std::vector<std::complex<double>> Jpm(3);
+  Jpm[0] = (-4*(s1i*s1j*s2i - s1i*s2i*s2j + s12*s2i*sij))/((s1i + s2i)*(s1j*s2i + s1i*s2j - s12*sij));
+  Jpm[1] = (-2.*(l3*s1i*s1j*s2i - l3*s1i*s2i*s2j + l3*s12*s2i*sij))/((s1i + s2i)*(s1j*s2i + s1i*s2j - s12*sij));
+  Jpm[2] = (-((6*std::pow(l1,2) + 6*l1*l3 + 3.*std::pow(l3,2) + 2*std::pow(M_PI,2))*s12*s2i*sij*(s2i*(s1j + s2j) - s12*sij)) -
+     std::pow(s1i,2)*(s1j + s2j)*((6*std::pow(l1,2) + 6*(l1 + l2)*l3 + 3.*std::pow(l3,2) + 2*(3*std::pow(l2,2) + std::pow(M_PI,2)))*s2i*(s1j - s2j) - 6*l1*(l1 + l3)*s12*sij) -
+     s1i*((6*std::pow(l1,2) + 6*(l1 + l2)*l3 + 3.*std::pow(l3,2) + 2*(3*std::pow(l2,2) + std::pow(M_PI,2)))*std::pow(s2i,2)*(s1j - s2j)*(s1j + s2j) +
+        2*s12*s2i*(-6*l1*(l1 + l3)*s1j + (6*std::pow(l1,2) + 6*l1*l3 + 3.*std::pow(l3,2) + 2*std::pow(M_PI,2))*s2j)*sij + 6*l1*(l1 + l3)*std::pow(s12,2)*std::pow(sij,2)))/
+   (3.*(s1i + s2i)*(s1j*s2i + s1i*s2j - s12*sij)*((s1i + s2i)*(s1j + s2j) - s12*sij));
+
+  std::vector<std::complex<double>> JpmSwapped(3);
+  JpmSwapped[0] = (-4*(-(s1i*s1j*s2j) + s1j*s2i*s2j + s12*s1j*sij))/((s1j + s2j)*(s1j*s2i + s1i*s2j - s12*sij));
+  JpmSwapped[1] = (-2.*(-(l3*s1i*s1j*s2j) + l3*s1j*s2i*s2j + l3*s12*s1j*sij))/((s1j + s2j)*(s1j*s2i + s1i*s2j - s12*sij));
+  JpmSwapped[2] = (-((6*std::pow(l2,2) + 6*l2*l3 + 3.*std::pow(l3,2) + 2*std::pow(M_PI,2))*s12*s1j*sij*(s1j*(s1i + s2i) - s12*sij)) -
+     (s1i + s2i)*std::pow(s2j,2)*((6*std::pow(l2,2) + 6*(l1 + l2)*l3 + 3.*std::pow(l3,2) + 2*(3*std::pow(l1,2) + std::pow(M_PI,2)))*s1j*(-s1i + s2i) - 6*l2*(l2 + l3)*s12*sij) -
+     s2j*((6*std::pow(l2,2) + 6*(l1 + l2)*l3 + 3.*std::pow(l3,2) + 2*(3*std::pow(l1,2) + std::pow(M_PI,2)))*std::pow(s1j,2)*(-s1i + s2i)*(s1i + s2i) +
+        2*s12*s1j*((6*std::pow(l2,2) + 6*l2*l3 + 3.*std::pow(l3,2) + 2*std::pow(M_PI,2))*s1i - 6*l2*(l2 + l3)*s2i)*sij + 6*l2*(l2 + l3)*std::pow(s12,2)*std::pow(sij,2)))/
+   (3.*(s1j + s2j)*(s1j*s2i + s1i*s2j - s12*sij)*((s1i + s2i)*(s1j + s2j) - s12*sij));
+
+  std::vector<std::complex<double>> Jpp(3);
+  Jpp[0] = -2.;
+  Jpp[1] = -l3;
+  Jpp[2] = (-2*(std::pow(l1,2) + l1*l2 + std::pow(l2,2)) - 2*(l1 + l2)*l3 - std::pow(l3,2) - 2.*(L1 + L2 + L3))/2.;
+
+  std::vector<std::complex<double>> prefactor(3);
+  prefactor[0] = 1.;
+  prefactor[1] = -logc;
+  prefactor[2] = (6.*std::pow(logc, 2) - std::pow(M_PI, 2))/12.;
+
+  std::complex<double> JHat_ep0 = JHat[0]*prefactor[2] + JHat[1]*prefactor[1] + JHat[2]*prefactor[0];
+  std::complex<double> Jpm_ep0 = Jpm[0]*prefactor[2] + Jpm[1]*prefactor[1] + Jpm[2]*prefactor[0];
+  std::complex<double> JpmSwapped_ep0 = JpmSwapped[0]*prefactor[2] + JpmSwapped[1]*prefactor[1] + JpmSwapped[2]*prefactor[0];
+  std::complex<double> Jpp_ep0 = Jpp[0]*prefactor[2] + Jpp[1]*prefactor[1] + Jpp[2]*prefactor[0];
+
+  for(int mu1 = 0; mu1 < 4; mu1++) for(int mu2 = 0; mu2 < 4; mu2++) {
+    output.components[mu1][mu2] = (JHat_ep0*g_perp.components[mu1][mu2]
+                                + Jpp_ep0*(q1*q2)/(pi*q1)/(pj*q2)*(pi_perp.components[mu1]*pj_perp.components[mu2] - pj_perp.components[mu1]*pi_perp.components[mu2])
+                                + Jpm_ep0*(g_perp.components[mu1][mu2] - 2.*pi_perp.components[mu1]*pi_perp.components[mu2]/(pi_perp*pi_perp))
+                                + JpmSwapped_ep0*(g_perp.components[mu1][mu2] - 2.*pj_perp.components[mu1]*pj_perp.components[mu2]/(pj_perp*pj_perp)))*2./s12/std::pow(4.*M_PI, 2);
+
+  }
+
+  return output;
+}
+
 std::unordered_map<std::string, std::complex<double>> J_g_eikonal(double *pp, double *q, amplitude& A) {
   std::unordered_map<std::string, std::complex<double>> J;
   for (int i = 0; i < A.process.size(); i++) { // particle index
@@ -560,49 +835,46 @@ double soft_qq_squared(double *pp_full, std::unordered_map<std::string, std::com
 }
 
 double soft_gg_squared(double*pp_full, std::unordered_map<std::string, std::complex<double>> Mij, std::unordered_map<std::string, std::complex<double>> Mijkl, amplitude& A) {
-  double q1[4], q2[4];
-  part(pp_full, q1, A.process.size()*4, A.process.size()*4 + 4);
-  part(pp_full, q2, A.process.size()*4 + 4, A.process.size()*4 + 8);
-  double q12[4];
-  add_arr(q1, q2, q12, 4);
+  double q1_arr[4], q2_arr[4];
+  part(pp_full, q1_arr, A.process.size()*4, A.process.size()*4 + 4);
+  part(pp_full, q2_arr, A.process.size()*4 + 4, A.process.size()*4 + 8);
+  LV<double> q1(q1_arr);
+  LV<double> q2(q2_arr);
   double approx = 0;
   for(int i = 0; i < A.process.size(); i++) {
     if(A.process[i] == 1) continue;
-    double pi[4];
-    part(pp_full, pi, i*4, i*4 + 4);
+    double pi_arr[4];
+    part(pp_full, pi_arr, i*4, i*4 + 4);
+    LV<double> pi(pi_arr);
     for(int j = 0; j < A.process.size(); j++) {
       if(A.process[j] == 1) continue;
-      double pj[4];
-      part(pp_full, pj, 4*j, 4*j + 4);
-      double piq1 = minkovski(pi, q1);
-      double piq2 = minkovski(pi, q2);
-      double piq12 = minkovski(pi, q12);
-      double pjq1 = minkovski(pj, q1);
-      double pjq2 = minkovski(pj, q2);
-      double pjq12 = minkovski(pj, q12);
-      double q1q2 = minkovski(q1, q2);
-      double pipj = minkovski(pi, pj);
+      double pj_arr[4];
+      part(pp_full, pj_arr, 4*j, 4*j + 4);
+      LV<double> pj(pj_arr);
 
       // Reducible part
-      double Sij = minkovski(pi, pj)/minkovski(pi, q1)/minkovski(pj, q1);
       for(int k = 0; k < A.process.size(); k++) {
         if(A.process[k] == 1) continue;
-        double pk[4];
-        part(pp_full, pk, 4*k, 4*k + 4);
+        double pk_arr[4];
+        part(pp_full, pk_arr, 4*k, 4*k + 4);
+        LV<double> pk(pk_arr);
         for(int l = 0; l < A.process.size(); l++) {
           if(A.process[l] == 1) continue;
-          double pl[4];
-          part(pp_full, pl, 4*l, 4*l + 4);
-          double Skl = minkovski(pk, pl)/minkovski(pk, q2)/minkovski(pl, q2);
-          approx += std::pow(gs, 4)*Sij*Skl*(std::real(Mijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)])
-                                                   + std::real(Mijkl[std::to_string(k) + std::to_string(l) + std::to_string(i) + std::to_string(j)]))/2. ;
+          double pl_arr[4];
+          part(pp_full, pl_arr, 4*l, 4*l + 4);
+          LV<double> pl(pl_arr);
+          approx += std::pow(gs, 4)*(j1(pi, q1)*j1(pj, q1))*(j1(pk, q2)*j1(pl, q2))*(std::real(Mijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)])
+                                                                                   + std::real(Mijkl[std::to_string(k) + std::to_string(l) + std::to_string(i) + std::to_string(j)]))/2. ;
         }
       }
       // Irreducible part
-      double Sij2_3_control = 1./q1q2/q1q2*(piq1*pjq2 + piq2*pjq1)/piq12/pjq12 - pipj*pipj/2./piq1/pjq2/piq2/pjq1*(2. - (piq1*pjq2 + piq2*pjq1)/piq12/pjq12)
-        + pipj/2./q1q2*(2./piq1/pjq2 + 2./pjq1/piq2 - 1./piq12/pjq12*(4 + std::pow(piq1*pjq2 + piq2*pjq1, 2)/piq1/pjq2/piq2/pjq1));
-
-      approx += -std::pow(gs, 4)*C_A*Sij2_3_control*std::real(Mij[std::to_string(i) + std::to_string(j)]);
+      approx += std::pow(gs, 4)*C_A*std::real(Mij[std::to_string(i) + std::to_string(j)])
+          *((gamma20(pi, q1, q2)*gamma20(pj, q1, q2).transpose()).trace()
+            +j1(pi, q1)*(gamma20(pi, q1, q2)*j1(pj, q2))
+            -j1(pi, q1)*(gamma20(pj, q1, q2)*j1(pj, q2))
+            -1./2.*(j1(pi, q1)*j1(pi, q1))*(j1(pi, q2)*j1(pj, q2))
+            -1./2.*(j1(pj, q2)*j1(pj, q2))*(j1(pi, q1)*j1(pj, q1))
+            +3./4.*(j1(pi, q1)*j1(pj, q1))*(j1(pi, q2)*j1(pj, q2)));
     }
   }
   return approx;
@@ -1152,30 +1424,129 @@ double soft_ggg_squared(double* pp_full, std::unordered_map<std::string, std::co
 
 double soft_g_squared_1l(double *pp_full, std::unordered_map<std::string, std::complex<double>> M0_ij, std::unordered_map<std::string, std::complex<double>> fM_ijk,
   std::unordered_map<std::string, std::complex<double>> M1_ij, amplitude& A) {
-  double q[4];
-  part(pp_full, q, A.process.size()*4, A.process.size()*4 + 4);
+  double q_arr[4];
+  part(pp_full, q_arr, A.process.size()*4, A.process.size()*4 + 4);
+  LV<double> q(q_arr);
   double approx = 0;
   for(int i = 0; i < A.process.size(); i++) {
     if(A.process[i] == 1) continue;
-    double pi[4];
-    part(pp_full, pi, i*4, i*4 + 4);
+    double pi_arr[4];
+    part(pp_full, pi_arr, i*4, i*4 + 4);
+    LV<double> pi(pi_arr);
+    if(i < 2) pi = (-1.)*pi;
     for(int j = 0; j < A.process.size(); j++) {
       if(A.process[j] == 1) continue;
       if(i == j) continue;
-      double lam_ij = ((i<2&&j<2)?1.:-1.);
-      double pj[4];
-      part(pp_full, pj, j*4, j*4 + 4);
-      approx += -gs*gs*minkovski(pi, pj)/minkovski(pi, q)/minkovski(pj, q)*std::real(M1_ij[std::to_string(i) + std::to_string(j)]);
-      approx += -gs*gs*gs*gs*C_A/4./std::pow(M_PI, 2)*minkovski(pi, pj)/minkovski(pi, q)/minkovski(pj, q)/2.
-        *(5.*std::pow(M_PI, 2) - 6.*std::pow(std::log(minkovski(pi, pj)*mu*mu/minkovski(pi, q)/minkovski(pj, q)/2.), 2))/12.*std::real(M0_ij[std::to_string(i) + std::to_string(j)]);
+      double pj_arr[4];
+      part(pp_full, pj_arr, j*4, j*4 + 4);
+      LV<double> pj(pj_arr);
+      if(j < 2) pj = (-1.)*pj;
+      approx += -gs*gs*(j1(pi, q)*j1(pj, q))*std::real(M1_ij[std::to_string(i) + std::to_string(j)]);
+      approx += gs*gs*gs*gs*C_A*2.*std::real(gamma11(pi, pj, q)*j1(pi, q))*std::real(M0_ij[std::to_string(i) + std::to_string(j)]);
       for(int k = 0; k < A.process.size(); k++) {
         if(A.process[k] == 1) continue;
         if((k == i) or (k == j)) continue;
-        double pk[4];
-        part(pp_full, pk, k*4, 4*k + 4);
-        approx += -gs*gs*gs*gs/4./std::pow(M_PI, 2)*minkovski(pk, pi)/minkovski(pk, q)/minkovski(pi, q)/2.
-          *2.*M_PI*std::log(minkovski(pi, pj)*mu*mu/minkovski(pi, q)/minkovski(pj, q)/2.)*lam_ij*std::real(fM_ijk[std::to_string(k) + std::to_string(i) + std::to_string(j)]);
-        //std::cout << fM_ijk[std::to_string(k) + std::to_string(i) + std::to_string(j)] << std::endl;
+        double pk_arr[4];
+        part(pp_full, pk_arr, k*4, 4*k + 4);
+        LV<double> pk(pk_arr);
+        if(k < 2) pk = (-1.)*pk;
+        approx += gs*gs*gs*gs*2.*std::imag(gamma11(pj, pk, q)*j1(pi, q))*std::real(fM_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]);
+      }
+    }
+  }
+  return approx;
+}
+
+double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, std::complex<double>> M0ij,
+    std::unordered_map<std::string, std::complex<double>> M1ij, std::unordered_map<std::string, std::complex<double>> M0ijkl,
+    std::unordered_map<std::string, std::complex<double>> M1ijkl, std::unordered_map<std::string, std::complex<double>> M0ijkla,
+    std::unordered_map<std::string, std::complex<double>> Q0ijkl, amplitude& A, int nl) {
+  double q1_arr[4], q2_arr[4];
+  part(pp_full, q1_arr, A.process.size()*4, A.process.size()*4 + 4);
+  part(pp_full, q2_arr, A.process.size()*4 + 4, A.process.size()*4 + 8);
+  LV<double> q1(q1_arr);
+  LV<double> q2(q2_arr);
+  double approx = 0;
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.process[i] == 1) continue;
+    double pi_arr[4];
+    part(pp_full, pi_arr, i*4, i*4 + 4);
+    LV<double> pi(pi_arr);
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.process[j] == 1) continue;
+      double pj_arr[4];
+      part(pp_full, pj_arr, 4*j, 4*j + 4);
+      LV<double> pj(pj_arr);
+
+      for(int k = 0; k < A.process.size(); k++) {
+        if(A.process[k] == 1) continue;
+        double pk_arr[4];
+        part(pp_full, pk_arr, 4*k, 4*k + 4);
+        LV<double> pk(pk_arr);
+        for(int l = 0; l < A.process.size(); l++) {
+          if(A.process[l] == 1) continue;
+          double pl_arr[4];
+          part(pp_full, pl_arr, 4*l, 4*l + 4);
+          LV<double> pl(pl_arr);
+
+          // Reducible part (tree level current)
+          if((i != j) and (k != l))
+            approx += std::pow(gs, 4)*(j1(pi, q1)*j1(pj, q1))*(j1(pk, q2)*j1(pl, q2))*(std::real(M1ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)])
+                                                                                     + std::real(M1ijkl[std::to_string(k) + std::to_string(l) + std::to_string(i) + std::to_string(j)]))/2. ;
+
+          // Independent emmision
+          if((i != j) and (k != l)) {
+            approx += std::pow(gs, 6)*(((-1.)*j1(pk, q1)*j1(pl, q1))*C_A*2.*std::real(gamma11(pi, pj, q2)*j1(pi, q2))
+                                      +((-1.)*j1(pk, q2)*j1(pl, q2))*C_A*2.*std::real(gamma11(pi, pj, q1)*j1(pi, q1)))
+                        *(std::real(M0ijkl[std::to_string(k) + std::to_string(l) + std::to_string(i) + std::to_string(j)])
+                        + std::real(M0ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]))/2.;
+            for(int a = 0; a < A.process.size(); a++) {
+              if(A.process[a] == 1) continue;
+              double pa_arr[4];
+              part(pp_full, pa_arr, 4*a, 4*a + a);
+              LV<double> pa(pa_arr);
+              if((a != k) and (a != l)) {
+                //approx += std::pow(gs, 6)*std::real(M0ijkla[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l) + std::to_string(a)])/2.
+                //  *(((-1.)*j1(pi, q1)*j1(pj, q1))*std::imag(gamma11(pl, pa, q2)*j1(pk, q2))
+                //  + ((-1.)*j1(pi, q2)*j1(pj, q2))*std::imag(gamma11(pl, pa, q1)*j1(pk, q1)));
+              }
+            }
+          }
+
+          // Quadupole operator contribution
+          approx += std::pow(gs, 6)*(-1.)*std::real((gamma11(pk, pl, q1)*j1(pi, q1))*(j1(pj, q2)*j1(pi, q2))/4.
+                                                   +(gamma11(pk, pl, q2)*j1(pi, q2))*(j1(pj, q1)*j1(pi, q1))/4.
+                                                   +(gamma11(pj, pk, q1)*(gamma20(pi, q1, q2)*j1(pl, q2)))/4.
+                                                   +(gamma11(pj, pk, q2)*(gamma20(pi, q2, q1)*j1(pl, q1)))/4.)
+                    *std::real(Q0ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
+          if(i != j)
+            approx += std::pow(gs, 6)*(-1.)*std::real(j1(pl, q1)*(gamma21(pi, pj, q1, q2, nl)*j1(pk, q2))
+                                                     +j1(pl, q2)*(gamma21(pi, pj, q2, q1, nl)*j1(pk, q1)))/8.
+                    *std::real(Q0ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
+
+
+
+        }
+      }
+      // Irreducible part (tree level current)
+      approx += std::pow(gs, 4)*C_A*std::real(M1ij[std::to_string(i) + std::to_string(j)])
+          *((gamma20(pi, q1, q2)*gamma20(pj, q1, q2).transpose()).trace()
+            +j1(pi, q1)*(gamma20(pi, q1, q2)*j1(pj, q2))
+            -j1(pi, q1)*(gamma20(pj, q1, q2)*j1(pj, q2))
+            -1./2.*(j1(pi, q1)*j1(pi, q1))*(j1(pi, q2)*j1(pj, q2))
+            -1./2.*(j1(pj, q2)*j1(pj, q2))*(j1(pi, q1)*j1(pj, q1))
+            +3./4.*(j1(pi, q1)*j1(pj, q1))*(j1(pi, q2)*j1(pj, q2)));
+
+      if(i != j) {
+        approx += std::pow(gs, 6)*std::pow(C_A, 2)*2.*std::real(j1(pi, q1)*(gamma21(pi, pj, q1, q2)*j1(pi, q2))/8.
+                                                               +j1(pi, q2)*(gamma21(pi, pj, q2, q1)*j1(pi, q1))/8.
+                                                               -j1(pi, q1)*(gamma21(pi, pj, q1, q2)*j1(pj, q2))/8.
+                                                               -j1(pi, q2)*(gamma21(pi, pj, q2, q1)*j1(pj, q1))/8.
+                                                               -(gamma11(pi, pj, q1)*j1(pi, q1))*(j1(pi, q2)*j1(pj, q2))
+                                                               -(gamma11(pi, pj, q2)*j1(pi, q2))*(j1(pi, q1)*j1(pj, q1))
+                                                               +(gamma20(pi, q1, q2)*gamma21(pi, pj, q1, q2).transpose()).trace()/4.
+                                                               +(gamma20(pi, q2, q1)*gamma21(pi, pj, q2, q1).transpose()).trace()/4.)
+                *std::real(M0ij[std::to_string(i) + std::to_string(j)]);
       }
     }
   }

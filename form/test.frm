@@ -7,7 +7,9 @@ Off Statistics;
 
 #include declarations.h
 
-*l test = Tc(i1,cOli1,cOli2,cOli3)*cOlf(cOli1,cOli3,cOli4);
+l test = cOlf(cOli1, cOli2, cOli3)*cOlf(cOli3, cOli4, cOli5)*(cOlT(cOli6, cOli7, cOli1)*(cOlT(cOli7, cOli8, cOli4)*cOlT(cOli8, cOli9, cOli5) + cOlT(cOli7, cOli8, cOli5)*cOlT(cOli8, cOli9, cOli4))*cOlT(cOli9, cOli10, cOli2)
+                                                             +cOlT(cOli6, cOli7, cOli2)*(cOlT(cOli7, cOli8, cOli4)*cOlT(cOli8, cOli9, cOli5) + cOlT(cOli7, cOli8, cOli5)*cOlT(cOli8, cOli9, cOli4))*cOlT(cOli9, cOli10, cOli1));
+#call Cvitanovic
 *
 *id Tc(i1, cOli1, cOli2, cOli3) = Tc(i1, cOli2, cOli1, cOli3) + i_*cOlf(cOli1, cOli2, cOli5)*Tc(i1, cOli5, cOli3);
 *sum cOli5;
@@ -16,10 +18,6 @@ Off Statistics;
 *id cOlf(cOli1?, cOli2?, cOli3?)*cOlf(cOli1?, cOli2?, cOli4?) = CA*delta(cOli3, cOli4);
 *id delta(cOli4?, cOli4?) = NF;
 *id delta(cOli4?, cOli5?)*Tc(i1?, cOli2?, cOli4?) = Tc(i1, cOli2, cOli5);
-cf Int;
-s s1,s2,s3,s4;
-l test = Int(0, 1)*Int(-1,1);
-id Int(s1?, s2?)*Int(s3?, s4?) = Int(s1+s3,s2+s4);
 
 
 *b Tc, cOlf;
