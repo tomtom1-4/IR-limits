@@ -65,14 +65,14 @@ l test1 = (T(i1, cOli1)*(T(i2, cOli2)*T(i3, cOli3) + T(i3, cOli3)*T(i2, cOli2))*
 
 l test2 = i_*cOlf(cOli1, cOli2, cOli3)*T(i1, cOli1)*T(i2, cOli2)*T(i3, cOli3)*(1 + replace_(q1,q2,q2,q1))*(1 + replace_(i_, -i_, phase, phaseConj, gamma21, gamma21Conj))
   *(summeP(i1)*summeP(i2)*summeP(i3)*(-gamma11(pi2,pi3,q1,N4_?)*gamma20(pi1,q1,q2,N4_?,N5_?)*j1(pi1,q2,N5_?)*phase(i2,i3)*CA/2
-                                   +gamma11(pi2,pi3,q1,N4_?)*gamma20(pi1,q1,q2,N4_?,N5_?)*j1(pi2,q2,N5_?)*phase(i2,i3)*CA/2
-                                   +gamma11(pi2,pi3,q1,N4_?)*gamma20(pi2,q1,q2,N4_?,N5_?)*j1(pi1,q2,N5_?)*phase(i2,i3)*CA/2
-                                   -gamma20(pi1,q1,q2,N4_?,N5_?)*gamma21(pi2,pi3,q1,q2,N4_?,N5_?)*CA/4
-                                   +gamma11(pi2,pi3,q1,N4_?)*j1(pi1,q1,N4_?)*j1(pi1,q2,N5_?)*j1(pi2,q2,N5_?)*phase(i2,i3)*CA*3/4
-                                   +gamma11(pi2,pi3,q1,N4_?)*j1(pi1,q1,N4_?)*j1(pi2,q2,N5_?)*j1(pi3,q2,N5_?)*phase(i2,i3)*CA*1/2
-                                   -gamma11(pi2,pi3,q1,N4_?)*j1(pi1,q2,N5_?)*j1(pi2,q1,N4_?)*j1(pi2,q2,N5_?)*phase(i2,i3)*CA*1/4
-                                   -gamma21(pi1,pi2,q1,q2,N4_?,N5_?)*j1(pi1,q1,N4_?)*j1(pi3,q2,N5_?)*CA/2
-                                   +gamma21(pi1,pi2,q1,q2,N4_?,N5_?)*j1(pi2,q1,N4_?)*j1(pi3,q2,N5_?)*CA/4));
+                                      +gamma11(pi2,pi3,q1,N4_?)*gamma20(pi1,q1,q2,N4_?,N5_?)*j1(pi2,q2,N5_?)*phase(i2,i3)*CA/2
+                                      +gamma11(pi2,pi3,q1,N4_?)*gamma20(pi2,q1,q2,N4_?,N5_?)*j1(pi1,q2,N5_?)*phase(i2,i3)*CA/2
+                                      -gamma20(pi1,q1,q2,N4_?,N5_?)*gamma21(pi2,pi3,q1,q2,N4_?,N5_?)*CA/4
+                                      +gamma11(pi2,pi3,q1,N4_?)*j1(pi1,q1,N4_?)*j1(pi1,q2,N5_?)*j1(pi2,q2,N5_?)*phase(i2,i3)*CA*3/4
+                                      +gamma11(pi2,pi3,q1,N4_?)*j1(pi1,q1,N4_?)*j1(pi2,q2,N5_?)*j1(pi3,q2,N5_?)*phase(i2,i3)*CA*1/2
+                                      -gamma11(pi2,pi3,q1,N4_?)*j1(pi1,q2,N5_?)*j1(pi2,q1,N4_?)*j1(pi2,q2,N5_?)*phase(i2,i3)*CA*1/4
+                                      -gamma21(pi1,pi2,q1,q2,N4_?,N5_?)*j1(pi1,q1,N4_?)*j1(pi3,q2,N5_?)*CA/2
+                                      +gamma21(pi1,pi2,q1,q2,N4_?,N5_?)*j1(pi2,q1,N4_?)*j1(pi3,q2,N5_?)*CA/4));
 
 l test3= summeP(i1)*summeP(i2)*T(i1, cOli1)*T(i2, cOli1)*(1 + replace_(q1, q2, q2, q1))*(1 + replace_(i_, -i_, phase, phaseConj, gamma21, gamma21Conj))
   *(gamma21(pi1,pi2,q1,q2,N2_?,N3_?)*j1(pi1,q1,N2_?)*j1(pi1,q2,N3_?)*CA^2/8

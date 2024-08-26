@@ -3,25 +3,23 @@
 
 using namespace tinyxml2;
 // Evaluation of input
-std::string process_str = "u u~ -> e- e+";
+std::string process_str = "e- e+ -> u u~ u u~";
 std::string unresolved_str = " g g";
-std::string process_full_str = process_str + unresolved_str;
+std::string suffix = "_EW";
 
 
-const int nBorn = 4;
-const int nUnresolved = 2;
-const int power = 0;
-const std::vector<int> flavor = {0,0,1,1};
+const int nBorn = 6;
+const int power = 2;
 const std::string order = "NLO";
 
 void replace(std::string& str, const std::string& from, const std::string& to) {
-    if(from.empty())
-        return;
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
-    }
+  if(from.empty())
+    return;
+  size_t start_pos = 0;
+  while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+    str.replace(start_pos, from.length(), to);
+    start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+  }
 }
 
 int main() {
@@ -36,7 +34,6 @@ int main() {
   outfile1.open ("results/" + process_str + " +" + unresolved_str + "_" + order + ".txt");
 
   amplitude A(process_str);
-  amplitude A_full(process_full_str);
 
   // Recola Settings
   Recola::set_reduction_mode_rcl(4);
@@ -52,27 +49,19 @@ int main() {
 
   // Define & generate process
   Recola::define_process_rcl(1, process_str, order);
-  Recola::define_process_rcl(2, process_full_str, order);
   Recola::set_otter_mode_rcl(1, "oneloop_qp");
-  Recola::set_otter_mode_rcl(2, "oneloop_qp");
 
   Recola::generate_processes_rcl();
   // Define initial state
   PhaseSpace dumn = Splitting(nBorn - 2, COM);
   PhaseSpace pp = Splitting(nBorn - 2, COM);
-  PhaseSpace ppFull_dummy = Splitting(nBorn + nUnresolved - 2, COM);
   pp.print();
   // Transform to Recola format
-  double pp_rcl[nBorn][4], ppFull_rcl[nBorn + nUnresolved][4], pp_arr[4*nBorn];
+  double pp_rcl[nBorn][4], pp_arr[4*nBorn];
   for(int i = 0; i < nBorn; i++) {
     for(int j = 0; j < 4; j++) {
       pp_rcl[i][j] = (i<2?-1.:1.)*pp.momenta[i].components[j];
       pp_arr[i*4+j] = (i<2?-1.:1.)*pp.momenta[i].components[j];
-    }
-  }
-  for(int i = 0; i < nBorn + nUnresolved; i++) {
-    for(int j = 0; j < 4; j++) {
-      ppFull_rcl[i][j] = (i<2?-1.:1.)*ppFull_dummy.momenta[i].components[j];
     }
   }
 
@@ -97,18 +86,13 @@ int main() {
 
   // Compute process amplitudes
   Recola::compute_process_rcl(1, pp_rcl, order);
-  //Recola::compute_all_colour_correlations_rcl(1, pp_rcl);
-  Recola::compute_process_rcl(2, ppFull_rcl, order);
 
   // Get non-vanishing helicity and color-configurations
   std::vector<std::vector<int> > helicities = non0hel(1, power + delta_power, order, A);
   std::cout << "Found non zero helicity configurations of Born process" << std::endl;
   std::vector<std::vector<int> > colors = non0col(1, power + delta_power, order, A, helicities);
   std::cout << "Found non zero color configurations of Born process" << std::endl;
-  /*std::vector<std::vector<int> > helicities_full = non0hel(2, power + nUnresolved, "LO", A_full);
-  std::cout << "Found non zero helicity configurations of Full process" << std::endl;
-  std::vector<std::vector<int> > colors_full = non0col(2, power + nUnresolved, "LO", A_full, helicities_full);*/
-  std::cout << "Found non zero color configurations of Full process" << std::endl;
+
   // Create Hashmap for all non-zero amplitudes that only need to be caluculated once per data set
   std::unordered_map<std::string, std::complex<double>> M0, M1; // hel + col is the key as string
   std::unordered_map<std::string, std::complex<double>> M0_ij, M1_ij, fM0_ijk, fM1_ijk, dM_ijk, M0_ijkl, M1_ijkl, M0_ijklab, Q_ijkl, M0_ijkla; // color correlators
@@ -153,16 +137,13 @@ int main() {
   {
   for(int i = 0; i < 2; i++) {
     average_factor *= 1./double(A.process[i]);
-    average_factor_full *= 1./double(A_full.process[i]);
   }
   std::vector<std::string> particles = A.process_particles;
-  std::vector<std::string> particles_full = A_full.process_particles;
   for(auto s : particles) std::cout << s << ", " ;
   std::cout << std::endl;
   particles.erase(particles.begin(), particles.begin() + 2);
   for(auto s : particles) std::cout << s << ", " ;
   std::cout << std::endl;
-  particles_full.erase(particles_full.begin(), particles_full.begin() + 2);
   while(particles.size() > 0) {
     std::string particle = particles[0];
     int occurances = 1;
@@ -170,7 +151,7 @@ int main() {
     while(i < particles.size()) {
       if(particles[i] == particle) {
         occurances += 1;
-        particles.erase(particles.begin(), particles.begin() + i);
+        particles.erase(particles.begin() + i);
       }
       else {
         i += 1;
@@ -180,22 +161,6 @@ int main() {
     average_factor *= 1./factorial(occurances);
   }
   std::cout << average_factor << std::endl;
-  while(particles_full.size() > 0) {
-    std::string particle = particles_full[0];
-    int occurances = 1;
-    int i = 1;
-    while(i < particles_full.size()) {
-      if(particles_full[i] == particle) {
-        occurances += 1;
-        particles_full.erase(particles_full.begin(), particles_full.begin() + i);
-      }
-      else {
-        i += 1;
-      }
-    }
-    particles_full.erase(particles_full.begin());
-    average_factor_full *= 1./factorial(occurances);
-  }
   }
   std::cout << "A.particle_type = ";
   for(int i : A.particle_type) {
@@ -302,110 +267,112 @@ int main() {
   pRoot->InsertEndChild(M1_ijElement);
 
   // <M|Ti.Tj Tk.Tl|M>
-  XMLElement * M0_ijklElement = xmlDoc.NewElement("M0_ijkl");
-  XMLElement * M1_ijklElement = xmlDoc.NewElement("M1_ijkl");
+
   if(unresolved_str==" g g" || unresolved_str==" g g g") {
-  for (int i = 0; i < A.process.size(); i++) {
-    if(A.particle_type[i] == 0) continue;
-    for(int j = 0; j < A.process.size(); j++) {
-      if(A.particle_type[j] == 0) continue;
-      for(int k = 0; k < A.process.size(); k++) {
-        if(A.particle_type[k] == 0) continue;
-        for(int l = 0; l < A.process.size(); l++) {
-          if(A.particle_type[l] == 0) continue;
-          std::complex<double> M0ijkl = 0.;
-          std::complex<double> M1ijkl = 0.;
-          XMLElement * M0_ijklEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
-          XMLElement * M1_ijklEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
-          for(std::vector<int> hel_full : helicities) {  // color and helicity of the bra <M|
-            std::string hel_string;
-            for (int dummy = 0; dummy < hel_full.size(); dummy++) {
-              hel_string += std::to_string(hel_full[dummy]);
-            }
-            for(std::vector<int> col_full : colors) {
-              std::string col_string;
-              for(int dummy = 0; dummy < col_full.size(); dummy++) {
-                col_string += std::to_string(col_full[dummy]);
+    XMLElement * M0_ijklElement = xmlDoc.NewElement("M0_ijkl");
+    XMLElement * M1_ijklElement = xmlDoc.NewElement("M1_ijkl");
+    for (int i = 0; i < A.process.size(); i++) {
+      if(A.particle_type[i] == 0) continue;
+      for(int j = 0; j < A.process.size(); j++) {
+        if(A.particle_type[j] == 0) continue;
+        for(int k = 0; k < A.process.size(); k++) {
+          if(A.particle_type[k] == 0) continue;
+          for(int l = 0; l < A.process.size(); l++) {
+            if(A.particle_type[l] == 0) continue;
+            std::complex<double> M0ijkl = 0.;
+            std::complex<double> M1ijkl = 0.;
+            XMLElement * M0_ijklEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
+            XMLElement * M1_ijklEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
+            for(std::vector<int> hel_full : helicities) {  // color and helicity of the bra <M|
+              std::string hel_string;
+              for (int dummy = 0; dummy < hel_full.size(); dummy++) {
+                hel_string += std::to_string(hel_full[dummy]);
               }
-              std::string key = hel_string + col_string;
-              std::complex<double> M0_bra = std::conj(M0[key]);
-              std::complex<double> M1_bra = std::conj(M1[key]);
-              std::vector<int> output_colors = {col_full[i], col_full[j], col_full[k], col_full[l]};
-              for(int a = 0; a < 8; a++) for(int b = 0; b < 8; b++) {
-                for(int ci = 0; ci < A.process[i]; ci++) for(int cj = 0; cj < A.process[j]; cj++) for(int ck = 0; ck < A.process[k]; ck++) for(int cl = 0; cl < A.process[l]; cl++) {
-                  key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
-                  key.replace(key.size() - A.process.size() + j, 1, std::to_string(cj));
-                  key.replace(key.size() - A.process.size() + k, 1, std::to_string(ck));
-                  key.replace(key.size() - A.process.size() + l, 1, std::to_string(cl));
+              for(std::vector<int> col_full : colors) {
+                std::string col_string;
+                for(int dummy = 0; dummy < col_full.size(); dummy++) {
+                  col_string += std::to_string(col_full[dummy]);
+                }
+                std::string key = hel_string + col_string;
+                std::complex<double> M0_bra = std::conj(M0[key]);
+                std::complex<double> M1_bra = std::conj(M1[key]);
+                std::vector<int> output_colors = {col_full[i], col_full[j], col_full[k], col_full[l]};
+                for(int a = 0; a < 8; a++) for(int b = 0; b < 8; b++) {
+                  for(int ci = 0; ci < A.process[i]; ci++) for(int cj = 0; cj < A.process[j]; cj++) for(int ck = 0; ck < A.process[k]; ck++) for(int cl = 0; cl < A.process[l]; cl++) {
+                    key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
+                    key.replace(key.size() - A.process.size() + j, 1, std::to_string(cj));
+                    key.replace(key.size() - A.process.size() + k, 1, std::to_string(ck));
+                    key.replace(key.size() - A.process.size() + l, 1, std::to_string(cl));
 
-                  if(j == i)
-                    output_colors[1] = ci;
-                  else if(k == i)
-                    output_colors[2] = ci;
-                  else if(l == i)
-                    output_colors[3] = ci;
+                    if(j == i)
+                      output_colors[1] = ci;
+                    else if(k == i)
+                      output_colors[2] = ci;
+                    else if(l == i)
+                      output_colors[3] = ci;
 
-                  if(k == j)
-                    output_colors[2] = cj;
-                  else if(l == j)
-                    output_colors[3] = cj;
+                    if(k == j)
+                      output_colors[2] = cj;
+                    else if(l == j)
+                      output_colors[3] = cj;
 
-                  if(l == k)
-                    output_colors[3] = ck;
+                    if(l == k)
+                      output_colors[3] = ck;
 
-                  std::complex<double> col_factor = 1;
-                  if(A.particle_type[l] == 1)
-                    col_factor *= lam[a][3*output_colors[3] + cl]/2.;
-                  else if(A.particle_type[l] == -1)
-                    col_factor *= -lam[a][3*cl + output_colors[3]]/2.;
-                  else if(A.particle_type[l] == 2)
-                    col_factor *= I*fabc[a][8*cl + output_colors[3]];
+                    std::complex<double> col_factor = 1;
+                    if(A.particle_type[l] == 1)
+                      col_factor *= lam[a][3*output_colors[3] + cl]/2.;
+                    else if(A.particle_type[l] == -1)
+                      col_factor *= -lam[a][3*cl + output_colors[3]]/2.;
+                    else if(A.particle_type[l] == 2)
+                      col_factor *= I*fabc[a][8*cl + output_colors[3]];
 
-                  if(A.particle_type[k] == 1)
-                    col_factor *= lam[a][3*output_colors[2] + ck]/2.;
-                  else if(A.particle_type[k] == -1)
-                    col_factor *= -lam[a][3*ck + output_colors[2]]/2.;
-                  else if(A.particle_type[k] == 2)
-                    col_factor *= I*fabc[a][8*ck + output_colors[2]];
+                    if(A.particle_type[k] == 1)
+                      col_factor *= lam[a][3*output_colors[2] + ck]/2.;
+                    else if(A.particle_type[k] == -1)
+                      col_factor *= -lam[a][3*ck + output_colors[2]]/2.;
+                    else if(A.particle_type[k] == 2)
+                      col_factor *= I*fabc[a][8*ck + output_colors[2]];
 
-                  if(A.particle_type[j] == 1)
-                    col_factor *= lam[b][3*output_colors[1] + cj]/2.;
-                  else if(A.particle_type[j] == -1)
-                    col_factor *= -lam[b][3*cj + output_colors[1]]/2.;
-                  else if(A.particle_type[j] == 2)
-                    col_factor *= I*fabc[b][8*cj + output_colors[1]];
+                    if(A.particle_type[j] == 1)
+                      col_factor *= lam[b][3*output_colors[1] + cj]/2.;
+                    else if(A.particle_type[j] == -1)
+                      col_factor *= -lam[b][3*cj + output_colors[1]]/2.;
+                    else if(A.particle_type[j] == 2)
+                      col_factor *= I*fabc[b][8*cj + output_colors[1]];
 
-                  if(A.particle_type[i] == 1)
-                    col_factor *= lam[b][3*output_colors[0] + ci]/2.;
-                  else if(A.particle_type[i] == -1)
-                    col_factor *= -lam[b][3*ci + output_colors[0]]/2.;
-                  else if(A.particle_type[i] == 2)
-                    col_factor *= I*fabc[b][8*ci + output_colors[0]];
+                    if(A.particle_type[i] == 1)
+                      col_factor *= lam[b][3*output_colors[0] + ci]/2.;
+                    else if(A.particle_type[i] == -1)
+                      col_factor *= -lam[b][3*ci + output_colors[0]]/2.;
+                    else if(A.particle_type[i] == 2)
+                      col_factor *= I*fabc[b][8*ci + output_colors[0]];
 
-                  M0ijkl += col_factor*M0_bra*M0[key];
-                  M1ijkl += 2.*std::real(col_factor*M0_bra*M1[key]);
+                    M0ijkl += col_factor*M0_bra*M0[key];
+                    M1ijkl += 2.*std::real(col_factor*M0_bra*M1[key]);
+                  }
                 }
               }
             }
-          }
 
-          M0_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)] = M0ijkl*average_factor;
-          M1_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)] = M1ijkl*average_factor;
-          M0_ijklEntry->SetText(std::real(M0_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]));
-          M1_ijklEntry->SetText(std::real(M1_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]));
-          M0_ijklElement->InsertEndChild(M0_ijklEntry);
-          M1_ijklElement->InsertEndChild(M1_ijklEntry);
-          double M2_averaged;
-          Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged);
-          std::cout << "i = " << i << ", j = " << j << ", k = " << k << ", l = " << l << ": <M|T_i.T_j T_k.T_l|M> = " << M0ijkl*average_factor << "\t" << M0ijkl*average_factor/M2_averaged << std::endl;
+            M0_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)] = M0ijkl*average_factor;
+            M1_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)] = M1ijkl*average_factor;
+            M0_ijklEntry->SetText(std::real(M0_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]));
+            M1_ijklEntry->SetText(std::real(M1_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]));
+            M0_ijklElement->InsertEndChild(M0_ijklEntry);
+            M1_ijklElement->InsertEndChild(M1_ijklEntry);
+            double M2_averaged;
+            Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged);
+            std::cout << "i = " << i << ", j = " << j << ", k = " << k << ", l = " << l << ": <M|T_i.T_j T_k.T_l|M> = " << M0ijkl*average_factor << "\t" << M0ijkl*average_factor/M2_averaged << std::endl;
+          }
         }
       }
     }
-  }
+    pRoot->InsertEndChild(M0_ijklElement);
+    pRoot->InsertEndChild(M1_ijklElement);
   }
 
-  pRoot->InsertEndChild(M0_ijklElement);
-  pRoot->InsertEndChild(M1_ijklElement);
+
 
   // <M|Ti.Tj Tk.Tl Ta.Tb|M>
   if(unresolved_str==" g g g") {
@@ -542,9 +509,10 @@ int main() {
   }
   }
 
-  // <M|Ti.Tj f^{ck, cl, ca} Tk^ck Tl^cl Ta^ca|M>
-  //if((unresolved_str==" g g g") or (unresolved_str == " g g" and order == "NLO")) {
-  if(false) {
+  // <M|Ti.Tj f^{ck, cl, ca} Tk^ck Tl^cl Ta^ca|M> + c.c.
+  if((unresolved_str==" g g g") or (unresolved_str == " g g" and order == "NLO") and suffix=="_EW") {
+  XMLElement * M0_ijklaElement = xmlDoc.NewElement("M0_ijkla");
+  std::vector<std::vector<int>> configurations;
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
     for(int j = 0; j < A.process.size(); j++) {
@@ -557,6 +525,17 @@ int main() {
           for(int a = 0; a < A.process.size(); a++) {
             if(A.particle_type[a] == 0) continue;
             if((a == l) or (a == k)) continue;
+            XMLElement * M0_ijklaEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l) + std::to_string(a)).c_str()));
+            bool permutation = false;
+            for(std::vector<int> configuration : configurations) {
+              if(configuration == std::vector<int>({i,j,k,l,a})) {
+                M0_ijklaEntry->SetText(std::real(M0_ijkla[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l) + std::to_string(a)]));
+                M0_ijklaElement->InsertEndChild(M0_ijklaEntry);
+                permutation = true;
+                break;
+              }
+            }
+            if(permutation) continue;
             std::complex<double> Mijkla = 0.;
             for(std::vector<int> helcol : keys) { // color and helicity of the bra <M|
               std::vector<int> hel_full(helcol.begin(), helcol.begin() + A.process.size());
@@ -572,16 +551,16 @@ int main() {
               std::string key = hel_string + col_string;
               std::complex<double> M_bra = std::conj(M0[key]);
               std::vector<int> output_colors = {col_full[i], col_full[j], col_full[k], col_full[l], col_full[a]};
-              for(int m = 0; m < 8; m++) for(int n = 0; n < 8; n++) for(int b = 0; b < 8; b++) for(int c = 0; c < 8; c++) {
-                for(int ci = 0; ci < A.process[i]; ci++) for(int cj = 0; cj < A.process[j]; cj++)
-                for(int ck = 0; ck < A.process[k]; ck++) for(int cl = 0; cl < A.process[l]; cl++)
-                for(int ca = 0; ca < A.process[a]; ca++) {
-                  key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
-                  key.replace(key.size() - A.process.size() + j, 1, std::to_string(cj));
-                  key.replace(key.size() - A.process.size() + k, 1, std::to_string(ck));
-                  key.replace(key.size() - A.process.size() + l, 1, std::to_string(cl));
-                  key.replace(key.size() - A.process.size() + a, 1, std::to_string(ca));
-
+              for(int ci = 0; ci < A.process[i]; ci++) for(int cj = 0; cj < A.process[j]; cj++)
+              for(int ck = 0; ck < A.process[k]; ck++) for(int cl = 0; cl < A.process[l]; cl++)
+              for(int ca = 0; ca < A.process[a]; ca++) {
+                key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
+                key.replace(key.size() - A.process.size() + j, 1, std::to_string(cj));
+                key.replace(key.size() - A.process.size() + k, 1, std::to_string(ck));
+                key.replace(key.size() - A.process.size() + l, 1, std::to_string(cl));
+                key.replace(key.size() - A.process.size() + a, 1, std::to_string(ca));
+                if(M0[key]==0.) continue;
+                for(int m = 0; m < 8; m++) for(int n = 0; n < 8; n++) for(int b = 0; b < 8; b++) for(int c = 0; c < 8; c++) {
                   if(j == i)
                     output_colors[1] = ci;
                   else if(k == i)
@@ -610,9 +589,9 @@ int main() {
 
                   if(A.particle_type[a] == 1)
                     col_factor *= lam[c][3*output_colors[4] + ca]/2.;
-                  else if(A.particle_type[l] == -1)
+                  else if(A.particle_type[a] == -1)
                     col_factor *= -lam[c][3*ca + output_colors[4]]/2.;
-                  else if(A.particle_type[l] == 2)
+                  else if(A.particle_type[a] == 2)
                     col_factor *= I*fabc[c][8*ca + output_colors[4]];
 
                   if(A.particle_type[l] == 1)
@@ -648,6 +627,32 @@ int main() {
               }
             }
             M0_ijkla[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l) + std::to_string(a)] = Mijkla*average_factor;
+            M0_ijkla[std::to_string(i) + std::to_string(j) + std::to_string(a) + std::to_string(k) + std::to_string(l)] = Mijkla*average_factor;
+            M0_ijkla[std::to_string(i) + std::to_string(j) + std::to_string(l) + std::to_string(a) + std::to_string(k)] = Mijkla*average_factor;
+            M0_ijkla[std::to_string(i) + std::to_string(j) + std::to_string(a) + std::to_string(l) + std::to_string(k)] = -Mijkla*average_factor;
+            M0_ijkla[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(a) + std::to_string(l)] = -Mijkla*average_factor;
+            M0_ijkla[std::to_string(i) + std::to_string(j) + std::to_string(l) + std::to_string(k) + std::to_string(a)] = -Mijkla*average_factor;
+            M0_ijkla[std::to_string(j) + std::to_string(i) + std::to_string(k) + std::to_string(l) + std::to_string(a)] = Mijkla*average_factor;
+            M0_ijkla[std::to_string(j) + std::to_string(i) + std::to_string(a) + std::to_string(k) + std::to_string(l)] = Mijkla*average_factor;
+            M0_ijkla[std::to_string(j) + std::to_string(i) + std::to_string(l) + std::to_string(a) + std::to_string(k)] = Mijkla*average_factor;
+            M0_ijkla[std::to_string(j) + std::to_string(i) + std::to_string(a) + std::to_string(l) + std::to_string(k)] = -Mijkla*average_factor;
+            M0_ijkla[std::to_string(j) + std::to_string(i) + std::to_string(k) + std::to_string(a) + std::to_string(l)] = -Mijkla*average_factor;
+            M0_ijkla[std::to_string(j) + std::to_string(i) + std::to_string(l) + std::to_string(k) + std::to_string(a)] = -Mijkla*average_factor;
+            configurations.push_back(std::vector<int>({i,j,k,l,a}));
+            configurations.push_back(std::vector<int>({i,j,a,k,l}));
+            configurations.push_back(std::vector<int>({i,j,l,a,k}));
+            configurations.push_back(std::vector<int>({i,j,a,l,k}));
+            configurations.push_back(std::vector<int>({i,j,k,a,l}));
+            configurations.push_back(std::vector<int>({i,j,l,k,a}));
+            configurations.push_back(std::vector<int>({j,i,k,l,a}));
+            configurations.push_back(std::vector<int>({j,i,a,k,l}));
+            configurations.push_back(std::vector<int>({j,i,l,a,k}));
+            configurations.push_back(std::vector<int>({j,i,a,l,k}));
+            configurations.push_back(std::vector<int>({j,i,k,a,l}));
+            configurations.push_back(std::vector<int>({j,i,l,k,a}));
+
+            M0_ijklaEntry->SetText(std::real(M0_ijkla[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l) + std::to_string(a)]));
+            M0_ijklaElement->InsertEndChild(M0_ijklaEntry);
             double M2_averaged;
             Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged);
             std::cout << "i = " << i << ", j = " << j << ", k = " << k << ", l = " << l << ", a = " << a <<  ": <M|Ti.Tj f^{ck, cl, ca} Tk^ck Tl^cl Ta^ca|M> = " << Mijkla*average_factor << "\t" << Mijkla*average_factor/M2_averaged << std::endl;
@@ -656,11 +661,13 @@ int main() {
       }
     }
   }
+  pRoot->InsertEndChild(M0_ijklaElement);
   }
 
   // d^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
   // f^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
-  if(unresolved_str==" g g g" or order=="NLO") {
+  if((unresolved_str==" g g g" or order=="NLO") and suffix=="_EW") {
+  XMLElement * M0_ijkElement = xmlDoc.NewElement("M0_ijk");
   std::vector<std::vector<int>> configurations;
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
@@ -673,8 +680,11 @@ int main() {
         std::complex<double> fMijk = 0.;
         std::complex<double> dMijk = 0.;
         bool permutation = false;
+        XMLElement * M0_ijkEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
         for(std::vector<int> configuration : configurations) {
           if(configuration==std::vector<int>({i,j,k})) {
+            M0_ijkEntry->SetText(std::real(fM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
+            M0_ijkElement->InsertEndChild(M0_ijkEntry);
             permutation = true;
             break;
           }
@@ -707,16 +717,16 @@ int main() {
             if(k == j)
               output_colors[2] = cj;
 
-            if(std::abs(M0[key]) < 1.e-17) continue;
+            if(M0[key] == 0.) continue;
             for(int a = 0; a < 8; a++) for(int b = 0; b < 8; b++) for(int c = 0; c < 8; c++) {
               std::complex<double> col_factor = 1;
 
               if(A.particle_type[k] == 1)
-                col_factor *= lam[a][3*output_colors[2] + ck]/2.;
+                col_factor *= lam[c][3*output_colors[2] + ck]/2.;
               else if(A.particle_type[k] == -1)
-                col_factor *= -lam[a][3*ck + output_colors[2]]/2.;
+                col_factor *= -lam[c][3*ck + output_colors[2]]/2.;
               else if(A.particle_type[k] == 2)
-                col_factor *= I*fabc[a][8*ck + output_colors[2]];
+                col_factor *= I*fabc[c][8*ck + output_colors[2]];
               else
                 std::cout << "unknown particle type" << std::endl;
 
@@ -730,11 +740,11 @@ int main() {
                 std::cout << "unknown particle type" << std::endl;
 
               if(A.particle_type[i] == 1)
-                col_factor *= lam[c][3*output_colors[0] + ci]/2.;
+                col_factor *= lam[a][3*output_colors[0] + ci]/2.;
               else if(A.particle_type[i] == -1)
-                col_factor *= -lam[c][3*ci + output_colors[0]]/2.;
+                col_factor *= -lam[a][3*ci + output_colors[0]]/2.;
               else if(A.particle_type[i] == 2)
-                col_factor *= I*fabc[c][8*ci + output_colors[0]];
+                col_factor *= I*fabc[a][8*ci + output_colors[0]];
               else
                 std::cout << "unknown particle type" << std::endl;
               fMijk += col_factor*M_bra*M0[key]*fabc[a][8*b+c];
@@ -743,6 +753,8 @@ int main() {
           }
         }
         fM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)] = fMijk*average_factor;
+        M0_ijkEntry->SetText(std::real(fM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
+        M0_ijkElement->InsertEndChild(M0_ijkEntry);
         // permutations
         fM0_ijk[std::to_string(i) + std::to_string(k) + std::to_string(j)] = -fMijk*average_factor;
         fM0_ijk[std::to_string(j) + std::to_string(i) + std::to_string(k)] = -fMijk*average_factor;
@@ -767,11 +779,12 @@ int main() {
       }
     }
   }
+  pRoot->InsertEndChild(M0_ijkElement);
   }
 
   // f^{a,d;b,c} <M|Ti^a {Tj^b, Tk^c} Tl^d|M> + h.c.
-  XMLElement * Q_ijklElement = xmlDoc.NewElement("Q_ijkl");
   if((order=="NLO" && unresolved_str==" g g") || unresolved_str==" g g g") {
+  XMLElement * Q_ijklElement = xmlDoc.NewElement("Q_ijkl");
   std::vector<std::vector<int>> configurations;
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
@@ -812,18 +825,18 @@ int main() {
             std::vector<int> output_colors = {col_full[i], col_full[j], col_full[k],  col_full[l]};
             std::vector<int> output_colors2 = {col_full[i], col_full[k], col_full[j],  col_full[l]};
             std::string key2 = key;
-            for(int a = 0; a < 8; a++) for(int b = 0; b < 8; b++) for(int c = 0; c < 8; c++) for(int d = 0; d < 8; d++) {
-              for(int ci = 0; ci < A.process[i]; ci++) for(int cj = 0; cj < A.process[j]; cj++) for(int ck = 0; ck < A.process[k]; ck++) for(int cl = 0; cl < A.process[l]; cl++) {
-                key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
-                key.replace(key.size() - A.process.size() + j, 1, std::to_string(cj));
-                key.replace(key.size() - A.process.size() + k, 1, std::to_string(ck));
-                key.replace(key.size() - A.process.size() + l, 1, std::to_string(cl));
+            for(int ci = 0; ci < A.process[i]; ci++) for(int cj = 0; cj < A.process[j]; cj++) for(int ck = 0; ck < A.process[k]; ck++) for(int cl = 0; cl < A.process[l]; cl++) {
+              key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
+              key.replace(key.size() - A.process.size() + j, 1, std::to_string(cj));
+              key.replace(key.size() - A.process.size() + k, 1, std::to_string(ck));
+              key.replace(key.size() - A.process.size() + l, 1, std::to_string(cl));
 
-                key2.replace(key2.size() - A.process.size() + i, 1, std::to_string(ci));
-                key2.replace(key2.size() - A.process.size() + k, 1, std::to_string(ck));
-                key2.replace(key2.size() - A.process.size() + j, 1, std::to_string(cj));
-                key2.replace(key2.size() - A.process.size() + l, 1, std::to_string(cl));
-
+              key2.replace(key2.size() - A.process.size() + i, 1, std::to_string(ci));
+              key2.replace(key2.size() - A.process.size() + k, 1, std::to_string(ck));
+              key2.replace(key2.size() - A.process.size() + j, 1, std::to_string(cj));
+              key2.replace(key2.size() - A.process.size() + l, 1, std::to_string(cl));
+              if((M0[key] == 0.) and (M0[key2] == 0.)) continue;
+              for(int a = 0; a < 8; a++) for(int b = 0; b < 8; b++) for(int c = 0; c < 8; c++) for(int d = 0; d < 8; d++) {
                 if(j == i)
                   output_colors[1] = ci;
                 else if(k == i)
@@ -937,10 +950,10 @@ int main() {
       }
     }
   }
-  }
   pRoot->InsertEndChild(Q_ijklElement);
+  }
 
   std::cout << "Filled the Hashmaps" << std::endl;
-  XMLError eResult = xmlDoc.SaveFile(const_cast<char*>(("results/ColorCorrelators/" + process_str + ".xml").c_str()));
+  XMLError eResult = xmlDoc.SaveFile(const_cast<char*>(("results/ColorCorrelators/" + process_str + suffix + ".xml").c_str()));
   return 0;
 }

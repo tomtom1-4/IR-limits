@@ -175,10 +175,10 @@ LV<double> j1(const LV<double>& p, const LV<double>& q) {
 }
 
 LV<std::complex<double>> gamma11(const LV<double>& p1, const LV<double>& p2, const LV<double>& q) {
-  if(p1*p2<1.e-8) return LV<std::complex<double>>({0.,0.,0.,0.});
+  if(std::abs(p1*p2)<1.e-8) return LV<std::complex<double>>({0.,0.,0.,0.});
   std::complex<double> log = std::log((p1*p2)*mu*mu/(p1*q)/(p2*q)/2.);
-  if((p1.components[0] < 0) and (p2.components[0] < 0)) log = log + I*M_PI;
-  else log = log - I*M_PI;
+  if((p1.components[0] < 0) and (p2.components[0] < 0)) log = log - I*M_PI;
+  else log = log + I*M_PI;
   std::complex<double> prefactor = -1./12.*(std::pow(M_PI, 2) + 6.*std::pow(log, 2))/std::pow(4.*M_PI, 2);
   LV<std::complex<double>> output = prefactor*(p1/(p1*q) - p2/(p2*q));
 
@@ -204,14 +204,16 @@ LM<std::complex<double>> gamma21(const LV<double>& pi, const LV<double>& pj, con
 
   LM<std::complex<double>> output;
   bool analytic_continuation = false;
-  if((pi.components[0] < 0.) and (pj.components[0] < 0.)) analytic_continuation = true;
+  if((pi.components[0] < 0.) and (pj.components[0] < 0.)) {
+    analytic_continuation = true;
+  }
   std::complex<double> logc = std::log(2.*q1*q2/mu/mu) - I*M_PI;
   double l1 = std::log((pi*q1)/(pi*q1 + pi*q2));
   double l2 = std::log((pj*q2)/(pj*q1 + pj*q2));
   double L1 = li2(1. - pj*q2/(pj*q1 + pj*q2));
   double L2 = li2(1. - pi*q1/(pi*q1 + pi*q2));
   std::complex<double> L3 = li2(1. - (pi*pj)*(q1*q2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2));
-  if(analytic_continuation) L3 = L3 + 2.*M_PI*I*std::log(1. - (pi*pj)*(q1*q2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2));
+  if(analytic_continuation) L3 = L3 + 2.*M_PI*I*std::log(1. - (pi*pj)*(q1*q2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2)) + 4.*M_PI*M_PI;
 
   double s1j = 2.*(pj*q1);
   double s1i = 2.*(pi*q1);
@@ -1459,8 +1461,9 @@ double soft_g_squared_1l(double *pp_full, std::unordered_map<std::string, double
 
 double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, double> M0ij,
     std::unordered_map<std::string, double> M1ij, std::unordered_map<std::string, double> M0ijkl,
-    std::unordered_map<std::string, double> M1ijkl, std::unordered_map<std::string, double> M0ijkla,
-    std::unordered_map<std::string, double> Q0ijkl, amplitude& A, int nl) {
+    std::unordered_map<std::string, double> M1ijkl, std::unordered_map<std::string, double> M0ijk,
+    std::unordered_map<std::string, double> M0ijkla, std::unordered_map<std::string, double> Q0ijkl,
+    amplitude& A, int nl) {
   double q1_arr[4], q2_arr[4];
   part(pp_full, q1_arr, A.process.size()*4, A.process.size()*4 + 4);
   part(pp_full, q2_arr, A.process.size()*4 + 4, A.process.size()*4 + 8);
@@ -1472,23 +1475,25 @@ double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, double
     double pi_arr[4];
     part(pp_full, pi_arr, i*4, i*4 + 4);
     LV<double> pi(pi_arr);
+    if(i < 2) pi = (-1.)*pi;
     for(int j = 0; j < A.process.size(); j++) {
       if(A.process[j] == 1) continue;
       double pj_arr[4];
       part(pp_full, pj_arr, 4*j, 4*j + 4);
       LV<double> pj(pj_arr);
-
+      if(j < 2) pj = (-1.)*pj;
       for(int k = 0; k < A.process.size(); k++) {
         if(A.process[k] == 1) continue;
         double pk_arr[4];
         part(pp_full, pk_arr, 4*k, 4*k + 4);
         LV<double> pk(pk_arr);
+        if(k < 2) pk = (-1.)*pk;
         for(int l = 0; l < A.process.size(); l++) {
           if(A.process[l] == 1) continue;
           double pl_arr[4];
           part(pp_full, pl_arr, 4*l, 4*l + 4);
           LV<double> pl(pl_arr);
-
+          if(l < 2) pl = (-1.)*pl;
           // Reducible part (tree level current)
           if((i != j) and (k != l))
             approx += std::pow(gs, 4)*(j1(pi, q1)*j1(pj, q1))*(j1(pk, q2)*j1(pl, q2))*(std::real(M1ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)])
@@ -1505,14 +1510,14 @@ double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, double
               double pa_arr[4];
               part(pp_full, pa_arr, 4*a, 4*a + a);
               LV<double> pa(pa_arr);
+              if(a < 2) pa = (-1.)*pa;
               if((a != k) and (a != l)) {
-                //approx += std::pow(gs, 6)*std::real(M0ijkla[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l) + std::to_string(a)])/2.
-                //  *(((-1.)*j1(pi, q1)*j1(pj, q1))*std::imag(gamma11(pl, pa, q2)*j1(pk, q2))
-                //  + ((-1.)*j1(pi, q2)*j1(pj, q2))*std::imag(gamma11(pl, pa, q1)*j1(pk, q1)));
+                approx += std::pow(gs, 6)*std::real(M0ijkla[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l) + std::to_string(a)])/2.
+                  *(((-1.)*j1(pi, q1)*j1(pj, q1))*2.*std::imag(gamma11(pl, pa, q2)*j1(pk, q2))
+                  + ((-1.)*j1(pi, q2)*j1(pj, q2))*2.*std::imag(gamma11(pl, pa, q1)*j1(pk, q1)));
               }
             }
           }
-
           // Quadupole operator contribution
           approx += std::pow(gs, 6)*(-1.)*2.*std::real((gamma11(pk, pl, q1)*j1(pi, q1))*(j1(pj, q2)*j1(pi, q2))/4.
                                                       +(gamma11(pk, pl, q2)*j1(pi, q2))*(j1(pj, q1)*j1(pi, q1))/4.
@@ -1521,11 +1526,26 @@ double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, double
                     *std::real(Q0ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
           if(i != j)
             approx += std::pow(gs, 6)*2.*std::real(j1(pl, q1)*(gamma21(pi, pj, q1, q2, nl)*j1(pk, q2))
-                                                        +j1(pl, q2)*(gamma21(pi, pj, q2, q1, nl)*j1(pk, q1)))/8.
+                                                  +j1(pl, q2)*(gamma21(pi, pj, q2, q1, nl)*j1(pk, q1)))/8.
                     *std::real(Q0ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
 
 
 
+        }
+        // Tripole operator contribution
+        if((i != j) and (i != k) and (j != k)) {
+          std::vector<std::vector<LV<double>>> qs = {{q1, q2}, {q2, q1}};
+          for(std::vector<LV<double>> q : qs)
+            approx += -std::pow(gs, 6)*2.*std::imag(gamma11(pj, pk, q[0])*(gamma20(pi, q[0], q[1])*j1(pi, q[1]))*(-C_A/2.)
+                                                   +gamma11(pj, pk, q[0])*(gamma20(pi, q[0], q[1])*j1(pj, q[1]))*(+C_A/2.)
+                                                   +gamma11(pj, pk, q[0])*(gamma20(pj, q[0], q[1])*j1(pi, q[1]))*(+C_A/2.)
+                                                   +(gamma20(pi, q[0], q[1])*gamma21(pj, pk, q[0], q[1]).transpose()).trace()*(-C_A/4.)
+                                                   +(gamma11(pj, pk, q[0])*j1(pi, q[0]))*(j1(pi, q[1])*j1(pj, q[1]))*(+C_A*3./4.)
+                                                   +(gamma11(pj, pk, q[0])*j1(pi, q[0]))*(j1(pj, q[1])*j1(pk, q[1]))*(+C_A*1./2.)
+                                                   +(gamma11(pj, pk, q[0])*j1(pj, q[0]))*(j1(pi, q[1])*j1(pj, q[1]))*(-C_A*1./4.)
+                                                   +j1(pi, q[0])*(gamma21(pi, pj, q[0], q[1])*j1(pk, q[1]))*(-C_A/2.)
+                                                   +j1(pj, q[0])*(gamma21(pi, pj, q[0], q[1])*j1(pk, q[1]))*(+C_A/4.) )
+                    *M0ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)];
         }
       }
       // Irreducible part (tree level current)
@@ -1552,54 +1572,3 @@ double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, double
   }
   return approx;
 }
-
-double soft_gg_squared_1l_quad(double*pp_full, std::unordered_map<std::string, double> M0ij,
-    std::unordered_map<std::string, double> M1ij, std::unordered_map<std::string, double> M0ijkl,
-    std::unordered_map<std::string, double> M1ijkl, std::unordered_map<std::string, double> M0ijkla,
-    std::unordered_map<std::string, double> Q0ijkl, amplitude& A, int nl) {
-  double q1_arr[4], q2_arr[4];
-  part(pp_full, q1_arr, A.process.size()*4, A.process.size()*4 + 4);
-  part(pp_full, q2_arr, A.process.size()*4 + 4, A.process.size()*4 + 8);
-  LV<double> q1(q1_arr);
-  LV<double> q2(q2_arr);
-  double approx = 0;
-  for(int i = 0; i < A.process.size(); i++) {
-    if(A.process[i] == 1) continue;
-    double pi_arr[4];
-    part(pp_full, pi_arr, i*4, i*4 + 4);
-    LV<double> pi(pi_arr);
-    for(int j = 0; j < A.process.size(); j++) {
-      if(A.process[j] == 1) continue;
-      double pj_arr[4];
-      part(pp_full, pj_arr, 4*j, 4*j + 4);
-      LV<double> pj(pj_arr);
-      for(int k = 0; k < A.process.size(); k++) {
-        if(A.process[k] == 1) continue;
-        double pk_arr[4];
-        part(pp_full, pk_arr, 4*k, 4*k + 4);
-        LV<double> pk(pk_arr);
-        for(int l = 0; l < A.process.size(); l++) {
-          if(A.process[l] == 1) continue;
-          double pl_arr[4];
-          part(pp_full, pl_arr, 4*l, 4*l + 4);
-          LV<double> pl(pl_arr);
-          // Quadupole operator contribution
-          approx += std::pow(gs, 6)*(-1.)*2.*std::real((gamma11(pk, pl, q1)*j1(pi, q1))*(j1(pj, q2)*j1(pi, q2))/4.
-                                                      +(gamma11(pk, pl, q2)*j1(pi, q2))*(j1(pj, q1)*j1(pi, q1))/4.
-                                                      +(gamma11(pj, pk, q1)*(gamma20(pi, q1, q2)*j1(pl, q2)))/4.
-                                                      +(gamma11(pj, pk, q2)*(gamma20(pi, q2, q1)*j1(pl, q1)))/4.)
-                    *std::real(Q0ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
-          if(i != j)
-            approx += std::pow(gs, 6)*2.*std::real(j1(pl, q1)*(gamma21(pi, pj, q1, q2, nl)*j1(pk, q2))
-                                                        +j1(pl, q2)*(gamma21(pi, pj, q2, q1, nl)*j1(pk, q1)))/8.
-                    *std::real(Q0ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
-
-
-
-        }
-      }
-    }
-  }
-  return approx;
-}
-

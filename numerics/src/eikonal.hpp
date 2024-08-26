@@ -53,12 +53,9 @@ double soft_g_squared_1l(double *pp_full, std::unordered_map<std::string, double
 
 double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, double> M0ij,
     std::unordered_map<std::string, double> M1ij, std::unordered_map<std::string, double> M0ijkl,
-    std::unordered_map<std::string, double> M1ijkl, std::unordered_map<std::string, double> M0ijkla,
-    std::unordered_map<std::string, double> Q0ijkl, amplitude& A, int nl);
+    std::unordered_map<std::string, double> M1ijkl, std::unordered_map<std::string, double>  M0ijk,
+    std::unordered_map<std::string, double> M0ijkla, std::unordered_map<std::string, double> Q0ijkl,
+    amplitude& A, int nl);
 
-double soft_gg_squared_1l_quad(double*pp_full, std::unordered_map<std::string, double> M0ij,
-    std::unordered_map<std::string, double> M1ij, std::unordered_map<std::string, double> M0ijkl,
-    std::unordered_map<std::string, double> M1ijkl, std::unordered_map<std::string, double> M0ijkla,
-    std::unordered_map<std::string, double> Q0ijkl, amplitude& A, int nl);
 
 #endif
