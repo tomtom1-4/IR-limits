@@ -48,7 +48,7 @@ cf Eps, EpsStar;
 v E0, E3, E4, E5; * Eps(...,p123,...), EpsStar(...,p1,...), etc.
 v Et3, Et4;
 f UfBar, Vf;
-f UBar, V;
+f UBar, V, U, VBar;
 nt g;
 
 ****************************************

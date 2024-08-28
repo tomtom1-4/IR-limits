@@ -1,0 +1,7 @@
+\contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
+\contentsline {section}{\numberline {2}Definitions and Conventions}{1}{section.2}%
+\contentsline {section}{\numberline {3}Soft Gluon Limits}{1}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Squared Currents}{2}{subsection.3.1}%
+\contentsline {subsubsection}{\numberline {3.1.1}One-Loop Double-Soft Limit}{2}{subsubsection.3.1.1}%
+\contentsline {section}{\numberline {4}Soft Quark Limits}{3}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Squared Currents}{3}{subsection.4.1}%

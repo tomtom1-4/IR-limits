@@ -2,7 +2,7 @@
 
 // Evaluation of input
 std::string process_str = "u u~ -> u u~ e- e+";
-std::string unresolved_str = " g g";
+std::string unresolved_str = " d d~";
 std::string process_full_str = process_str + unresolved_str;
 
 
@@ -119,7 +119,7 @@ int main() {
   }
 
   // Get non-vanishing helicity and color-configurations
-  std::unordered_map<std::string, double> M0_ij, M1_ij, M0_ijk, dM_ijk, M0_ijkl, M1_ijkl, M0_ijklab, Q_ijkl, M0_ijkla; // color correlators
+  std::unordered_map<std::string, double> M0_ij, M1_ij, M0_ijk, dM0_ijk, M0_ijkl, M1_ijkl, M0_ijklab, Q_ijkl, M0_ijkla; // color correlators
 
   double average_factor = 1./4.; // Spin of the initial state
   double average_factor_full = 1./4.;
@@ -270,6 +270,24 @@ int main() {
     }
   }
 
+  // d^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
+  if(unresolved_str==" g g g" or order=="NLO") {
+    XMLElement * dM0_ijkElement = pRoot->FirstChildElement("dM0_ijk");
+    if(dM0_ijkElement != nullptr) {
+      for(int i = 0; i < A.process.size(); i++) {
+        if(A.particle_type[i] == 0) continue;
+        for(int j = 0; j < A.process.size(); j++) {
+          if(A.particle_type[j] == 0) continue;
+          for(int k = 0; k < A.process.size(); k++) {
+            if(A.particle_type[k] == 0) continue;
+            XMLElement * dM0_ijkEntry = dM0_ijkElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
+            if(dM0_ijkEntry != nullptr) dM0_ijkEntry->QueryDoubleText(&dM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]);
+          }
+        }
+      }
+    }
+  }
+
   // <M|Ti.Tj f^{ck, cl, ca} Tk^ck Tl^cl Ta^ca|M> + c.c.
   if((order=="NLO") and (unresolved_str== " g g") and (suffix == "_EW")) {
     XMLElement * M0_ijklaElement = pRoot->FirstChildElement("M0_ijkla");
@@ -324,7 +342,7 @@ int main() {
   }
   double increment = std::sqrt(0.1);
   int counter = 0;
-  while (scale > 1.e-6) {
+  while (scale > 1.e-8) {
     scale *= increment;
     std::vector<std::vector<std::vector<double>>> xParFull;
     int level_int = 1;
@@ -375,18 +393,20 @@ int main() {
       if(order=="LO") M2_approx = soft_g_squared(pp_full, M0_ij, A)*average_factor_full/average_factor;
       else if(order=="NLO") M2_approx = soft_g_squared_1l(pp_full, M0_ij, M0_ijk, M1_ij, A)*average_factor_full/average_factor;
     }
-    else if(unresolved_str == " d d~")
-      M2_approx = soft_qq_squared(pp_full, M0_ij, A)*average_factor_full/average_factor;
-    else if(unresolved_str == " g g")
+    else if(unresolved_str == " d d~") {
+      if(order == "LO") M2_approx = soft_qq_squared(pp_full, M0_ij, A)*average_factor_full/average_factor;
+      else if(order == "NLO") M2_approx = soft_qq_squared_1l(pp_full, M0_ij, M1_ij, M0_ijk, dM0_ijk, A, n_f);
+    }
+    else if(unresolved_str == " g g") {
       if(order=="LO") M2_approx = soft_gg_squared(pp_full, M0_ij, M0_ijkl, A)*average_factor_full/average_factor;
-      else if(order=="NLO") {
-        M2_approx = soft_gg_squared_1l(pp_full, M0_ij, M1_ij, M0_ijkl, M1_ijkl, M0_ijk, M0_ijkla, Q_ijkl, A, n_f)*average_factor_full/average_factor;
-      }
+      else if(order=="NLO") M2_approx = soft_gg_squared_1l(pp_full, M0_ij, M1_ij, M0_ijkl, M1_ijkl, M0_ijk, M0_ijkla, Q_ijkl, A, n_f)*average_factor_full/average_factor;
+    }
     else if(unresolved_str == " g d d~")
-      M2_approx = soft_gqq_squared(pp_full, M0_ij, M0_ijkl, dM_ijk, A)*average_factor_full/average_factor;
+      M2_approx = soft_gqq_squared(pp_full, M0_ij, M0_ijkl, dM0_ijk, A)*average_factor_full/average_factor;
     //else if(unresolved_str == " g g g")
-    //  M2_approx = soft_ggg_squared(pp_full, M_ij, M0_ijkl, M_ijklab, dM_ijk, fM_ijkl)*average_factor_full/average_factor;
-    std::cout << scale << "\t" << M2_Full << "\t" << M2_approx << "\t" << std::abs(1. - M2_Full/M2_approx) << std::endl;
+    //  M2_approx = soft_ggg_squared(pp_full, M_ij, M0_ijkl, M_ijklab, dM0_ijk, fM_ijkl)*average_factor_full/average_factor;
+    double M2_test = soft_qq_squared_1l_oneLoop(pp_full, M0_ij, M1_ij, M0_ijk, dM0_ijk, A, n_f);
+    std::cout << scale << "\t" << M2_Full << "\t" << M2_approx  << "\t" << (M2_Full - M2_approx)/M2_test << "\t" << std::abs(1. - M2_Full/M2_approx) << std::endl;
     outfile1 << scale << ", " << std::abs(1. - M2_Full/M2_approx) << std::endl;
   }
   }

@@ -1,0 +1,198 @@
+\documentclass[a4paper,11pt]{article}
+\pdfoutput=1 % if your are submitting a pdflatex (i.e. if you have
+             % images in pdf, png or jpg format)
+
+\usepackage{jheppub}
+
+\textwidth=17cm \textheight=25 cm \oddsidemargin 2cm \topmargin 0cm
+
+\usepackage{graphicx, epstopdf}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{amsmath, amsthm, amsfonts, amssymb}
+\usepackage{mathtools, mathabx, bm, bbm, scalerel, xfrac}
+\usepackage{empheq, physics, slashed, cancel}
+
+\usepackage{hyperref}
+\usepackage{color}
+%\usepackage{cite}
+\usepackage{xspace} % decides whether to insert a space or not
+
+\allowdisplaybreaks
+
+\title{Infrared Limits for the N${}^3$LO Era}
+
+\author{Micha\l{} Czakon,}
+\author{Felix Eschment and}
+\author{Tom Schellenberger}
+\affiliation{Institut f\"ur Theoretische Teilchenphysik und Kosmologie, RWTH Aachen University,\\ D-52056 Aachen, Germany}
+\emailAdd{mczakon@physik.rwth-aachen.de}
+\emailAdd{felix.eschment@rwth-aachen.de}
+\emailAdd{tom.schellenberger@rwth-aachen.de}
+
+\abstract{We collect all necessary soft and collinear limits for the construction of a next-to-next-to-next-to-leading order subtraction scheme. We recompute and test all known infrared limits. Additionally, we identify any missing ingredients and evaluate them. New results include squared currents for the double-soft one loop asymptotic and the evanescent parts of the two loop soft current. }
+\keywords{QCD, Scattering Amplitudes, Higher-Order Perturbative Calculations}
+\preprint{P3H-22-111, TTK-22-37}
+
+\begin{document}
+\maketitle
+\flushbottom
+
+\section{Introduction}
+\section{Definitions and Conventions}
+\section{Soft Gluon Limits}
+%
+\begin{multline} \label{eq:asymptotics}
+    \ip{a_1\lambda_1,\dots,a_n\lambda_n}{M(q_1,\dots,q_n,\{ p_i \}^m_{i=1})} \quad \sim \\[.2cm] \epsilon_{\lambda_1}^{\alpha_1\,*}(q_1) \dots \epsilon_{\lambda_n}^{\alpha_n\,*}(q_n) \, \bm{\mathrm{J}}^{a_1\dots a_n}_{\alpha_1\dots\alpha_n}\big( q_1,\dots,q_n,\{ p_i\}^m_{i=1}\big) \ket{M(\{ p_i\}^m_{i=1})} \; ,
+\end{multline}
+%
+%
+\begin{equation} \label{eq:Jexp}
+    \bm{\mathrm{J}} = \big( g_s^B \big)^n \bigg( \bm{\mathrm{J}}^{(0)} + \frac{\mu^{-2\epsilon} \alpha_s^B}{(4\pi)^{1-\epsilon}} \, \bm{\mathrm{J}}^{(1)} + \dots \bigg) \; , \qquad \alpha_s^B \equiv \frac{\big( g_s^B \big)^2}{4\pi} \; ,
+\end{equation}
+%
+\begin{equation}
+\bm{\mathrm{J}}^{(0)}{}^{a}_{\alpha}\big( q,\{ p_i \}_{i=1}^m \big) =  \sum_{i} \bm{\mathrm{T}}_i^a j_\alpha(q; p_i),  \quad j_\alpha(q; p_i) = -\frac{p_{i\alpha}}{p_i \cdot q} \; .
+\end{equation}
+%
+\begin{align}
+&\bm{\mathrm{J}}^{(1)}{}^{a}_{\alpha}\big( q,\{ p_i \}_{i=1}^m \big) =  \sum_{i \neq j} i f^{abc} \bm{\mathrm{T}}_i^b \bm{\mathrm{T}}_j^c \gamma^{(1)}_{\alpha}(q; p_i, p_j), \\
+&\gamma^{(1)}_{\alpha}(q; p_i, p_j) = r_\Gamma \frac{\Gamma(1 - \epsilon) \Gamma(1 + \epsilon)}{\epsilon^2} \left(\frac{p_{i\alpha}}{p_i \cdot q} - \frac{p_{j \alpha}}{p_j \cdot q} \right) \left(\frac{\mu^2 s_{ij}}{s_{qi} s_{qj}} \right)^\epsilon e^{i \pi \epsilon \sigma_{ij}}
+\end{align}
+%
+\begin{equation}
+r_\Gamma = \frac{\Gamma^2 (1 - \epsilon) \Gamma (1 + \epsilon)}{\Gamma(1 - 2 \epsilon)}
+\end{equation}
+%
+\begin{equation}
+\sigma_{ij} = \begin{cases} -1 \quad \text{if } i \text{ and } j \text{ incoming} \\
++1 \quad \text{otherwise}
+\end{cases}
+\end{equation}
+%
+\begin{equation}
+\bm{\mathrm{J}}^{(0)}{}^{a_1 a_2}_{\alpha_1 \alpha_2}\big( q_1, q_2,\{ p_i \}_{i=1}^m \big) = \frac{1}{2} \Big \lbrace \mathbf{J}^{(0)}{}^{a_1}_{\alpha_1} \big( q_1, \{p_i \}_{i = 1}^m \big), \mathbf{J}^{(0)}{}^{a_2}_{\alpha_2}  \big( q_1, \{p_i \}_{i = 1}^m \big) \Big \rbrace + \Gamma^{(0)}{}^{a_1 a_2}_{\alpha_1 \alpha_2} \big( q_1, \{p_i \}_{i = 1}^m \big)
+\end{equation}
+%
+\begin{equation}
+\Gamma^{(0)}{}^{a_1 a_2}_{\alpha_1 \alpha_2} \big( q_1, \{p_i \}_{i = 1}^m \big) = \sum_i i f^{a_1 a_2 c} \mathbf{T}_i^c \gamma^{(0)}_{\alpha_1 \alpha_2}(q_1, q_2; p_i)
+\end{equation}
+%
+\begin{equation}
+\gamma^{(0)}_{\alpha_1 \alpha_2}(q_1, q_2; p_i) = \frac{p_{i\alpha_1} q_{1\alpha_2} - p_{i \alpha_2} q_{2 \alpha_1}}{(q_1 \cdot q_2) \big( p_i \cdot (q_1 + q_2)\big)} - \frac{p_i \cdot (q_1 - q_2)}{2 p_i \cdot ( q_1 + q_2 )} \bigg( \frac{p_{i \alpha_1} p_{i \alpha_2}}{(p_i \cdot q_1) (p_i \cdot q_2)} + \frac{g_{\alpha_1\alpha_2}}{q_1 \cdot q_2} \bigg)
+\end{equation}
+%
+\begin{align}
+&\mathbf{J}^{(1)}{}^{a_1 a_2}_{\alpha_1 \alpha_2}\big( q_1, q_2,\{ p_i \}_{i=1}^m \big) \\
+& \quad = \mathbf{J}^{(1)}{}^{a_1}_{ \alpha_1}\big( q_1,\{ p_i \}_{i=1}^m \big) \mathbf{J}^{(0)}{}^{a_2}_{ \alpha_2}\big( q_2,\{ p_i \}_{i=1}^m \big) + \mathbf{J}^{(1)}{}^{a_2}_{\alpha_2}\big( q_2,\{ p_i \}_{i=1}^m \big) \mathbf{J}^{(0)}{}^{a_1}_{\alpha_1}\big( q_1,\{ p_i \}_{i=1}^m \big)  \\
+& \qquad + \Gamma^{(1)}{}^{a_1 a_2}_{\alpha_1 \alpha_2}\big( q_1, q_2,\{ p_i \}_{i=1}^m \big)
+\end{align}
+%
+\begin{equation}
+\Gamma^{(1)}{}^{a_1 a_2}_{\alpha_1 \alpha_2}\big( q_1, q_2,\{ p_i \}_{i=1}^m \big) = \frac{1}{q_1 \cdot q_1} f^{a_1 b d} f^{a_2 c d} \sum_{i \neq j} \mathbf{T}_i^b \mathbf{T}_j^c \gamma^{(1)}_{\alpha_1 \alpha_2} (q_1, q_2, p_i, p_j)
+\end{equation}
+%
+\begin{equation}
+\begin{split}
+\gamma^{(1)}_{\alpha_1 \alpha_2}& (q_1, q_2, p_i, p_j) \equiv \tilde{J}(q_1, q_2, p_i, p_j) \big[ \tilde{g}_{\alpha_1 \alpha_2} \big] + \hat{J}_{++} (q_1, q_2, p_i, p_j) \big[ \hat{g}_{\perp\alpha_1 \alpha_2} \big] \\[.2cm]
+ &+J_{++}(q_1, q_2, p_i, p_j) \bigg[  \frac{q_1 \cdot q_2}{(p_i \cdot q_1) (p_j \cdot q_2)} \big( p_{i\perp\alpha_1} p_{j\perp\alpha_2} - p_{j\perp\alpha_1} p_{i\perp\alpha_2} \big) \bigg] \\[.2cm]
+ &+J_{+-}(q_1, q_2, p_i, p_j) \bigg[ \hat{g}_{\perp \alpha_1 \alpha_2} - \frac{2 \, p_{i\perp\alpha_1} p_{i\perp\alpha_2}}{p_{i\perp}^2} \bigg] + J_{+-}(q_2, q_1, p_j, p_i) \bigg[ \hat{g}_{\perp \alpha_1 \alpha_2} - \frac{2 \, p_{j\perp\alpha_1} p_{j\perp\alpha_2}}{p_{j\perp}^2} \bigg] \; .
+\end{split}
+\end{equation}
+%
+\subsection{Squared Currents}
+\begin{equation}
+|\mathbf{J}^{(0)}\big( q,\{ p_i \}_{i=1}^m \big)|^2 = -\sum_{i,j} j(q, p_i) \cdot j(q, p_j) \mathbf{T}_i^a \mathbf{T}_j^a
+\end{equation}
+\begin{equation}
+\begin{split}
+&\mathbf{J}^{(0)\dagger} \big( q,\{ p_i \}_{i=1}^m \big) \cdot \mathbf{J}^{(1)}\big( q,\{ p_i \}_{i=1}^m \big) + \text{h.c.} \\
+& \quad =  \sum_{i \neq j} \mathbf{T}_i \cdot \mathbf{T}_j \; 2 \, \text{Re}\big(j(q, p_i) \cdot \gamma^{(1)} (q, p_i, p_j)  \big)   + \sum_{(i,j,k)} f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \; 2 \, \text{Im} \big( j(q, p_i) \cdot \gamma^{(1)}(q, p_j, p_k) \big)
+\end{split}
+\end{equation}
+%
+\begin{equation}
+|\mathbf{J}^{(0)} \big(q_1, q_2, \{ p_i \}_{i=1}^m \big)|^2 = \left(\mathbf{J}^{(0)}\big(q_1, \{ p_i \}_{i=1}^m \big) \mathbf{J}^{(0)}\big(q_2, \{ p_i \}_{i=1}^m \big) \right)_{sym} + W^{(0)}\big(q_1, q_2, \{ p_i \}_{i=1}^m \big)
+\end{equation}
+%
+\begin{equation}
+W^{(0)}\big(q_1, q_2, \{ p_i \}_{i=1}^m \big) = - C_A \sum_{i, j} \mathbf{T}_i \cdot \mathbf{T}_j S^{(0)}(q_1, q_2, p_i, p_j)
+\end{equation}
+%
+\begin{equation}
+\begin{split}
+S^{(0)}&(q_1, q_2, p_i, p_j) = - \gamma^{(0)}_{\alpha_1 \alpha_2}(q_1, q_2, p_i) \gamma^{(0)\alpha_1 \alpha_2} (q_1, q_2, p_j) - \gamma^{(0)}_{\alpha_1 \alpha_2} (q_1, q_2, p_i) j^{\alpha_1}(q_1, p_i) j^{\alpha_2}(q_2, p_j) \\
+& + \gamma^{(0)}_{\alpha_1 \alpha_2} (q_1, q_2, p_i) j^{\alpha_1}(q_1, p_i) j^{\alpha_2}(q_2, p_j) - \frac{3}{4} \left(j(q_1, p_i) \cdot j(q_1, p_j) \right) \left(j(q_2, p_i) \cdot j(q_2, p_j) \right) \\
+& + \frac{1}{2} j(q_1, p_i)^2 \left( j(q_2, p_i) \cdot j(q_2, p_j) \right) + \frac{1}{2} j(q_2, p_j)^2 \left( j(q_1, p_i) \cdot j(q_1, p_j) \right)
+\end{split}
+\end{equation}
+%
+\subsubsection{One-Loop Double-Soft Limit}
+\begin{equation}
+\begin{split}
+\mathbf{J}^{(0) \dagger} &\big( q_1, q_2 ,\{ p_i \}_{i=1}^m \big) \cdot \mathbf{J}^{(1)} \big( q_1, q_2 ,\{ p_i \}_{i=1}^m \big) + \text{h.c.} \\
+& = \bigg \lbrace \left[ |\mathbf{J}^{(0)}\big( q_1,\{ p_i \}_{i=1}^m \big)|^2 \left(\mathbf{J}^{(0)\dagger} \big( q_2,\{ p_i \}_{i=1}^m \big) \cdot \mathbf{J}^{(1)}\big( q_2,\{ p_i \}_{i=1}^m \big) + \text{h.c.} \right) \right]_{sym} + (q_1 \longleftrightarrow q_2) \bigg \rbrace \\
+& \quad + \sum_{i,j,k,l} \left(f^{ade}f^{bce} \mathbf{T}_i^a \big \lbrace \mathbf{T}_j^b, \mathbf{T}_k^c \big \rbrace \mathbf{T}_l^d + \text{h.c.} \right) S^{(1)}(q_1, q_2, p_i, p_j, p_k, p_l) \\
+& \quad + \sum_{(i,j,k)} f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \; S^{(1)}(q_1, q_2, p_i, p_j, p_k) + \sum_{(i,j)} \mathbf{T}_i\cdot \mathbf{T}_j \; S^{(1)} (q_1, q_2, p_i, p_j)
+\end{split}
+\end{equation}
+%
+\begin{equation}
+\begin{split}
+&S^{(1)}(q_1, q_2, p_i, p_j, p_k, p_l) \\
+&= 2 \, \text{Re} \bigg \lbrace - \frac{1}{4} \left(\gamma^{(1)}(q_1, p_k, p_l) \cdot j(q_1, p_i) \right) \left(j(q_2, p_i) \cdot j(q_2, p_j) \right) - \frac{1}{4} \gamma^{(1)}_{\alpha}(q_1, p_j, p_k) \gamma^{(0)\alpha \beta}(q_1, q_2, p_i) j_\beta(q_2,  p_l) \\
+& \quad + \frac{1}{8} \left(\gamma^{(1)}_{\alpha \beta}(q_1, q_2, p_i, p_j) - \gamma^{(1)}_{\alpha \beta}(q_1, q_2, p_i, p_i) \right) j^\alpha(q_1, p_l) j^{\beta}(q_2, p_k) + (q_1 \longleftrightarrow q_2 ) \bigg \rbrace
+\end{split}
+\end{equation}
+%
+\begin{equation}
+\begin{split}
+&S^{(1)}(q_1, q_2, p_i, p_j, p_k) \\
+&= 2 C_A \, \text{Im} \bigg \lbrace \frac{1}{2} \gamma^{(1)}_{\alpha}(q_1, p_j, p_k) \gamma^{(0)\alpha \beta}(q_1, q_2, p_i) j_\beta(q_2, p_i)  -  \frac{1}{2} \gamma^{(1)}_{\alpha}(q_1, p_j, p_k) \gamma^{(0)\alpha \beta}(q_1, q_2, p_i) j_\beta(q_2, p_j)  \\
+& \quad -  \frac{1}{2} \gamma^{(1)}_{\alpha}(q_1, p_j, p_k) \gamma^{(0)\alpha \beta}(q_1, q_2, p_j) j_\beta(q_2, p_i) + \frac{1}{4} \gamma^{(0)}_{\alpha \beta} (q_1, q_2, p_i) \gamma^{(1)\alpha \beta}(q_1, q_2, p_j, p_k) \\
+& \quad - \frac{3}{4} \left(\gamma^{(1)}(q_1, p_j, p_k) \cdot j(q_1, p_i) \right) \left(j(q_2, p_i) \cdot j(q_2, p_j) \right) - \frac{1}{2} \left(\gamma^{(1)}(q_1, p_j, p_k) \cdot j(q_1, p_i) \right) \left(j(q_2, p_j) \cdot j(q_2, p_k) \right) \\
+& \quad + \frac{1}{4} \left(\gamma^{(1)}(q_1, p_j, p_k) \cdot j(q_1, p_j) \right) \left(j(q_2, p_i) \cdot j(q_2, p_j) \right) + \frac{1}{2} \gamma^{(1)}_{\alpha \beta}(q_1, q_2, p_i, p_j) j^\alpha(q_1, p_i) j^\beta(q_2, p_k) \\
+& \quad - \frac{1}{4} \gamma^{(1)}_{\alpha \beta}(q_1, q_2, p_i, p_j) j^\alpha(q_1, p_j) j^\beta(q_2, p_k) + (q_1 \longleftrightarrow q_2) \bigg \rbrace
+\end{split}
+\end{equation}
+%
+\begin{equation}
+\begin{split}
+&S^{(1)}(q_1, q_2, p_i, p_j) \\
+&= 2 C_A^2\, \text{Re} \bigg \lbrace \frac{1}{8} \gamma^{(1)}_{\alpha \beta} (q_1, q_2, p_i, p_j) j^\alpha (q_1, p_i) j^\beta(q_2, p_i) - \frac{1}{8} \gamma^{(1)}_{\alpha \beta} (q_1, q_2, p_i, p_j) j^\alpha (q_1, p_i) j^\beta(q_2, p_j) \\
+& \quad - \left( \gamma^{(1)}(q_1, p_i, p_j) \cdot j(q_1, p_i) \right) \left(j(q_2, p_i) \cdot j(q_2, p_j) \right) + \frac{1}{4} \gamma^{(1)}_{\alpha \beta}(q_1, q_2, p_i, p_j) \gamma^{(0)\alpha \beta}(q_1, q_2, p_i) \\
+& \quad + (q_1 \longleftrightarrow q_2 ) \bigg \rbrace
+\end{split}
+\end{equation} 
+
+\section{Soft Quark Limits}
+\begin{equation} \label{eq:J0quarks}
+    \mathbf{J}^{(0)}_{a_1 a_2}(q_1, q_2, \{ p_i \}_{i=1}^m ) = - \sum_{i} T^c_{a_1a_2} \mathbf{T}^c_i \, \frac{\bar{u}(q_1,\lambda_1) \, \slashed{p}_i \, v(q_2,\lambda_2)}{2 ( q_1 \cdot q_2 ) \big( p_i \cdot (q_1  + q_2) \big)} \; .
+\end{equation}
+
+\begin{equation}
+\begin{split}
+ &\mathbf{J}^{(1)}_{a_1 a_2}(q_1,q_2, \{ p_i \}_{i=1}^m ) =  \frac{1}{q_1 \cdot q_2} \sum_{i\neq j} (T^bT^c)_{a_1a_2} \mathbf{T}^b_i \mathbf{T}^c_j \, \\
+  & \quad \times \left[ \bar{u}(q_1,\lambda_1) \left( \frac{\slashed{p}_i}{p_i \cdot (q_1 + q_2)} \, J_{q\bar{q}}(q_1,q_2, p_i, p_j)  - \frac{\slashed{p}_j}{p_j \cdot (q_1 + q_2)} \, J_{q\bar{q}}(q_2,q_1, p_j, p_i) \right) v(q_2,\lambda_2) \right] 
+\end{split}
+\end{equation}
+
+\subsection{Squared Currents}
+\begin{equation}
+|\mathbf{J}^{(0)}(q_1, q_2)|^2 = T_F \sum_{i, j} \mathbf{T}_i \cdot \mathbf{T}_j \mathcal{I}(q_1, q_2, p_i, p_j)
+\end{equation}
+
+\begin{equation}
+\mathcal{I}(q_1, q_2, p_i, p_j) = \frac{p_i \cdot q_1 p_j \cdot q_2 + p_i \cdot q_2 p_j \cdot q_1 - p_i \cdot p_j q_1 \cdot q_2}{(q_1 \cdot q_2)^2 p_i \cdot (q_1 + q_2) p_j \cdot (q_1 + q_2)}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+\mathbf{J}^{(0)\dagger}&(q_1, q_2,\{ p_i \}_{i=1}^m ) \mathbf{J}^{(1)}(q_1, q_2, \{ p_i \}_{i=1}^m ) + \text{h.c.} \\ 
+ = &-2T_F \sum_{(i,j,k)} d^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \mathcal{I}(q_1, q_2, p_i, p_j) \text{Re} \big \lbrace J_{q\bar{q}} (q_1, q_2, p_j, p_k) - J_{q \bar{q}}(q_2, q_1, p_j, p_k)  \big \rbrace  \\ 
+&  -2T_F \sum_{(i,j,k)} f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \mathcal{I}(q_1, q_2, p_i, p_j) \text{Im} \big \lbrace J_{q\bar{q}} (q_1, q_2, p_j, p_k) + J_{q \bar{q}}(q_2, q_1, p_j, p_k)  \big \rbrace  \\ 
+\end{split}
+\end{equation}
+
+\end{document}

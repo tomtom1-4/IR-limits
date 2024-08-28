@@ -3,7 +3,7 @@
 
 using namespace tinyxml2;
 // Evaluation of input
-std::string process_str = "e- e+ -> u u~ u u~";
+std::string process_str = "u u~ -> u u~ e- e+";
 std::string unresolved_str = " g g";
 std::string suffix = "_EW";
 
@@ -95,7 +95,7 @@ int main() {
 
   // Create Hashmap for all non-zero amplitudes that only need to be caluculated once per data set
   std::unordered_map<std::string, std::complex<double>> M0, M1; // hel + col is the key as string
-  std::unordered_map<std::string, std::complex<double>> M0_ij, M1_ij, fM0_ijk, fM1_ijk, dM_ijk, M0_ijkl, M1_ijkl, M0_ijklab, Q_ijkl, M0_ijkla; // color correlators
+  std::unordered_map<std::string, std::complex<double>> M0_ij, M1_ij, fM0_ijk, dM0_ijk, fM1_ijk, dM_ijk, M0_ijkl, M1_ijkl, M0_ijklab, Q_ijkl, M0_ijkla; // color correlators
   std::vector<std::vector<int>> keys;
   // fill the Hashmaps
   for (int i = 0; i < helicities.size(); i++) {
@@ -193,9 +193,11 @@ int main() {
       }
       double control;
       double M2_averaged_control;
+      double M2_averaged_control_LO;
       double M2_averaged = 0;
       //Recola::get_colour_correlation_rcl(1, power, i + 1, j + 1, control);
 
+      Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged_control_LO);
       Recola::get_squared_amplitude_rcl(1, power + delta_power/2, order, M2_averaged_control);
       //Recola::get_squared_amplitude_rcl(1, power + delta_power/2, order, M2_averaged_control);
       std::cout << "M2_averaged_control = " << M2_averaged_control << std::endl;
@@ -258,7 +260,7 @@ int main() {
       M0_ijElement->InsertEndChild(M0_ijEntry);
       M1_ijElement->InsertEndChild(M1_ijEntry);
       std::cout << "M2Control = " << M2_averaged_control << "\t" << M2_averaged << "\t" << M2_averaged/M2_averaged_control << std::endl;
-      std::cout << "i = " << i << ", j = " << j << ": <M|T_i.T_j|M> = " << M0ij*average_factor << "\t" << control;
+      std::cout << "i = " << i << ", j = " << j << ": <M|T_i.T_j|M> = " << M0ij*average_factor << "\t" << M0ij*average_factor/M2_averaged_control_LO;
       if(order == "NLO") std::cout << "\t" << M1ij*average_factor;
       std::cout << std::endl;
     }
@@ -363,6 +365,7 @@ int main() {
             M1_ijklElement->InsertEndChild(M1_ijklEntry);
             double M2_averaged;
             Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged);
+            std::cout << "M2 (LO) = " << M2_averaged << std::endl;
             std::cout << "i = " << i << ", j = " << j << ", k = " << k << ", l = " << l << ": <M|T_i.T_j T_k.T_l|M> = " << M0ijkl*average_factor << "\t" << M0ijkl*average_factor/M2_averaged << std::endl;
           }
         }
@@ -668,23 +671,33 @@ int main() {
   // f^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
   if((unresolved_str==" g g g" or order=="NLO") and suffix=="_EW") {
   XMLElement * M0_ijkElement = xmlDoc.NewElement("M0_ijk");
+  XMLElement * dM0_ijkElement = xmlDoc.NewElement("dM0_ijk");
   std::vector<std::vector<int>> configurations;
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
     for(int j = 0; j < A.process.size(); j++) {
       if(A.particle_type[j] == 0) continue;
-      if(j == i) continue;
+      //if(j == i) continue;
       for(int k = 0; k < A.process.size(); k++) {
         if(A.particle_type[k] == 0) continue;
-        if((k == i) or (k == j)) continue;
+        //if((k == i) or (k == j)) continue;
         std::complex<double> fMijk = 0.;
         std::complex<double> dMijk = 0.;
         bool permutation = false;
+
         XMLElement * M0_ijkEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
+        XMLElement * dM0_ijkEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
         for(std::vector<int> configuration : configurations) {
           if(configuration==std::vector<int>({i,j,k})) {
-            M0_ijkEntry->SetText(std::real(fM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
+            if((i != j) and (i != k) and (j != k)) {
+              M0_ijkEntry->SetText(std::real(fM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
+            }
+            else {
+              M0_ijkEntry->SetText(0);
+            }
             M0_ijkElement->InsertEndChild(M0_ijkEntry);
+            dM0_ijkEntry->SetText(std::real(dM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
+            dM0_ijkElement->InsertEndChild(dM0_ijkEntry);
             permutation = true;
             break;
           }
@@ -753,14 +766,27 @@ int main() {
           }
         }
         fM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)] = fMijk*average_factor;
-        M0_ijkEntry->SetText(std::real(fM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
+        dM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)] = dMijk*average_factor;
+        if((i != j) and (i != k) and (j != k)) {
+          M0_ijkEntry->SetText(std::real(fM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
+        }
+        else {
+          M0_ijkEntry->SetText(0);
+        }
         M0_ijkElement->InsertEndChild(M0_ijkEntry);
+        dM0_ijkEntry->SetText(std::real(dM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
+        dM0_ijkElement->InsertEndChild(dM0_ijkEntry);
         // permutations
         fM0_ijk[std::to_string(i) + std::to_string(k) + std::to_string(j)] = -fMijk*average_factor;
         fM0_ijk[std::to_string(j) + std::to_string(i) + std::to_string(k)] = -fMijk*average_factor;
         fM0_ijk[std::to_string(j) + std::to_string(k) + std::to_string(i)] = fMijk*average_factor;
         fM0_ijk[std::to_string(k) + std::to_string(j) + std::to_string(i)] = -fMijk*average_factor;
         fM0_ijk[std::to_string(k) + std::to_string(i) + std::to_string(j)] = fMijk*average_factor;
+        dM0_ijk[std::to_string(i) + std::to_string(k) + std::to_string(j)] = dMijk*average_factor;
+        dM0_ijk[std::to_string(j) + std::to_string(i) + std::to_string(k)] = dMijk*average_factor;
+        dM0_ijk[std::to_string(j) + std::to_string(k) + std::to_string(i)] = dMijk*average_factor;
+        dM0_ijk[std::to_string(k) + std::to_string(j) + std::to_string(i)] = dMijk*average_factor;
+        dM0_ijk[std::to_string(k) + std::to_string(i) + std::to_string(j)] = dMijk*average_factor;
         configurations.push_back(std::vector<int>({i,j,k}));
         configurations.push_back(std::vector<int>({i,k,j}));
         configurations.push_back(std::vector<int>({j,i,k}));
@@ -774,12 +800,13 @@ int main() {
         Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged);
         std::string lock = std::to_string(i) + std::to_string(j) + std::to_string(k);
         std::cout << lock << ": f^{abc} <M|Ti Tj Tk|M> = " << fM0_ijk[lock] << "\t" << fMijk*average_factor << "\t" << fM0_ijk[lock]/M2_averaged << std::endl;
-        //std::cout << "i = " << i << ", j = " << j << ", k = " << k << ": d^{abc} <M|Ti Tj Tk|M> = " << dMijk*average_factor << "\t" << dMijk*average_factor/M2_averaged << std::endl;
+        std::cout << "i = " << i << ", j = " << j << ", k = " << k << ": d^{abc} <M|Ti Tj Tk|M> = " << dMijk*average_factor << "\t" << dMijk*average_factor/M2_averaged << std::endl;
 
       }
     }
   }
   pRoot->InsertEndChild(M0_ijkElement);
+  pRoot->InsertEndChild(dM0_ijkElement);
   }
 
   // f^{a,d;b,c} <M|Ti^a {Tj^b, Tk^c} Tl^d|M> + h.c.

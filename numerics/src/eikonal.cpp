@@ -277,6 +277,40 @@ LM<std::complex<double>> gamma21(const LV<double>& pi, const LV<double>& pj, con
   return output;
 }
 
+std::complex<double> Jqq(const LV<double>& q1, const LV<double>& q2, const LV<double>& pi, const LV<double>& pj, int nl=5) {
+  bool analytic_continuation = false;
+  if((pi.components[0] < 0.) and (pj.components[0] < 0.)) {
+    analytic_continuation = true;
+  }
+  std::complex<double> logc = std::log(2.*q1*q2/mu/mu) - I*M_PI;
+  double l1 = std::log((pi*q1)/(pi*q1 + pi*q2));
+  double l2 = std::log((pj*q2)/(pj*q1 + pj*q2));
+
+  double s1j = 2.*(pj*q1);
+  double s1i = 2.*(pi*q1);
+  double s2j = 2.*(pj*q2);
+  double s2i = 2.*(pi*q2);
+  double sij = 2.*(pi*pj);
+  double s12 = 2.*(q1*q2);
+
+  std::complex<double> l3 = std::log(sij*s12/s1i/s2j);
+  if(analytic_continuation) l3 = l3 - 2.*M_PI*I;
+
+  std::vector<std::complex<double>> Jpm(3);
+  Jpm[0] = 2.*C_F/C_A;
+  Jpm[1] = (-11*C_A + 9*C_F + 3*C_A*l3 + 4*nl*T_F)/(3.*C_A);
+  Jpm[2] = (144*C_F + (C_A*((-152 + 18*std::pow(l1,2) + 18*std::pow(l2,2) + 18*l1*l3 + 18*l2*l3 + 9.*std::pow(l3,2) + 6*std::pow(M_PI,2))*(s1i + s2i)*(s1j + s2j) + (152. - 9.*std::pow(2*l1 + l3,2) - 6*std::pow(M_PI,2))*s12*sij))/((s1i + s2i)*(s1j + s2j) - s12*sij) +
+     40*nl*T_F)/(18.*C_A);
+
+  std::vector<std::complex<double>> prefactor(3);
+  prefactor[0] = 1.;
+  prefactor[1] = -logc;
+  prefactor[2] = (6.*std::pow(logc, 2) - std::pow(M_PI, 2))/12.;
+
+  std::complex<double> Jpm_ep0 = Jpm[0]*prefactor[2] + Jpm[1]*prefactor[1] + Jpm[2]*prefactor[0];
+  return Jpm_ep0/std::pow(4.*M_PI, 2);
+}
+
 std::unordered_map<std::string, std::complex<double>> J_g_eikonal(double *pp, double *q, amplitude& A) {
   std::unordered_map<std::string, std::complex<double>> J;
   for (int i = 0; i < A.process.size(); i++) { // particle index
@@ -1568,6 +1602,115 @@ double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, double
                                                                +(gamma20(pi, q2, q1)*gamma21(pi, pj, q2, q1).transpose()).trace()/4.)
                 *std::real(M0ij[std::to_string(i) + std::to_string(j)]);
       }
+    }
+  }
+  return approx;
+}
+
+
+
+double soft_qq_squared_1l(double*pp_full, std::unordered_map<std::string, double> M0ij,
+    std::unordered_map<std::string, double> M1ij, std::unordered_map<std::string, double> M0ijk,
+    std::unordered_map<std::string, double> dM0ijk, amplitude& A, int nl) {
+  double q1_arr[4], q2_arr[4];
+  part(pp_full, q1_arr, A.process.size()*4, A.process.size()*4 + 4);
+  part(pp_full, q2_arr, A.process.size()*4 + 4, A.process.size()*4 + 8);
+  LV<double> q1(q1_arr);
+  LV<double> q2(q2_arr);
+  double approx = 0;
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.process[i] == 1) continue;
+    double pi_arr[4];
+    part(pp_full, pi_arr, i*4, i*4 + 4);
+    LV<double> pi(pi_arr);
+    if(i < 2) pi = (-1.)*pi;
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.process[j] == 1) continue;
+      double pj_arr[4];
+      part(pp_full, pj_arr, 4*j, 4*j + 4);
+      LV<double> pj(pj_arr);
+      if(j < 2) pj = (-1.)*pj;
+      approx += T_F*std::pow(gs, 4)*((pi*q1)*(pj*q2) + (pi*q2)*(pj*q1) - (pi*pj)*(q1*q2))/std::pow(q1*q2, 2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2)
+        *M1ij[std::to_string(i) + std::to_string(j)];
+      if(j == i) continue;
+
+      //double colfactor = std::pow(T_F, 2)*(1./NC/NC - 3./NC + 2 + NC);
+
+      double kinfactor = (q1*q2)*(pi*pj) - (q1*pi)*(q2*pj) - (q1*pj)*(q2*pi);
+      approx += std::pow(gs, 6)*std::real(Jqq(q1, q2, pi, pj, nl))*M0ij[std::to_string(i) + std::to_string(j)]*T_F*C_A/2
+        *(+4./std::pow(q1*q2, 2)/std::pow(pi*q1 + pi*q2, 2)*(q1*pi)*(q2*pi)
+          +2.*kinfactor/std::pow(q1*q2, 2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2));
+
+      approx += std::pow(gs, 6)*M0ij[std::to_string(i) + std::to_string(j)]*T_F*C_A/2
+        *(+4.*(q1*pj)*(q2*pj)/std::pow(q1*q2, 2)/std::pow(pj*q1 + pj*q2, 2)*std::real(Jqq(q2, q1, pj, pi, nl))
+          +2.*kinfactor/std::pow(q1*q2, 2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2)*std::real(Jqq(q2, q1, pi, pj, nl)));
+
+      approx += std::pow(gs, 6)*std::real(Jqq(q1, q2, pi, pj, nl))*T_F*dM0ijk[std::to_string(i) + std::to_string(j) + std::to_string(j)]
+        *(+2.*kinfactor/std::pow(q1*q2, 2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2));
+
+      approx += std::pow(gs, 6)*std::real(Jqq(q2, q1, pi, pj, nl))*T_F*dM0ijk[std::to_string(i) + std::to_string(j) + std::to_string(j)]
+        *(-2.*kinfactor/std::pow(q1*q2, 2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2));
+
+      approx += std::pow(gs, 6)*std::real(Jqq(q2, q1, pj, pi, nl))*T_F*dM0ijk[std::to_string(i) + std::to_string(j) + std::to_string(j)]
+        *(+4.*(q1*pj)*(q2*pj)/std::pow(q1*q2, 2)/std::pow(pj*q1 + pj*q2,2));
+
+      approx += std::pow(gs, 6)*std::real(Jqq(q1, q2, pi, pj, nl))*T_F*dM0ijk[std::to_string(i) + std::to_string(i) + std::to_string(j)]
+        *(-4.*(q1*pi)*(q2*pi)/std::pow(q1*q2, 2)/std::pow(pi*q1 + pi*q2,2));
+
+      for(int k = 0; k < A.process.size(); k++) {
+        if(A.process[k] == 1) continue;
+        if((k == i) or (k == j)) continue;
+        double pk_arr[4];
+        part(pp_full, pk_arr, 4*k, 4*k + 4);
+        LV<double> pk(pk_arr);
+        if(k < 2) pk = (-1.)*pk;
+
+        approx += std::pow(gs, 6)*T_F*M0ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]
+          *kinfactor*(-2.)/std::pow(q1*q2, 2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2)*(std::imag(Jqq(q1, q2, pj, pk)) + std::imag(Jqq(q2, q1, pj, pk)));
+
+        approx += std::pow(gs, 6)*T_F*dM0ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]
+          *kinfactor*2./std::pow(q1*q2, 2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2)*(std::real(Jqq(q1, q2, pj, pk)) - std::real(Jqq(q2, q1, pj, pk)));
+      }
+    }
+  }
+  return approx;
+}
+
+double soft_qq_squared_1l_oneLoop(double*pp_full, std::unordered_map<std::string, double> M0ij,
+    std::unordered_map<std::string, double> M1ij, std::unordered_map<std::string, double> M0ijk,
+    std::unordered_map<std::string, double> dM0ijk, amplitude& A, int nl) {
+  double q1_arr[4], q2_arr[4];
+  part(pp_full, q1_arr, A.process.size()*4, A.process.size()*4 + 4);
+  part(pp_full, q2_arr, A.process.size()*4 + 4, A.process.size()*4 + 8);
+  LV<double> q1(q1_arr);
+  LV<double> q2(q2_arr);
+  double approx = 0;
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.process[i] == 1) continue;
+    double pi_arr[4];
+    part(pp_full, pi_arr, i*4, i*4 + 4);
+    LV<double> pi(pi_arr);
+    if(i < 2) pi = (-1.)*pi;
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.process[j] == 1) continue;
+      if(j == i) continue;
+      double pj_arr[4];
+      part(pp_full, pj_arr, 4*j, 4*j + 4);
+      LV<double> pj(pj_arr);
+      if(j < 2) pj = (-1.)*pj;
+      double kinfactor = (q1*q2)*(pi*pj) - (q1*pi)*(q2*pj) - (q1*pj)*(q2*pi);
+      approx += std::pow(gs, 6)*std::real(Jqq(q1, q2, pi, pj, nl))*T_F*dM0ijk[std::to_string(i) + std::to_string(j) + std::to_string(j)]
+        *(+2.*kinfactor/std::pow(q1*q2, 2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2));
+
+      approx += std::pow(gs, 6)*std::real(Jqq(q2, q1, pi, pj, nl))*T_F*dM0ijk[std::to_string(i) + std::to_string(j) + std::to_string(j)]
+        *(-2.*kinfactor/std::pow(q1*q2, 2)/(pi*q1 + pi*q2)/(pj*q1 + pj*q2));
+
+      approx += std::pow(gs, 6)*std::real(Jqq(q2, q1, pj, pi, nl))*T_F*dM0ijk[std::to_string(i) + std::to_string(j) + std::to_string(j)]
+        *(+4.*(q1*pj)*(q2*pj)/std::pow(q1*q2, 2)/std::pow(pj*q1 + pj*q2,2));
+
+      approx += std::pow(gs, 6)*std::real(Jqq(q1, q2, pi, pj, nl))*T_F*dM0ijk[std::to_string(i) + std::to_string(i) + std::to_string(j)]
+        *(-4.*(q1*pi)*(q2*pi)/std::pow(q1*q2, 2)/std::pow(pi*q1 + pi*q2,2));
+
     }
   }
   return approx;
