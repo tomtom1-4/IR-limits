@@ -1,16 +1,16 @@
 #include "main.hpp"
-#include "src/tinyxml2.h"
 
 using namespace tinyxml2;
 // Evaluation of input
-std::string process_str = "u u~ -> u u~ e- e+";
-std::string unresolved_str = " g g";
-std::string suffix = "_EW";
+std::string process_str = "e- e+ -> u u~";
+std::string unresolved_str = " g";
+std::string suffix = "_QED";
 
 
-const int nBorn = 6;
-const int power = 2;
-const std::string order = "NLO";
+const int nBorn = 4;
+const int power = 0;
+const std::array<unsigned, 3> powerNonQCD = {2,0,0};
+const std::string order = "NNLO";
 
 void replace(std::string& str, const std::string& from, const std::string& to) {
   if(from.empty())
@@ -23,8 +23,15 @@ void replace(std::string& str, const std::string& from, const std::string& to) {
 }
 
 int main() {
+  std::string order_rcl = "LO";
+  unsigned loopOrder = 0;
+  if(order == "NLO") loopOrder = 1;
+  else if(order == "NNLO") loopOrder = 2;
   int delta_power = 0;
-  if (order == "NLO") delta_power = 2;
+  if ((order == "NLO") or (order == "NNLO")) {
+    delta_power = 2;
+    order_rcl = "NLO";
+  }
   std::cout.precision(8);
   // Initialize txt outstream (delete previous file)
 
@@ -35,6 +42,11 @@ int main() {
 
   amplitude A(process_str);
 
+  // Stripper Settings
+  Stripper::Model::config(true,false,false,false,powerNonQCD[0],powerNonQCD[1],powerNonQCD[2],1.,1.,1.);
+  const Stripper::Process process(process_str);
+  Stripper::Model::nf = 5;
+
   // Recola Settings
   Recola::set_reduction_mode_rcl(4);
   Recola::set_print_level_amplitude_rcl(2);
@@ -44,11 +56,11 @@ int main() {
   Recola::set_momenta_correction_rcl(false);
 
   Recola::use_alpha0_scheme_rcl(e*e/4./M_PI);
-  //Recola::set_pole_mass_z_rcl(1.e8, 0.0001);
-  //Recola::set_pole_mass_w_rcl(1.e15, 0.0001);
+  Recola::set_pole_mass_z_rcl(1.e8, 0.0001);
+  Recola::set_pole_mass_w_rcl(1.e15, 0.0001);
 
   // Define & generate process
-  Recola::define_process_rcl(1, process_str, order);
+  Recola::define_process_rcl(1, process_str, order_rcl);
   Recola::set_otter_mode_rcl(1, "oneloop_qp");
 
   Recola::generate_processes_rcl();
@@ -63,6 +75,11 @@ int main() {
       pp_rcl[i][j] = (i<2?-1.:1.)*pp.momenta[i].components[j];
       pp_arr[i*4+j] = (i<2?-1.:1.)*pp.momenta[i].components[j];
     }
+  }
+  std::vector<Stripper::Momentum<double>> pp_Stripper;
+  for(int i = 0; i < nBorn; i++) {
+    Stripper::Momentum<double> p_Stripper = {pp_rcl[i][0], pp_rcl[i][1], pp_rcl[i][2], pp_rcl[i][3],0.,0.};
+    pp_Stripper.push_back(p_Stripper);
   }
 
   XMLDocument xmlDoc;
@@ -85,17 +102,17 @@ int main() {
   pRoot->InsertEndChild(ppElement);
 
   // Compute process amplitudes
-  Recola::compute_process_rcl(1, pp_rcl, order);
+  Recola::compute_process_rcl(1, pp_rcl, order_rcl);
 
   // Get non-vanishing helicity and color-configurations
-  std::vector<std::vector<int> > helicities = non0hel(1, power + delta_power, order, A);
+  std::vector<std::vector<int> > helicities = non0hel(1, power + delta_power, order_rcl, A);
   std::cout << "Found non zero helicity configurations of Born process" << std::endl;
-  std::vector<std::vector<int> > colors = non0col(1, power + delta_power, order, A, helicities);
+  std::vector<std::vector<int> > colors = non0col(1, power + delta_power, order_rcl, A, helicities);
   std::cout << "Found non zero color configurations of Born process" << std::endl;
 
   // Create Hashmap for all non-zero amplitudes that only need to be caluculated once per data set
   std::unordered_map<std::string, std::complex<double>> M0, M1; // hel + col is the key as string
-  std::unordered_map<std::string, std::complex<double>> M0_ij, M1_ij, fM0_ijk, dM0_ijk, fM1_ijk, dM_ijk, M0_ijkl, M1_ijkl, M0_ijklab, Q_ijkl, M0_ijkla; // color correlators
+  std::unordered_map<std::string, std::complex<double>> M0_ij, M1_ij, M2_ij, fM0_ijk, fM1_ijk, dM0_ijk, dM_ijk, M0_ijkl, M1_ijkl, M0_ijklab, Q_ijkl, M0_ijkla; // color correlators
   std::vector<std::vector<int>> keys;
   // fill the Hashmaps
   for (int i = 0; i < helicities.size(); i++) {
@@ -121,13 +138,13 @@ int main() {
       // Compute amplitudes
       // Born amplitude
       M0[key] = colorflow2color(hel, col, A, power, "LO", 1);
-      if(order=="NLO") M1[key] = colorflow2color(hel, col, A, power + 2, "NLO", 1);
+      if(order_rcl=="NLO") M1[key] = colorflow2color(hel, col, A, power + 2, "NLO", 1);
       if(std::abs(M0[key]) + std::abs(M1[key]) > 1.e-17) {
         std::vector<int> dummy = hel_full;
         dummy.insert(dummy.end(), col_full.begin(), col_full.end());
         keys.push_back(dummy);
         std::cout << key << "\t" << M0[key];
-        if(order=="NLO") std::cout << "\t" << M1[key];
+        if(order_rcl=="NLO") std::cout << "\t" << M1[key];
         std::cout << std::endl;
       }
     }
@@ -176,19 +193,27 @@ int main() {
   // <M|Ti.Tj|M>
   XMLElement * M0_ijElement = xmlDoc.NewElement("M0_ij");
   XMLElement * M1_ijElement = xmlDoc.NewElement("M1_ij");
+  XMLElement * M2_ijElement = xmlDoc.NewElement("M2_ij");
+  std::shared_ptr<Stripper::LoopImplementation<double>> matrixelements = std::make_shared<Stripper::Hardcoded<double>>(loopOrder,process,powerNonQCD);
+  matrixelements->setKinematics(pp_Stripper);
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
     for(int j = 0; j < A.process.size(); j++) {
       if(A.particle_type[j] == 0) continue;
       XMLElement * M0_ijEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
       XMLElement * M1_ijEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
-      if(std::abs(M0_ij[std::to_string(j) + std::to_string(i)]) + std::abs(M1_ij[std::to_string(j) + std::to_string(i)]) != 0.) {
+      XMLElement * M2_ijEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
+      if(std::abs(M0_ij[std::to_string(j) + std::to_string(i)]) + std::abs(M1_ij[std::to_string(j) + std::to_string(i)]
+       + std::abs(M2_ij[std::to_string(j) + std::to_string(i)])) != 0.) {
         M0_ij[std::to_string(i) + std::to_string(j)] = M0_ij[std::to_string(j) + std::to_string(i)];
         M1_ij[std::to_string(i) + std::to_string(j)] = M1_ij[std::to_string(j) + std::to_string(i)];
+        M2_ij[std::to_string(i) + std::to_string(j)] = M2_ij[std::to_string(j) + std::to_string(i)];
         M0_ijEntry->SetText(std::real(M0_ij[std::to_string(i) + std::to_string(j)]));
         M1_ijEntry->SetText(std::real(M1_ij[std::to_string(i) + std::to_string(j)]));
+        M2_ijEntry->SetText(std::real(M2_ij[std::to_string(i) + std::to_string(j)]));
         M0_ijElement->InsertEndChild(M0_ijEntry);
         M1_ijElement->InsertEndChild(M1_ijEntry);
+        M2_ijElement->InsertEndChild(M2_ijEntry);
         continue;
       }
       double control;
@@ -198,7 +223,8 @@ int main() {
       //Recola::get_colour_correlation_rcl(1, power, i + 1, j + 1, control);
 
       Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged_control_LO);
-      Recola::get_squared_amplitude_rcl(1, power + delta_power/2, order, M2_averaged_control);
+      Recola::get_squared_amplitude_rcl(1, power + delta_power/2, order_rcl, M2_averaged_control);
+      if(order == "NNLO") M2_ij[std::to_string(i) + std::to_string(j)] = (matrixelements->evalCC(mu,i,j))*average_factor;
       //Recola::get_squared_amplitude_rcl(1, power + delta_power/2, order, M2_averaged_control);
       std::cout << "M2_averaged_control = " << M2_averaged_control << std::endl;
       std::complex<double> M0ij = 0;
@@ -217,8 +243,8 @@ int main() {
         std::string key = hel_string + col_string;
         std::complex<double> M0_bra = std::conj(M0[key]);
         std::complex<double> M1_bra = std::conj(M1[key]);
-        if(order=="LO") M2_averaged += std::pow(std::abs(M0[key]), 2)*average_factor;
-        if(order=="NLO") M2_averaged += 2.*std::real(M0[key]*std::conj(M1[key]))*average_factor;
+        if(order_rcl=="LO") M2_averaged += std::pow(std::abs(M0[key]), 2)*average_factor;
+        if(order_rcl=="NLO") M2_averaged += 2.*std::real(M0[key]*std::conj(M1[key]))*average_factor;
         for(int a = 0; a < 8; a++) {
           for(int ci = 0; ci < A.process[i]; ci++) {
             for(int cj = 0; cj < A.process[j]; cj++) {
@@ -256,17 +282,21 @@ int main() {
       M0_ij[std::to_string(i) + std::to_string(j)] = M0ij*average_factor;
       M0_ijEntry->SetText(std::real(M0_ij[std::to_string(i) + std::to_string(j)]));
       M1_ijEntry->SetText(std::real(M1_ij[std::to_string(i) + std::to_string(j)]));
+      M2_ijEntry->SetText(std::real(M2_ij[std::to_string(i) + std::to_string(j)]));
 
       M0_ijElement->InsertEndChild(M0_ijEntry);
       M1_ijElement->InsertEndChild(M1_ijEntry);
+      M2_ijElement->InsertEndChild(M2_ijEntry);
       std::cout << "M2Control = " << M2_averaged_control << "\t" << M2_averaged << "\t" << M2_averaged/M2_averaged_control << std::endl;
       std::cout << "i = " << i << ", j = " << j << ": <M|T_i.T_j|M> = " << M0ij*average_factor << "\t" << M0ij*average_factor/M2_averaged_control_LO;
-      if(order == "NLO") std::cout << "\t" << M1ij*average_factor;
+      if(order_rcl == "NLO") std::cout << "\t" << M1ij*average_factor;
+      if(order == "NNLO") std::cout << "\t" << M2_ij[std::to_string(i) + std::to_string(j)];
       std::cout << std::endl;
     }
   }
   pRoot->InsertEndChild(M0_ijElement);
   pRoot->InsertEndChild(M1_ijElement);
+  pRoot->InsertEndChild(M2_ijElement);
 
   // <M|Ti.Tj Tk.Tl|M>
 
@@ -669,8 +699,9 @@ int main() {
 
   // d^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
   // f^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
-  if((unresolved_str==" g g g" or order=="NLO") and suffix=="_EW") {
+  if(((unresolved_str==" g g g" or order=="NLO") and (suffix=="_EW")) or (order=="NNLO")) {
   XMLElement * M0_ijkElement = xmlDoc.NewElement("M0_ijk");
+  XMLElement * M1_ijkElement = xmlDoc.NewElement("M1_ijk");
   XMLElement * dM0_ijkElement = xmlDoc.NewElement("dM0_ijk");
   std::vector<std::vector<int>> configurations;
   for (int i = 0; i < A.process.size(); i++) {
@@ -681,21 +712,26 @@ int main() {
       for(int k = 0; k < A.process.size(); k++) {
         if(A.particle_type[k] == 0) continue;
         //if((k == i) or (k == j)) continue;
-        std::complex<double> fMijk = 0.;
-        std::complex<double> dMijk = 0.;
+        std::complex<double> fM0ijk = 0.;
+        std::complex<double> fM1ijk = 0.;
+        std::complex<double> dM0ijk = 0.;
         bool permutation = false;
 
         XMLElement * M0_ijkEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
+        XMLElement * M1_ijkEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
         XMLElement * dM0_ijkEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
         for(std::vector<int> configuration : configurations) {
           if(configuration==std::vector<int>({i,j,k})) {
             if((i != j) and (i != k) and (j != k)) {
               M0_ijkEntry->SetText(std::real(fM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
+              M1_ijkEntry->SetText(std::real(fM1_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
             }
             else {
               M0_ijkEntry->SetText(0);
+              M1_ijkEntry->SetText(0);
             }
             M0_ijkElement->InsertEndChild(M0_ijkEntry);
+            M1_ijkElement->InsertEndChild(M1_ijkEntry);
             dM0_ijkEntry->SetText(std::real(dM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
             dM0_ijkElement->InsertEndChild(dM0_ijkEntry);
             permutation = true;
@@ -715,7 +751,7 @@ int main() {
             col_string += std::to_string(col_full[dummy]);
           }
           std::string key = hel_string + col_string;
-          std::complex<double> M_bra = std::conj(M0[key]);
+          std::complex<double> M0_bra = std::conj(M0[key]);
           std::vector<int> output_colors = {col_full[i], col_full[j], col_full[k]};
           for(int ci = 0; ci < A.process[i]; ci++) for(int cj = 0; cj < A.process[j]; cj++) for(int ck = 0; ck < A.process[k]; ck++) {
             key.replace(key.size() - A.process.size() + i, 1, std::to_string(ci));
@@ -730,7 +766,7 @@ int main() {
             if(k == j)
               output_colors[2] = cj;
 
-            if(M0[key] == 0.) continue;
+            if(M0[key] == 0. and M1[key] == 0.) continue;
             for(int a = 0; a < 8; a++) for(int b = 0; b < 8; b++) for(int c = 0; c < 8; c++) {
               std::complex<double> col_factor = 1;
 
@@ -760,33 +796,45 @@ int main() {
                 col_factor *= I*fabc[a][8*ci + output_colors[0]];
               else
                 std::cout << "unknown particle type" << std::endl;
-              fMijk += col_factor*M_bra*M0[key]*fabc[a][8*b+c];
-              dMijk += col_factor*M_bra*M0[key]*dabc[a][8*b+c];
+              fM0ijk += col_factor*M0_bra*M0[key]*fabc[a][8*b+c];
+              fM1ijk += 2.*std::real(col_factor*M0_bra*M1[key])*fabc[a][8*b+c];
+              dM0ijk += col_factor*M0_bra*M0[key]*dabc[a][8*b+c];
             }
           }
         }
-        fM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)] = fMijk*average_factor;
-        dM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)] = dMijk*average_factor;
+        fM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)] = fM0ijk*average_factor;
+        fM1_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)] = fM1ijk*average_factor;
+        dM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)] = dM0ijk*average_factor;
         if((i != j) and (i != k) and (j != k)) {
           M0_ijkEntry->SetText(std::real(fM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
+          M1_ijkEntry->SetText(std::real(fM1_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
         }
         else {
           M0_ijkEntry->SetText(0);
+          M1_ijkEntry->SetText(0);
         }
         M0_ijkElement->InsertEndChild(M0_ijkEntry);
+        M1_ijkElement->InsertEndChild(M1_ijkEntry);
         dM0_ijkEntry->SetText(std::real(dM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]));
         dM0_ijkElement->InsertEndChild(dM0_ijkEntry);
         // permutations
-        fM0_ijk[std::to_string(i) + std::to_string(k) + std::to_string(j)] = -fMijk*average_factor;
-        fM0_ijk[std::to_string(j) + std::to_string(i) + std::to_string(k)] = -fMijk*average_factor;
-        fM0_ijk[std::to_string(j) + std::to_string(k) + std::to_string(i)] = fMijk*average_factor;
-        fM0_ijk[std::to_string(k) + std::to_string(j) + std::to_string(i)] = -fMijk*average_factor;
-        fM0_ijk[std::to_string(k) + std::to_string(i) + std::to_string(j)] = fMijk*average_factor;
-        dM0_ijk[std::to_string(i) + std::to_string(k) + std::to_string(j)] = dMijk*average_factor;
-        dM0_ijk[std::to_string(j) + std::to_string(i) + std::to_string(k)] = dMijk*average_factor;
-        dM0_ijk[std::to_string(j) + std::to_string(k) + std::to_string(i)] = dMijk*average_factor;
-        dM0_ijk[std::to_string(k) + std::to_string(j) + std::to_string(i)] = dMijk*average_factor;
-        dM0_ijk[std::to_string(k) + std::to_string(i) + std::to_string(j)] = dMijk*average_factor;
+        fM0_ijk[std::to_string(i) + std::to_string(k) + std::to_string(j)] = -fM0ijk*average_factor;
+        fM0_ijk[std::to_string(j) + std::to_string(i) + std::to_string(k)] = -fM0ijk*average_factor;
+        fM0_ijk[std::to_string(j) + std::to_string(k) + std::to_string(i)] = fM0ijk*average_factor;
+        fM0_ijk[std::to_string(k) + std::to_string(j) + std::to_string(i)] = -fM0ijk*average_factor;
+        fM0_ijk[std::to_string(k) + std::to_string(i) + std::to_string(j)] = fM0ijk*average_factor;
+
+        fM1_ijk[std::to_string(i) + std::to_string(k) + std::to_string(j)] = -fM1ijk*average_factor;
+        fM1_ijk[std::to_string(j) + std::to_string(i) + std::to_string(k)] = -fM1ijk*average_factor;
+        fM1_ijk[std::to_string(j) + std::to_string(k) + std::to_string(i)] = fM1ijk*average_factor;
+        fM1_ijk[std::to_string(k) + std::to_string(j) + std::to_string(i)] = -fM1ijk*average_factor;
+        fM1_ijk[std::to_string(k) + std::to_string(i) + std::to_string(j)] = fM1ijk*average_factor;
+
+        dM0_ijk[std::to_string(i) + std::to_string(k) + std::to_string(j)] = dM0ijk*average_factor;
+        dM0_ijk[std::to_string(j) + std::to_string(i) + std::to_string(k)] = dM0ijk*average_factor;
+        dM0_ijk[std::to_string(j) + std::to_string(k) + std::to_string(i)] = dM0ijk*average_factor;
+        dM0_ijk[std::to_string(k) + std::to_string(j) + std::to_string(i)] = dM0ijk*average_factor;
+        dM0_ijk[std::to_string(k) + std::to_string(i) + std::to_string(j)] = dM0ijk*average_factor;
         configurations.push_back(std::vector<int>({i,j,k}));
         configurations.push_back(std::vector<int>({i,k,j}));
         configurations.push_back(std::vector<int>({j,i,k}));
@@ -794,23 +842,25 @@ int main() {
         configurations.push_back(std::vector<int>({k,j,i}));
         configurations.push_back(std::vector<int>({k,i,j}));
 
-        dM_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)] = dMijk*average_factor;
+        dM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)] = dM0ijk*average_factor;
 
         double M2_averaged;
         Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged);
         std::string lock = std::to_string(i) + std::to_string(j) + std::to_string(k);
-        std::cout << lock << ": f^{abc} <M|Ti Tj Tk|M> = " << fM0_ijk[lock] << "\t" << fMijk*average_factor << "\t" << fM0_ijk[lock]/M2_averaged << std::endl;
-        std::cout << "i = " << i << ", j = " << j << ", k = " << k << ": d^{abc} <M|Ti Tj Tk|M> = " << dMijk*average_factor << "\t" << dMijk*average_factor/M2_averaged << std::endl;
+        std::cout << lock << ": f^{abc} <M0|Ti Tj Tk|M0> = " << fM0_ijk[lock] << "\t" << fM0ijk*average_factor << "\t" << fM0_ijk[lock]/M2_averaged << std::endl;
+        std::cout << lock << ": f^{abc} 2 Re <M0|Ti Tj Tk|M1> = " << fM1_ijk[lock] << "\t" << fM1ijk*average_factor << "\t" << fM1_ijk[lock]/M2_averaged << std::endl;
+        std::cout << "i = " << i << ", j = " << j << ", k = " << k << ": d^{abc} <M|Ti Tj Tk|M> = " << dM0ijk*average_factor << "\t" << dM0ijk*average_factor/M2_averaged << std::endl;
 
       }
     }
   }
   pRoot->InsertEndChild(M0_ijkElement);
+  pRoot->InsertEndChild(M1_ijkElement);
   pRoot->InsertEndChild(dM0_ijkElement);
   }
 
   // f^{a,d;b,c} <M|Ti^a {Tj^b, Tk^c} Tl^d|M> + h.c.
-  if((order=="NLO" && unresolved_str==" g g") || unresolved_str==" g g g") {
+  if((order=="NLO" && unresolved_str==" g g") || (unresolved_str==" g g g") || (order=="NNLO")) {
   XMLElement * Q_ijklElement = xmlDoc.NewElement("Q_ijkl");
   std::vector<std::vector<int>> configurations;
   for (int i = 0; i < A.process.size(); i++) {

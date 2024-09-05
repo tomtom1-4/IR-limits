@@ -5,6 +5,11 @@
 #include <iomanip>
 #include <fstream> // txt outstream
 #include <unordered_map> // hashmap
+#include <array>
+
+#include "/home/tom/Documents/software/software/Stripper/Stripper/Matrix.hpp"
+#include "/home/tom/Documents/software/software/Stripper/Stripper/PhaseSpace.hpp"
+#include "/home/tom/Documents/software/software/Stripper/Stripper/InitialState.hpp"
 
 #include "src/tinyxml2.h"
 #include "recola.hpp"

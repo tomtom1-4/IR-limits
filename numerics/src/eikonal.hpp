@@ -57,12 +57,12 @@ double soft_gg_squared_1l(double*pp_full, std::unordered_map<std::string, double
     std::unordered_map<std::string, double> M0ijkla, std::unordered_map<std::string, double> Q0ijkl,
     amplitude& A, int nl);
 
-double soft_qq_squared_1l(double*pp_full, std::unordered_map<std::string, double> M0ij,
+double soft_qq_squared_1l(double *pp_full, std::unordered_map<std::string, double> M0ij,
     std::unordered_map<std::string, double> M1ij, std::unordered_map<std::string, double> M0ijk,
     std::unordered_map<std::string, double> dM0ijk, amplitude& A, int nl);
 
-double soft_qq_squared_1l_oneLoop(double*pp_full, std::unordered_map<std::string, double> M0ij,
-    std::unordered_map<std::string, double> M1ij, std::unordered_map<std::string, double> M0ijk,
-    std::unordered_map<std::string, double> dM0ijk, amplitude& A, int nl);
-
+double soft_g_squared_2l(double *pp_full, std::unordered_map<std::string, double> M0_ij,
+    std::unordered_map<std::string, double> M0_ijk, std::unordered_map<std::string, double> Q_ijkl,
+    std::unordered_map<std::string, double> M1_ij, std::unordered_map<std::string, double> M1_ijk,
+    std::unordered_map<std::string, double> M2_ij, amplitude& A, int nl);
 #endif

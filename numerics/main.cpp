@@ -1,19 +1,55 @@
 #include "main.hpp"
 
+//using namespace std;
+//using namespace Stripper;
+
 // Evaluation of input
-std::string process_str = "u u~ -> u u~ e- e+";
-std::string unresolved_str = " d d~";
+std::string process_str = "e- e+ -> u u~";
+std::string unresolved_str = " g";
 std::string process_full_str = process_str + unresolved_str;
 
 
-const int nBorn = 6;
-const int power = 2;
-const std::vector<int> flavor = {0,0,1,1,0,0};
-const std::string order = "NLO";
-const std::string suffix = "_EW"; // "" or "_EW"
+const int nBorn = 4;
+const int power = 0;
+const std::array<unsigned, 3> powerNonQCD = {2,0,0};
+const std::vector<int> flavor = {0,0,1,1};
+const std::string order = "NNLO";
+const std::string suffix = "_QED"; // "" or "_EW"
 double M2_custom[13];
 
 int main() {
+  // switch floating point type here
+  using Real = double;
+  int loopOrder = 0;
+  if(order == "LO") loopOrder = 0;
+  if(order == "NLO") loopOrder = 1;
+  if(order == "NNLO") loopOrder = 2;
+
+  // user defined matrix element configuration
+  Stripper::Model::config(true,false,false,false,powerNonQCD[0],powerNonQCD[1],powerNonQCD[2],1.,1.,1.);
+  const Stripper::Process process_full(process_full_str);
+  Stripper::Model::nf = 5;
+
+  // hardcoded parameters required to obtain a phase space point
+
+  const double Ecms = 8000.;            // collider energy (LHC)
+
+  // phase space point
+  const unsigned n = 3*(nBorn - 2) - 4;
+  /*std::vector<double> x;
+  for (unsigned i = 0; i < n; ++i) x.push_back(dist(gen));
+  Phi.point(x);
+  std::vector<Stripper::Momentum<double>> p = Phi.kinematics();
+
+  // matrix element value
+  std::cout << std::setprecision(16) << "\n";
+  std::cout << "process: " << process << "\n\n"
+       << "phase space point:\n\n";
+  for (unsigned i = 0; i < p.size(); ++i)
+    std::cout << "p(" << i << ") = {" << p[i][0] << ", " << p[i][1] << ", " << p[i][2] << ", " << p[i][3] << "}" << "\n";
+  Stripper::TwoLoop<Real> me(process,p);
+  std::cout << "\n|M|^2 = " << me()[0] << "\t(spin summed, gQCD = 1)\n\n";*/
+
   bool custom = false;
   if((process_full_str == "u u~ -> u u~ e- e+ g g") and (order == "NLO")) {
     custom = true;
@@ -62,7 +98,7 @@ int main() {
   amplitude A_full(process_full_str);
   const int nUnresolved = A_full.process.size() - A.process.size();
 
-  if(!custom) {
+  if(!custom and order=="NLO") {
     // Recola Settings
     Recola::set_reduction_mode_rcl(4);
     Recola::set_print_level_amplitude_rcl(2);
@@ -72,8 +108,8 @@ int main() {
     Recola::set_momenta_correction_rcl(false);
 
     Recola::use_alpha0_scheme_rcl(e*e/4./M_PI);
-    //Recola::set_pole_mass_z_rcl(1.e8, 0.0001);
-    //Recola::set_pole_mass_w_rcl(1.e15, 0.0001);
+    Recola::set_pole_mass_z_rcl(1.e8, 0.0001);
+    Recola::set_pole_mass_w_rcl(1.e15, 0.0001);
 
     // Define & generate process
     Recola::define_process_rcl(1, process_str, order);
@@ -92,9 +128,18 @@ int main() {
     return -1;
   }
   // Define initial state
-  PhaseSpace dumn = Splitting(nBorn - 2, COM);
-  PhaseSpace pp = Splitting(nBorn - 2, COM);
-  PhaseSpace ppFull_dummy = Splitting(nBorn + nUnresolved - 2, COM);
+  PSF::PhaseSpace dumn = PSF::Splitting(nBorn - 2, COM);
+  PSF::PhaseSpace pp;// = Splitting(nBorn - 2, COM);
+  XMLElement * ppElement = pRoot->FirstChildElement("PhasePhacePoint");
+  for(int i = 0; i < nBorn; i++) {
+    PSF::Momentum pi;
+    for(int mu = 0; mu < 4; mu++) {
+      XMLElement * ppEntry = ppElement->FirstChildElement(const_cast<char*>(("p" + std::to_string(i) + "_" + std::to_string(mu)).c_str()));
+      if(ppEntry != nullptr) eResult = ppEntry->QueryDoubleText(&pi.components[mu]);
+    }
+    pp.momenta.push_back(pi);
+  }
+  PSF::PhaseSpace ppFull_dummy = PSF::Splitting(nBorn + nUnresolved - 2, COM);
   pp.print();
   // Transform to Recola format
   double pp_rcl[nBorn][4], ppFull_rcl[nBorn + nUnresolved][4], pp_arr[4*nBorn];
@@ -110,16 +155,20 @@ int main() {
     }
   }
 
-
   if(!custom) {
-    // Compute process amplitudes
-    Recola::compute_process_rcl(1, pp_rcl, order);
-    //Recola::compute_all_colour_correlations_rcl(1, pp_rcl);
-    Recola::compute_process_rcl(2, ppFull_rcl, order);
+    if(order == "LO" or order == "NLO") {
+      // Compute process amplitudes
+      Recola::compute_process_rcl(1, pp_rcl, order);
+      double M2;
+      Recola::get_squared_amplitude_rcl(1, power + delta_power/2, order, M2);
+      std::cout << "\n|M|^2 = " << M2 << "\t (Recola)" << std::endl;
+      //Recola::compute_all_colour_correlations_rcl(1, pp_rcl);
+      Recola::compute_process_rcl(2, ppFull_rcl, order);
+    }
   }
 
   // Get non-vanishing helicity and color-configurations
-  std::unordered_map<std::string, double> M0_ij, M1_ij, M0_ijk, dM0_ijk, M0_ijkl, M1_ijkl, M0_ijklab, Q_ijkl, M0_ijkla; // color correlators
+  std::unordered_map<std::string, double> M0_ij, M1_ij, M2_ij, M0_ijk, M1_ijk, dM0_ijk, M0_ijkl, M1_ijkl, M0_ijklab, Q_ijkl, M0_ijkla; // color correlators
 
   double average_factor = 1./4.; // Spin of the initial state
   double average_factor_full = 1./4.;
@@ -187,6 +236,7 @@ int main() {
   // <M|Ti.Tj|M>
   XMLElement * M0_ijElement = pRoot->FirstChildElement("M0_ij");
   XMLElement * M1_ijElement = pRoot->FirstChildElement("M1_ij");
+  XMLElement * M2_ijElement = pRoot->FirstChildElement("M2_ij");
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
     for(int j = 0; j < A.process.size(); j++) {
@@ -198,6 +248,10 @@ int main() {
       if(M1_ijElement != nullptr) {
         XMLElement * M1_ijEntry = M1_ijElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
         if(M1_ijEntry != nullptr) eResult = M1_ijEntry->QueryDoubleText(&M1_ij[std::to_string(i) + std::to_string(j)]);
+      }
+      if(M2_ijElement != nullptr) {
+        XMLElement * M2_ijEntry = M2_ijElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
+        if(M2_ijEntry != nullptr) eResult = M2_ijEntry->QueryDoubleText(&M2_ij[std::to_string(i) + std::to_string(j)]);
       }
     }
   }
@@ -228,7 +282,7 @@ int main() {
   }
 
   // f^{a,d;b,c} <M|Ti^a {Tj^b, Tk^c} Tl^d|M> + h.c.
-  if((order=="NLO" && unresolved_str==" g g") || unresolved_str==" g g g") {
+  if((order=="NLO" && unresolved_str==" g g") || unresolved_str==" g g g" or order=="NNLO") {
     XMLElement * Q_ijklElement = pRoot->FirstChildElement("Q_ijkl");
     if(Q_ijklElement != nullptr) {
       for (int i = 0; i < A.process.size(); i++) {
@@ -251,8 +305,9 @@ int main() {
   }
 
   // f^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
-  if(unresolved_str==" g g g" or order=="NLO") {
+  if(unresolved_str==" g g g" or order=="NLO" or order=="NNLO") {
     XMLElement * M0_ijkElement = pRoot->FirstChildElement("M0_ijk");
+    XMLElement * M1_ijkElement = pRoot->FirstChildElement("M1_ijk");
     if(M0_ijkElement != nullptr) {
       for(int i = 0; i < A.process.size(); i++) {
         if(A.particle_type[i] == 0) continue;
@@ -264,6 +319,8 @@ int main() {
             if(k == i or k == j) continue;
             XMLElement * M0_ijkEntry = M0_ijkElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
             if(M0_ijkEntry != nullptr) M0_ijkEntry->QueryDoubleText(&M0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]);
+            XMLElement * M1_ijkEntry = M1_ijkElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
+            if(M1_ijkEntry != nullptr) M1_ijkEntry->QueryDoubleText(&M1_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]);
           }
         }
       }
@@ -315,21 +372,21 @@ int main() {
   std::cout << "Filled the Hashmaps" << std::endl;
 
   // Define ClusterTree
-  std::vector<Tree<Cluster>> trees = GenTrees(nUnresolved);
+  std::vector<PSF::Tree<PSF::Cluster>> trees = PSF::GenTrees(nUnresolved);
   for(int tree_counter = 0; tree_counter < trees.size(); tree_counter++) {
-    Tree<Cluster> clusterTree = trees[tree_counter];
+    PSF::Tree<PSF::Cluster> clusterTree = trees[tree_counter];
     std::cout << "tree_counter = " << tree_counter << std:: endl;
     clusterTree.print();
     std::cout << "#########################################################################" << std::endl;
   }
-  Tree<Cluster> tree;
+  PSF::Tree<PSF::Cluster> tree;
   if(nUnresolved == 1) tree = trees[0];
   else if(nUnresolved == 2) tree = trees[1];
   tree.print();
-  std::vector<Tree<Cluster>> sectors = GenSectors(flavor, tree, nBorn);
+  std::vector<PSF::Tree<PSF::Cluster>> sectors = PSF::GenSectors(flavor, tree, nBorn);
 
   for(int sec_counter = 0; sec_counter < 1; sec_counter++) {
-  Tree<Cluster> clusterTree = sectors[sec_counter];
+  PSF::Tree<PSF::Cluster> clusterTree = sectors[sec_counter];
   std::cout << "reference = " << clusterTree.getRoot()->children[0]->data.reference << std::endl;
 
   // Generate phase-space points
@@ -337,8 +394,8 @@ int main() {
   std::vector<double> etas(nUnresolved);
   std::vector<double> phis(nUnresolved);
   for(int i = 0; i < nUnresolved; i++) {
-    etas[i] = rnd(0.1, 0.9);
-    phis[i] = rnd(0., 1.);
+    etas[i] = PSF::rnd(0.1, 0.9);
+    phis[i] = PSF::rnd(0., 1.);
   }
   double increment = std::sqrt(0.1);
   int counter = 0;
@@ -346,11 +403,11 @@ int main() {
     scale *= increment;
     std::vector<std::vector<std::vector<double>>> xParFull;
     int level_int = 1;
-    std::vector<TreeNode<Cluster>*> level = clusterTree.getLevel(level_int);
+    std::vector<PSF::TreeNode<PSF::Cluster>*> level = clusterTree.getLevel(level_int);
     int unresolved_counter = 0;
     while(level.size() > 0) {
       int unresolved_level = 0;
-      for(TreeNode<Cluster>* node : level){
+      for(PSF::TreeNode<PSF::Cluster>* node : level){
         unresolved_level += node->data.unresolved;
 
         std::vector<std::vector<double>> xPar;
@@ -368,7 +425,7 @@ int main() {
       level_int++;
       level = clusterTree.getLevel(level_int);
     }
-    PhaseSpace ppFull = GenMomenta2(pp, clusterTree, xParFull);
+    PSF::PhaseSpace ppFull = PSF::GenMomenta2(pp, clusterTree, xParFull);
     ppFull.print();
     double pp_full[4*(nBorn+nUnresolved)];
     for(int i = 0; i < ppFull.momenta.size(); i++) {
@@ -377,11 +434,23 @@ int main() {
         ppFull_rcl[i][j] = (i<2?-1.:1.)*ppFull.momenta[i].components[j];
       }
     }
+    std::vector<Stripper::Momentum<double>> pp_Stripper;
+    for(int i = 0; i < nBorn+nUnresolved; i++) {
+      Stripper::Momentum<double> p_Stripper = {ppFull_rcl[i][0], ppFull_rcl[i][1], ppFull_rcl[i][2], ppFull_rcl[i][3],0.,0.};
+      //Stripper::Momentum<double> p_Stripper = {ppFull.momenta[i].components[0], ppFull.momenta[i].components[1], ppFull.momenta[i].components[2], ppFull.momenta[i].components[3],0.,0.};
+      pp_Stripper.push_back(p_Stripper);
+    }
 
-    double M2_Full;
+    double M2_Full = 0.;
     if(!custom) {
-      Recola::compute_process_rcl(2, ppFull_rcl, order);
-      Recola::get_squared_amplitude_rcl(2, power + nUnresolved + delta_power/2, order, M2_Full);
+      if(order == "LO" or order == "NLO") {
+        Recola::compute_process_rcl(2, ppFull_rcl, order);
+        Recola::get_squared_amplitude_rcl(2, power + nUnresolved + delta_power/2, order, M2_Full);
+      }
+      else if(order == "NNLO") {
+        Stripper::TwoLoop<double> me(process_full,pp_Stripper);
+        for(int i = 0; i <= 4; i++) M2_Full += ((me()[i])*std::pow(std::log(mu*mu/COM/COM), i))*average_factor_full;
+      }
     }
     else {
       M2_Full = M2_custom[counter];
@@ -392,6 +461,7 @@ int main() {
     if(unresolved_str == " g") {
       if(order=="LO") M2_approx = soft_g_squared(pp_full, M0_ij, A)*average_factor_full/average_factor;
       else if(order=="NLO") M2_approx = soft_g_squared_1l(pp_full, M0_ij, M0_ijk, M1_ij, A)*average_factor_full/average_factor;
+      else if(order=="NNLO") M2_approx = soft_g_squared_2l(pp_full, M0_ij, M0_ijk, Q_ijkl, M1_ij, M1_ijk, M2_ij, A, n_f)*average_factor_full/average_factor;
     }
     else if(unresolved_str == " d d~") {
       if(order == "LO") M2_approx = soft_qq_squared(pp_full, M0_ij, A)*average_factor_full/average_factor;
@@ -405,8 +475,7 @@ int main() {
       M2_approx = soft_gqq_squared(pp_full, M0_ij, M0_ijkl, dM0_ijk, A)*average_factor_full/average_factor;
     //else if(unresolved_str == " g g g")
     //  M2_approx = soft_ggg_squared(pp_full, M_ij, M0_ijkl, M_ijklab, dM0_ijk, fM_ijkl)*average_factor_full/average_factor;
-    double M2_test = soft_qq_squared_1l_oneLoop(pp_full, M0_ij, M1_ij, M0_ijk, dM0_ijk, A, n_f);
-    std::cout << scale << "\t" << M2_Full << "\t" << M2_approx  << "\t" << (M2_Full - M2_approx)/M2_test << "\t" << std::abs(1. - M2_Full/M2_approx) << std::endl;
+    std::cout << scale << "\t" << M2_Full << "\t" << M2_approx  << "\t" << (M2_Full/M2_approx)<< "\t" << std::abs(1. - M2_Full/M2_approx) << std::endl;
     outfile1 << scale << ", " << std::abs(1. - M2_Full/M2_approx) << std::endl;
   }
   }
