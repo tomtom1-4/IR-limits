@@ -89,4 +89,4 @@ target: $(OBJS) $(EXEC)
 	$(CXX) $(CXXFLAGS) -c -DGNU_NAME_MANGLING $< -o $@
 
 clean:
-	rm -f *.o *.grd *.wgt $(EXEC) $(OBJS)
+	rm -f *.o $(EXEC) $(OBJS)

@@ -190,6 +190,24 @@ LV<std::complex<double>> gamma11(const LV<double>& p1, const LV<double>& p2, con
   return output;
 }
 
+std::vector<LV<std::complex<double>>> gamma11_expanded(const LV<double>& p1, const LV<double>& p2, const LV<double>& q) {
+  std::complex<double> log = std::log((p1*p2)*mu*mu/(p1*q)/(p2*q)/2.);
+  if((p1.components[0] < 0) and (p2.components[0] < 0)) log = log - I*M_PI;
+  else log = log + I*M_PI;
+  std::vector<std::complex<double>> log_expansion = {1, log, 1./2.*std::pow(log, 2), 1./6.*std::pow(log, 3), 1./24.*std::pow(log, 4)};
+  std::vector<double> C1 = {-1., 0., -Zeta2/2.,  7./3*Zeta3, 39./16.*Zeta4};
+  LV<double> kinematic = (p1/(p1*q) - p2/(p2*q));
+  std::vector<LV<std::complex<double>>> output;
+  for(int order = 0; order < 5; order++) {
+    LV<std::complex<double>> gamma11_order;
+    for(int i = 0; i <= order; i++) {
+      gamma11_order = gamma11_order + log_expansion[i]*C1[order - i]*kinematic/std::pow(4.*M_PI, 2);
+    }
+    output.push_back(gamma11_order);
+  }
+  return output;
+}
+
 LM<double> gamma20(const LV<double>& p, const LV<double>& q1, const LV<double>& q2) {
   LM<double> output;
   for(int mu1 = 0; mu1 < 4; mu1++) for(int mu2 = 0; mu2 < 4; mu2++) {
@@ -288,7 +306,7 @@ LV<std::complex<double>> gamma12Dipole(LV<double> pi, LV<double> pj, LV<double> 
   if((pi.components[0] < 0) and (pj.components[0] < 0)) log = log - I*M_PI;
   else log = log + I*M_PI;
   LV<double> kinematic = (pi/(pi*q) - pj/(pj*q));
-  std::vector<std::complex<double>> logExpand = {1, log, 1./2.*std::pow(log, 2), 1./6.*std::pow(log, 3), 1./24.*std::pow(log, 4)}; // epsilon expansion of (pi.pj * mu^2/pi.q/pj.q)^ep
+  std::vector<std::complex<double>> logExpand = {1, 2.*log, 2.*std::pow(log, 2), 4./3.*std::pow(log, 3), 2./3.*std::pow(log, 4)}; // epsilon expansion of (pi.pj * mu^2/pi.q/pj.q/2)^(2*ep)
   std::vector<double> C2 = {1./2.,
                             -11./12. + T_F*nl/C_A*1./3.,
                             Zeta2 - 16./9. - 1./12.*dR + T_F*nl/C_A*5./9.,
@@ -296,7 +314,7 @@ LV<std::complex<double>> gamma12Dipole(LV<double> pi, LV<double> pj, LV<double> 
                             7./8.*Zeta4 + 341*Zeta3/18. - 16./9.*Zeta2 - Zeta2/12.*dR - 1037./162. - 35./54.*dR + T_F*nl/C_A*(-62./9.*Zeta3 + 5./9.*Zeta2 + 65./81.)};
 
   std::complex<double> prefactor = logExpand[4]*C2[0] + logExpand[3]*C2[1] + logExpand[2]*C2[2] + logExpand[1]*C2[3] + logExpand[0]*C2[4];
-  return kinematic*prefactor;
+  return kinematic*prefactor/std::pow(4.*M_PI, 4);
 }
 
 std::complex<double> Jqq(const LV<double>& q1, const LV<double>& q2, const LV<double>& pi, const LV<double>& pj, int nl=5) {
@@ -1705,7 +1723,10 @@ double soft_g_squared_2l(double *pp_full, std::unordered_map<std::string, double
   double q_arr[4];
   part(pp_full, q_arr, A.process.size()*4, A.process.size()*4 + 4);
   LV<double> q(q_arr);
-  double approx = soft_g_squared_1l(pp_full, M1_ij, M1_ijk, M2_ij, A);
+  // One loop current
+  double approx = 0;//soft_g_squared_1l(pp_full, M1_ij, M1_ijk, M2_ij, A);
+
+  // Two loop current
   for(int i = 0; i < A.process.size(); i++) {
     if(A.process[i] == 1) continue;
     double pi_arr[4];
@@ -1717,13 +1738,65 @@ double soft_g_squared_2l(double *pp_full, std::unordered_map<std::string, double
       double pj_arr[4];
       part(pp_full, pj_arr, j*4, j*4 + 4);
       LV<double> pj(pj_arr);
-      if(i < 2) pj = (-1.)*pj;
+      if(j < 2) pj = (-1.)*pj;
       if(i != j) {
-        approx += C_A*C_A*M0_ij[std::to_string(i) + std::to_string(j)]
-          *(2.*std::real(gamma11(pi, pj, q).conj()*gamma11(pi, pj, q))/4.
-           +2.*std::real(j1(pi, q)*gamma12Dipole(pi, pj, q, nl)));
+        approx += std::pow(gs, 6)*C_A*C_A*M0_ij[std::to_string(i) + std::to_string(j)]
+          *(0.*2.*std::real(gamma11(pi, pj, q).conj()*gamma11(pi, pj, q))/4.
+           +2.*std::real(j1(pi, q)*gamma12Dipole(pi, pj, q, nl))/3.);
+
+        //std::vector<LV<std::complex<double>>> g11 = gamma11_expanded(pi, pj, q);
+        //approx += C_A*C_A*M0_ij[std::to_string(i) + std::to_string(j)]
+        //  *(0.*2.*std::real(g11[0].conj()*g11[4] + g11[1].conj()*g11[3] + g11[2].conj()*g11[2])/4.
+        //   +2.*std::real(j1(pi, q)*gamma12Dipole(pi, pj, q, nl)));
       }
     }
   }
   return approx;
 }
+
+double soft_g_squared_2l_reducible(double *pp_full, std::unordered_map<std::string, double> M0_ij,
+    std::unordered_map<std::string, double> M0_ijk, std::unordered_map<std::string, double> Q_ijkl,
+    std::unordered_map<std::string, double> M1_ij, std::unordered_map<std::string, double> M1_ijk,
+    std::unordered_map<std::string, double> M2_ij, amplitude& A, int nl) {
+  double approx = soft_g_squared_1l(pp_full, M1_ij, M1_ijk, M2_ij, A);
+  double q_arr[4];
+  part(pp_full, q_arr, A.process.size()*4, A.process.size()*4 + 4);
+  LV<double> q(q_arr);
+  // One loop current
+
+  // Two loop current
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.process[i] == 1) continue;
+    double pi_arr[4];
+    part(pp_full, pi_arr, i*4, i*4 + 4);
+    LV<double> pi(pi_arr);
+    if(i < 2) pi = (-1.)*pi;
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.process[j] == 1) continue;
+      double pj_arr[4];
+      part(pp_full, pj_arr, j*4, j*4 + 4);
+      LV<double> pj(pj_arr);
+      if(j < 2) pj = (-1.)*pj;
+      if(i != j) {
+        approx += std::pow(gs, 6)*C_A*C_A*M0_ij[std::to_string(i) + std::to_string(j)]
+          *(2.*std::real(gamma11(pi, pj, q).conj()*gamma11(pi, pj, q))/4.
+           +0.*2.*std::real(j1(pi, q)*gamma12Dipole(pi, pj, q, nl)));
+
+        //std::vector<LV<std::complex<double>>> g11 = gamma11_expanded(pi, pj, q);
+        //approx += C_A*C_A*M0_ij[std::to_string(i) + std::to_string(j)]
+        //  *(0.*2.*std::real(g11[0].conj()*g11[4] + g11[1].conj()*g11[3] + g11[2].conj()*g11[2])/4.
+        //   +2.*std::real(j1(pi, q)*gamma12Dipole(pi, pj, q, nl)));
+      }
+    }
+  }
+  return approx;
+}
+
+/*double soft_g_squared_2l_2partons(double *pp_full, std::unordered_map<std::string, double> M0_ij, amplitude& A, int nl) {
+  double dR = 1.;
+  std::vector<double> C2 = {1./2.,
+                            -11./12. + T_F*nl/C_A*1./3.,
+                            Zeta2 - 16./9. - 1./12.*dR + T_F*nl/C_A*5./9.,
+                            -(11./6.*Zeta3 + 11./12*Zeta2 + 181./54. + 2./9.*dR) + T_F*nl/C_A*(zeta2/3 + 19./27.),
+                            7./8.*Zeta4 + 341*Zeta3/18. - 16./9.*Zeta2 - Zeta2/12.*dR - 1037./162. - 35./54.*dR + T_F*nl/C_A*(-62./9.*Zeta3 + 5./9.*Zeta2 + 65./81.)};
+}*/

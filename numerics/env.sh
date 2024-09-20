@@ -2,4 +2,8 @@ export LD_LIBRARY_PATH=/home/tom/Documents/software/software/Stripper/Stripper/l
 export LIBRARY_PATH=/home/tom/Documents/software/software/Stripper/Stripper/libs:/usr/local/lib:$LIBRARY_PATH
 export LD_LIBRARY_PATH=/home/tom/Documents/software/software/recola_otter/recola2-2.2.3/:/usr/local/lib:$LD_LIBRARY_PATH
 export LIBRARY_PATH=/home/tom/Documents/software/software/recola_otter/recola2-2.2.3/:/usr/local/lib:$LIBRARY_PATH
-
+export LD_LIBRARY_PATH=/home/tom/local/lib/x86_64-linux-gnu/:/usr/local/lib:$LD_LIBRARY_PATH
+export LIBRARY_PATH=/home/tom/local/lib/x86_64-linux-gnu/:/usr/local/lib:$LIBRARY_PATH
+export PKG_CONFIG_PATH=/home/tom/local/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH
+export LD_LIBRARY_PATH=/home/tom/Documents/software/software/OpenLoops/lib:$LD_LIBRARY_PATH
+export LIBRARY_PATH=/home/tom/Documents/software/software/OpenLoops/lib:$LIBRARY_PATH

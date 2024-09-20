@@ -7,3 +7,15 @@ numerics/results
 *.rcl
 *.cll
 *.coli
+numerics/main
+numerics/src/color
+numerics/src/eikonal
+*.synctex.gz
+numerics/compute_CC
+numerics/src/tinyxml2
+*.log
+numerics/src/amplitude
+*.gz
+numerics/references/arXiv-hep-ph0112081v1
+*.pdf
+numerics/references

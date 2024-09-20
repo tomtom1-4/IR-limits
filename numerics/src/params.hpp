@@ -1,5 +1,5 @@
-#ifndef PARAMS_HEADER
-#define PARAMS_HEADER
+#ifndef PARAMS_HEADER2
+#define PARAMS_HEADER2
 
 #include <complex>
 

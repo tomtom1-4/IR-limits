@@ -1,8 +1,7 @@
 #include "main.hpp"
 
-using namespace tinyxml2;
 // Evaluation of input
-std::string process_str = "e- e+ -> u u~";
+std::string process_str = "u u~ -> A A";
 std::string unresolved_str = " g";
 std::string suffix = "_QED";
 
@@ -65,8 +64,9 @@ int main() {
 
   Recola::generate_processes_rcl();
   // Define initial state
-  PhaseSpace dumn = Splitting(nBorn - 2, COM);
-  PhaseSpace pp = Splitting(nBorn - 2, COM);
+  PSF::PhaseSpace dumn = PSF::Splitting(nBorn - 2, COM);
+  //PSF::PhaseSpace dumn2 = PSF::Splitting(nBorn - 2, COM);
+  PSF::PhaseSpace pp = PSF::Splitting(nBorn - 2, COM);
   pp.print();
   // Transform to Recola format
   double pp_rcl[nBorn][4], pp_arr[4*nBorn];
@@ -112,7 +112,7 @@ int main() {
 
   // Create Hashmap for all non-zero amplitudes that only need to be caluculated once per data set
   std::unordered_map<std::string, std::complex<double>> M0, M1; // hel + col is the key as string
-  std::unordered_map<std::string, std::complex<double>> M0_ij, M1_ij, M2_ij, fM0_ijk, fM1_ijk, dM0_ijk, dM_ijk, M0_ijkl, M1_ijkl, M0_ijklab, Q_ijkl, M0_ijkla; // color correlators
+  std::unordered_map<std::string, std::complex<double>> M0_ij, M1_ij, M1_ij_Im, M2_ij, fM0_ijk, fM1_ijk, dM0_ijk, dM_ijk, M0_ijkl, M1_ijkl, M0_ijklab, Q_ijkl, M0_ijkla; // color correlators
   std::vector<std::vector<int>> keys;
   // fill the Hashmaps
   for (int i = 0; i < helicities.size(); i++) {
@@ -189,46 +189,77 @@ int main() {
     std::cout << i << ",";
   }
   std::cout << std::endl;
-  // Get color correlators
-  // <M|Ti.Tj|M>
-  XMLElement * M0_ijElement = xmlDoc.NewElement("M0_ij");
-  XMLElement * M1_ijElement = xmlDoc.NewElement("M1_ij");
-  XMLElement * M2_ijElement = xmlDoc.NewElement("M2_ij");
+
   std::shared_ptr<Stripper::LoopImplementation<double>> matrixelements = std::make_shared<Stripper::Hardcoded<double>>(loopOrder,process,powerNonQCD);
   matrixelements->setKinematics(pp_Stripper);
+
+  // Squared Matrixelements
+  double M2_averaged_NNLO;
+  double M2_averaged_NLO;
+  double M2_averaged_LO;
+
+  Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged_LO);
+  Recola::get_squared_amplitude_rcl(1, power + delta_power/2, "NLO", M2_averaged_NLO);
+  if(order == "NNLO") M2_averaged_NNLO = (matrixelements->eval(mu))*average_factor*std::pow(gs, 2*power + 4);
+  std::cout << "M2 (LO) = " << M2_averaged_LO << std::endl;
+  std::cout << "M2 (NLO) = " << M2_averaged_NLO << std::endl;
+  std::cout << "M2 (NNLO) = " << M2_averaged_NNLO << std::endl;
+  // Get color correlators
+  // <M|Ti.Tj|M>
+
+  XMLElement* M2_ijElement = xmlDoc.NewElement("M2_ij");
+
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
     for(int j = 0; j < A.process.size(); j++) {
       if(A.particle_type[j] == 0) continue;
-      XMLElement * M0_ijEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
-      XMLElement * M1_ijEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
-      XMLElement * M2_ijEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
-      if(std::abs(M0_ij[std::to_string(j) + std::to_string(i)]) + std::abs(M1_ij[std::to_string(j) + std::to_string(i)]
-       + std::abs(M2_ij[std::to_string(j) + std::to_string(i)])) != 0.) {
+      XMLElement* M2_ijEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
+      double M2ij = 0;
+      if(order == "NNLO") {
+        M2ij = (matrixelements->evalCC(mu,i,j))*std::pow(gs, 2*power + 4);
+        M2_ij[std::to_string(i) + std::to_string(j)] = M2ij*average_factor;
+      }
+
+      M2_ijEntry->SetText(std::real(M2_ij[std::to_string(i) + std::to_string(j)]));
+      M2_ijElement->InsertEndChild(M2_ijEntry);
+
+      if(order == "NNLO") {
+        std::cout << "<M1|T_" << i << ".T_" << j << "|M1> + (<M0|T_" << i << ".T_" << j << "|M2> + c.c.) = " << M2ij*average_factor << "\t" << M2ij*average_factor/M2_averaged_NNLO << std::endl;
+      }
+    }
+  }
+  pRoot->InsertEndChild(M2_ijElement);
+  std::cout << std::endl;
+
+  XMLElement* M0_ijElement = xmlDoc.NewElement("M0_ij");
+  XMLElement* M1_ijElement = xmlDoc.NewElement("M1_ij");
+  //XMLElement* M1_ij_ImElement = xmlDoc.NewElement("M1_ij_Im");
+
+  for (int i = 0; i < A.process.size(); i++) {
+    if(A.particle_type[i] == 0) continue;
+    for(int j = 0; j < A.process.size(); j++) {
+      if(A.particle_type[j] == 0) continue;
+      XMLElement* M0_ijEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
+      XMLElement* M1_ijEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
+      //XMLElement* M1_ij_ImEntry = xmlDoc.NewElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
+      if(std::abs(M0_ij[std::to_string(j) + std::to_string(i)]) + std::abs(M1_ij[std::to_string(j) + std::to_string(i)]) != 0.) {
         M0_ij[std::to_string(i) + std::to_string(j)] = M0_ij[std::to_string(j) + std::to_string(i)];
         M1_ij[std::to_string(i) + std::to_string(j)] = M1_ij[std::to_string(j) + std::to_string(i)];
-        M2_ij[std::to_string(i) + std::to_string(j)] = M2_ij[std::to_string(j) + std::to_string(i)];
+        //M1_ij_Im[std::to_string(i) + std::to_string(j)] = M1_ij_Im[std::to_string(j) + std::to_string(i)];
         M0_ijEntry->SetText(std::real(M0_ij[std::to_string(i) + std::to_string(j)]));
         M1_ijEntry->SetText(std::real(M1_ij[std::to_string(i) + std::to_string(j)]));
-        M2_ijEntry->SetText(std::real(M2_ij[std::to_string(i) + std::to_string(j)]));
+        //M1_ij_ImEntry->SetText(std::real(M1_ij_Im[std::to_string(i) + std::to_string(j)]));
         M0_ijElement->InsertEndChild(M0_ijEntry);
         M1_ijElement->InsertEndChild(M1_ijEntry);
-        M2_ijElement->InsertEndChild(M2_ijEntry);
+        //M1_ij_ImElement->InsertEndChild(M1_ij_ImEntry);
         continue;
       }
-      double control;
-      double M2_averaged_control;
-      double M2_averaged_control_LO;
-      double M2_averaged = 0;
-      //Recola::get_colour_correlation_rcl(1, power, i + 1, j + 1, control);
 
-      Recola::get_squared_amplitude_rcl(1, power, "LO", M2_averaged_control_LO);
-      Recola::get_squared_amplitude_rcl(1, power + delta_power/2, order_rcl, M2_averaged_control);
-      if(order == "NNLO") M2_ij[std::to_string(i) + std::to_string(j)] = (matrixelements->evalCC(mu,i,j))*average_factor;
       //Recola::get_squared_amplitude_rcl(1, power + delta_power/2, order, M2_averaged_control);
-      std::cout << "M2_averaged_control = " << M2_averaged_control << std::endl;
-      std::complex<double> M0ij = 0;
-      std::complex<double> M1ij = 0;
+      double M0ij = 0;
+      double M1ij = 0;
+      double M1ij_Im = 0;
+
       for(std::vector<int> helcol : keys) { // color and helicity of the bra <M|
         std::vector<int> hel_full(helcol.begin(), helcol.begin() + A.process.size());
         std::vector<int> col_full(helcol.begin() + A.process.size(), helcol.end());
@@ -243,8 +274,6 @@ int main() {
         std::string key = hel_string + col_string;
         std::complex<double> M0_bra = std::conj(M0[key]);
         std::complex<double> M1_bra = std::conj(M1[key]);
-        if(order_rcl=="LO") M2_averaged += std::pow(std::abs(M0[key]), 2)*average_factor;
-        if(order_rcl=="NLO") M2_averaged += 2.*std::real(M0[key]*std::conj(M1[key]))*average_factor;
         for(int a = 0; a < 8; a++) {
           for(int ci = 0; ci < A.process[i]; ci++) {
             for(int cj = 0; cj < A.process[j]; cj++) {
@@ -272,31 +301,34 @@ int main() {
                 col_factor *= -lam[a][3*ci + col_full[i]]/2.;
               else if(A.particle_type[i] == 2)
                 col_factor *= I*fabc[a][8*ci + col_full[i]];
-              M0ij += col_factor*M0_bra*M0[key];
+              M0ij += std::real(col_factor*M0_bra*M0[key]);
               M1ij += 2*std::real(col_factor*M1_bra*M0[key]);
+              //M1ij_Im += -2*std::imag(col_factor*M1_bra*M0[key]);
             }
           }
         }
       }
       M1_ij[std::to_string(i) + std::to_string(j)] = M1ij*average_factor;
+      //M1_ij_Im[std::to_string(i) + std::to_string(j)] = M1ij_Im*average_factor;
       M0_ij[std::to_string(i) + std::to_string(j)] = M0ij*average_factor;
       M0_ijEntry->SetText(std::real(M0_ij[std::to_string(i) + std::to_string(j)]));
       M1_ijEntry->SetText(std::real(M1_ij[std::to_string(i) + std::to_string(j)]));
-      M2_ijEntry->SetText(std::real(M2_ij[std::to_string(i) + std::to_string(j)]));
+      //M1_ij_ImEntry->SetText(std::real(M1_ij_Im[std::to_string(i) + std::to_string(j)]));
 
       M0_ijElement->InsertEndChild(M0_ijEntry);
       M1_ijElement->InsertEndChild(M1_ijEntry);
-      M2_ijElement->InsertEndChild(M2_ijEntry);
-      std::cout << "M2Control = " << M2_averaged_control << "\t" << M2_averaged << "\t" << M2_averaged/M2_averaged_control << std::endl;
-      std::cout << "i = " << i << ", j = " << j << ": <M|T_i.T_j|M> = " << M0ij*average_factor << "\t" << M0ij*average_factor/M2_averaged_control_LO;
-      if(order_rcl == "NLO") std::cout << "\t" << M1ij*average_factor;
-      if(order == "NNLO") std::cout << "\t" << M2_ij[std::to_string(i) + std::to_string(j)];
+      //M1_ij_ImElement->InsertEndChild(M1_ij_ImEntry);
+      std::cout << "<M0|T_" << i << ".T_" << j << "|M0> = " << M0ij*average_factor << "\t" << M0ij*average_factor/M2_averaged_LO << std::endl;
+      if(order_rcl == "NLO") std::cout << "<M0|T_" << i << ".T_" << j << "|M1> + c.c. = " << M1ij*average_factor << "\t" << M1ij*average_factor/M2_averaged_NLO << std::endl;
+      //if(order == "NNLO") {
+      //  std::cout << "<M0|T_" << i << ".T_" << j << "|M1> - c.c. = " << M1ij_Im*average_factor << "\t" << M1ij_Im*average_factor/M2_averaged_NLO << std::endl;
+      //}
       std::cout << std::endl;
     }
   }
   pRoot->InsertEndChild(M0_ijElement);
   pRoot->InsertEndChild(M1_ijElement);
-  pRoot->InsertEndChild(M2_ijElement);
+  //pRoot->InsertEndChild(M1_ij_ImElement);
 
   // <M|Ti.Tj Tk.Tl|M>
 
