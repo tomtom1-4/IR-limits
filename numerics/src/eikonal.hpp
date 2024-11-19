@@ -71,4 +71,8 @@ double soft_g_squared_2l_reducible(double *pp_full, std::unordered_map<std::stri
     std::unordered_map<std::string, double> M1_ij, std::unordered_map<std::string, double> M1_ijk,
     std::unordered_map<std::string, double> M2_ij, amplitude& A, int nl);
 
+double collinear_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> SC0, amplitude& A, amplitude& A_full, int reference_index);
+
+//double collinear_squared_1l(double *pp_full, double M0, double M1, amplitude& A, amplitude& A_full);
+
 #endif

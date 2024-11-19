@@ -27,10 +27,10 @@ double li2(double x)
   const double y = -log(1.-x);
   const double y2 = y*y;
   for (int i = nLi2dat-1; i > 0; --i)
-    {
-      result += li2dat[i];
-      result *= y2;
-    }
+  {
+    result += li2dat[i];
+    result *= y2;
+  }
   result += li2dat[0]-0.25*y;
   result *= y;
 
@@ -1791,6 +1791,167 @@ double soft_g_squared_2l_reducible(double *pp_full, std::unordered_map<std::stri
   }
   return approx;
 }
+
+std::vector<std::vector<std::complex<double>>> P0_qg(double z, LV<double> p, LV<double> kperp) {
+  return std::vector<std::vector<std::complex<double>>>({{C_F*((1. + z*z)/(1. - z)), 0},{0, C_F*((1. + z*z)/(1. - z))}});
+}
+
+LV<std::complex<double>> polarization (LV<double> p, LV<double> n, int pol) {
+    std::vector<std::complex<double>> ep;
+
+    double pT = std::sqrt(p.components[1] * p.components[1] + p.components[2] * p.components[2]);
+    double s = std::abs(p.components[0])/p.components[0];
+
+    if (std::abs(p.components[1]) > 1e-12 or std::abs(p.components[2]) > 1e-12) {
+        ep.push_back(0);
+        ep.push_back((-pol * s * p.components[1] * p.components[3] - I * p.components[2] * std::abs(p.components[0]))/std::sqrt(2)/std::abs(p.components[0])/pT);
+        ep.push_back((-pol * s * p.components[2] * p.components[3] + I * p.components[1] * std::abs(p.components[0]))/std::sqrt(2)/std::abs(p.components[0])/pT);
+        ep.push_back(pol * s * pT/std::abs(p.components[0])/std::sqrt(2));
+        return LV<std::complex<double>>(ep);
+    }
+    else {
+        // Failsafe solution for p.components[1], p.components[2] -> 0
+        std::cout << "Failsafe solution" << std::endl;
+        ep.push_back(0);
+        ep.push_back(-pol/sqrt(2));
+        ep.push_back(-I/sqrt(2));
+        ep.push_back(0);
+        return LV<std::complex<double>>(ep);
+    }
+}
+
+std::vector<std::vector<std::complex<double>>> P0_gg(double z, LV<double> p, LV<double> kperp) {
+  LV<double> n(std::vector<double>({p.components[0], -p.components[1], -p.components[2], -p.components[3]}));
+  std::vector<std::vector<std::complex<double>>> output = {{0., 0.}, {0., 0.}};
+  for(int i = 0; i <= 1; i++) for(int j = 0; j <= 1; j++) {
+    LV<std::complex<double>> ep1 = polarization(p, n, (i?1:-1));
+    LV<std::complex<double>> ep2 = polarization(p, n, (j?1:-1)).conj();
+    output[i][j] = 2.*C_A*(-(ep1*ep2)*(z/(1. - z) + (1. - z)/z) - 2.*z*(1. - z)*(ep1*kperp)*(ep2*kperp)/(kperp*kperp));
+  }
+  return output;
+}
+
+std::vector<std::vector<std::complex<double>>> P0_qq(double z, LV<double> p, LV<double> kperp) {
+  std::cout << "marker 0" << std::endl;
+  LV<double> n(std::vector<double>({p.components[0], -p.components[1], -p.components[2], -p.components[3]}));
+  std::vector<std::vector<std::complex<double>>> output = {{0., 0.}, {0., 0.}};
+  for(int i = 0; i <= 1; i++) for(int j = 0; j <= 1; j++) {
+    LV<std::complex<double>> ep1 = polarization(p, n, (i?1:-1));
+    LV<std::complex<double>> ep2 = polarization(p, n, (j?1:-1)).conj();
+    output[i][j] = T_F*(-(ep1*ep2) + 4.*z*(1. - z)*(ep1*kperp)*(ep2*kperp)/(kperp*kperp));
+  }
+  std::cout << "marker 1" << std::endl;
+  return output;
+}
+
+/*double P1_qg(double z, double s12, double muR) {
+  double log = std::log(std::abs(muR*muR/s12));
+  std::vector<double> prefactor = {2, 2*log, 1./6.*(-M_PI*M_PI*(s12<0?1.:7.) + 6.*log*log)};
+
+  std::vector<double> rSqg = {-C_A,
+    2.*C_F*std::log(z) + 2.*C_A*std::atanh(1. - 2.*z),
+    -1./6.*C_A*(M_PI*M_PI + 3.*std::pow(std::log(-1. + 1./z), 2)) + 2.*(C_F - C_A)*li2(1. - 1./z)};
+
+  double rNSqg = 2.*(C_A - C_F);
+
+  double rSqg0 = (rSqg[0]*prefactor[2] + rSqg[1]*prefactor[1] + rSqg[2]*prefactor[0]);
+  double output = rSqg0*P0_qg(z) + C_F*rNSqg;
+  return output;
+}
+
+double P1_gg(double z, double s12, double muR) {
+  double log = std::log(std::abs(muR*muR/s12));
+  std::vector<double> prefactor = {2, 2*log, 1./6.*(-M_PI*M_PI*(s12<0?1.:7.) + 6.*log*log)};
+
+  std::vector<double> rSgg = {-C_A,
+    C_A*std::log(z*(1. - z)),
+    -1./6.*C_A*(M_PI*M_PI + 3.*std::pow(std::log(1./z - 1.), 2))};
+
+  double rSgg0 = (rSgg[0]*prefactor[2] + rSgg[1]*prefactor[1] + rSgg[2]*prefactor[0]);
+  double rNSgg = 1./3.*(C_A - 2.*n_f*T_F);
+  double output = rSgg0*P0_gg(z) + 2.*C_A*rNSgg;
+  return output;
+}
+
+double P1_qq(double z, double s12, double muR) {
+  double log = std::log(std::abs(muR*muR/s12));
+  std::vector<double> prefactor = {2, 2*log, 1./6.*(-M_PI*M_PI*(s12<0?1.:7.) + 6.*log*log)};
+
+  std::vector<double> rSqq = {C_A - 2.*C_F,
+    11./3.*C_A - 3.*C_F - 4./3.*n_f*T_F + C_A*std::log(z*(1. - z)),
+    1./18.*(C_A*(152. - 3.*M_PI*M_PI) - 8.*(18.*C_F + 5*n_f*T_F) - 9.*C_A*std::pow(std::log(1./z - 1.), 2))};
+
+  double dR = 1.; // 0 = 4 dimensional helicity, 1 = CDR/'t Hooft Veltman
+  rSqq[2] += (1. - dR)/3.;
+  double rSqq0 = (rSqq[0]*prefactor[2] + rSqq[1]*prefactor[1] + rSqq[2]*prefactor[0]);
+  double output = rSqq0*P0_qq(z);
+  return output;
+}*/
+
+double collinear_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> SC0, amplitude& A, amplitude& A_full, int index) {
+  double p2_arr[4], p1_arr[4];
+  part(pp_full, p2_arr, A.process.size()*4, A.process.size()*4 + 4);
+  part(pp_full, p1_arr, index*4, index*4 + 4);
+  LV<double> p2(p2_arr);
+  LV<double> p1(p1_arr);
+  LV<double> p = p1 + p2;
+  LV<double> n({p.components[0], -p.components[1], -p.components[2], -p.components[3]});
+  double z = p1.components[0]/p.components[0];
+  LV<double> k_perp = p1 - z*p;
+  std::complex<double> output = 0.;
+  std::cout << "marker -0.5" << std::endl;
+  std::cout << "A.process[index] = " << A.process[index] << std::endl;
+  std::cout << "A_full.process.back() = " << A_full.process.back() << std::endl;
+  std::cout << "index = " << index << std::endl;
+  std::vector<std::vector<std::complex<double>>> P0;
+  if((A.process[index] == 3) and (A_full.process.back() == 8)) P0 = P0_qg(z, p, k_perp);
+  else if((A.process[index] == 8) and (A_full.process.back() == 8)) P0 = P0_gg(z, p, k_perp);
+  else if((A.process[index] == 8) and (A_full.process.back() == 3)) P0 = P0_qq(z, p, k_perp);
+
+  for(int s1 = -1; s1 <= 1; s1 += 2) for(int s2 = -1; s2 <= 1; s2 +=2) {
+    output += SC0[std::to_string(index) + std::to_string(s1) + std::to_string(s2)]*P0[(s1+1)/2][(s2+1)/2]*gs*gs/(p1*p2);
+  }
+  if(std::imag(output) > std::abs(output)*1.e-6) std::cout << "Warning: Result is not real" << std::endl;
+  return std::real(output);
+}
+
+/*double collinear_squared_1l(double *pp_full, double M0, double M1, amplitude& A, amplitude& A_full) {
+  double p2_arr[4];
+  part(pp_full, p2_arr, A.process.size()*4, A.process.size()*4 + 4);
+  LV<double> p2(p2_arr);
+  // find parton with smallest angle to p2;
+  LV<double> p1;
+  int index = -1;
+  double closest_angle = 2;
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.process[i] == 1) continue;
+    double pi_arr[4];
+    part(pp_full, pi_arr, i*4, i*4 + 4);
+    LV<double> pi(pi_arr);
+    double angle = (pi*p2)/pi.components[0]/p2.components[0];
+    if(angle < closest_angle) {
+      closest_angle = angle;
+      p1 = pi;
+      index = i;
+    }
+  }
+  LV<double> p = p1 + p2;
+  LV<double> n({p.components[0], -p.components[1], -p.components[2], -p.components[3]});
+  double z = p1.components[0]/p.components[0];
+  LV<double> k_perp = p1 - z*p;
+
+  double output = 0.;
+  std::cout << "Choosing splitting function" << std::endl;
+  std::cout << "A.process[index] = " << A.process[index] << "\tA_full.process.back() = " << A_full.process.back() << std::endl;
+  std::cout << "index = " << index << std::endl;
+  if((A.process[index] == 3) and (A_full.process.back() == 8)) output = gs*gs/(16.*M_PI*M_PI)*P1_qg(z, p*p, mu);
+  else if((A.process[index] == 8) and (A_full.process.back() == 8)) output = gs*gs/(16.*M_PI*M_PI)*P1_gg(z, p*p, mu);
+  else if((A.process[index] == 8) and (A_full.process.back() == 3)) output = gs*gs/(16.*M_PI*M_PI)*P1_qq(z, p*p, mu);
+
+  output *= M0*gs*gs/(p1*p2);
+
+  return output;
+}*/
 
 /*double soft_g_squared_2l_2partons(double *pp_full, std::unordered_map<std::string, double> M0_ij, amplitude& A, int nl) {
   double dR = 1.;

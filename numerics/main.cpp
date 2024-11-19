@@ -4,17 +4,18 @@
 //using namespace Stripper;
 
 // Evaluation of input
-std::string process_str = "u u~ -> A A";
+std::string process_str = "d d~ -> g d d~";
 std::string unresolved_str = " g";
-std::string process_full_str = process_str + unresolved_str;
+std::string limit = "collinear";
+//std::string process_full_str = process_str + unresolved_str;
+std::string process_full_str = "d d~ -> d d d~ d~";
 
-
-const int nBorn = 4;
-const int power = 0;
-const std::array<unsigned, 3> powerNonQCD = {2,0,0};
-const std::vector<int> flavor = {0,0,1,1};
-const std::string order = "NNLO";
-const std::string suffix = "_QED"; // "" or "_EW"
+const int nBorn = 5;
+const int power = 3;
+const std::array<unsigned, 3> powerNonQCD = {0,0,0};
+const std::vector<int> flavor = {0,0,1,1,1};
+const std::string order = "LO";
+const std::string suffix = ""; // "" or "_EW" or "_QED"
 double M2_custom[13];
 
 int main() {
@@ -26,8 +27,9 @@ int main() {
   if(order == "NNLO") loopOrder = 2;
 
   // user defined matrix element configuration
-  Stripper::Model::config(true,false,false,false,powerNonQCD[0],powerNonQCD[1],powerNonQCD[2],1.,0.,0.);
+  Stripper::Model::config((powerNonQCD[0]==0),false,false,false,powerNonQCD[0],powerNonQCD[1],powerNonQCD[2],1.,0.,0.);
   const Stripper::Process process_full(process_full_str);
+  const Stripper::Process process(process_str);
   Stripper::Model::nf = 5;
   Stripper::Model::print(std::cout);
 
@@ -98,7 +100,7 @@ int main() {
   outfile1.close();
   outfile1.open ("results/" + process_str + " +" + unresolved_str + "_" + order + suffix + ".txt");
 
-  if(!custom and order=="NLO") {
+  if(!custom and (order=="NLO" or order=="LO")) {
     // Recola Settings
     Recola::set_reduction_mode_rcl(4);
     Recola::set_print_level_amplitude_rcl(2);
@@ -108,8 +110,8 @@ int main() {
     Recola::set_momenta_correction_rcl(false);
 
     Recola::use_alpha0_scheme_rcl(e*e/4./M_PI);
-    Recola::set_pole_mass_z_rcl(1.e8, 0.0001);
-    Recola::set_pole_mass_w_rcl(1.e15, 0.0001);
+    //Recola::set_pole_mass_z_rcl(1.e8, 0.0001);
+    //Recola::set_pole_mass_w_rcl(1.e15, 0.0001);
 
     // Define & generate process
     Recola::define_process_rcl(1, process_str, order);
@@ -140,6 +142,10 @@ int main() {
     pp.momenta.push_back(pi);
   }
   double pp_rcl[nBorn][4], ppFull_rcl[nBorn + nUnresolved][4], pp_arr[4*nBorn];
+  for(int i = 0 ; i < nBorn; i++) {
+    for(int j = 0; j < 4; j++)
+      pp_rcl[i][j] = (i<2?-1.:1.)*pp.momenta[i].components[j];
+  }
 
   // Get non-vanishing helicity and color-configurations
   std::unordered_map<std::string, double> M0_ij, M1_ij, M2_ij, M0_ijk, M1_ijk, dM0_ijk, M0_ijkl, M1_ijkl, M0_ijklab, Q_ijkl, M0_ijkla; // color correlators
@@ -206,6 +212,34 @@ int main() {
     std::cout << i << ",";
   }
   std::cout << std::endl;
+  // Get matrix elements
+  double M0, M1, M2;
+  XMLElement * M0_Element = pRoot->FirstChildElement("M0");
+  eResult = M0_Element->QueryDoubleText(&M0);
+  XMLElement * M1_Element = pRoot->FirstChildElement("M1");
+  eResult = M1_Element->QueryDoubleText(&M1);
+  if(order=="NNLO") {
+    XMLElement * M2_Element = pRoot->FirstChildElement("M2");
+    eResult = M2_Element->QueryDoubleText(&M2);
+  }
+  // Get spin correlator
+  std::unordered_map<std::string, std::complex<double>> SC0, SC1;
+  XMLElement * SC0_iElement = pRoot->FirstChildElement("SC0");
+  XMLElement * SC1_iElement = pRoot->FirstChildElement("SC1");
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.particle_type[i] == 0) continue;
+    for(int s1 = -1; s1 <= 1; s1 += 2) {
+      for(int s2 = -1; s2 <= 1; s2 += 2) {
+        XMLElement * SC0_iEntry_real = SC0_iElement->FirstChildElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+        XMLElement * SC0_iEntry_imag = SC0_iElement->FirstChildElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+        double real, imag;
+        if(SC0_iEntry_real != nullptr) eResult = SC0_iEntry_real->QueryDoubleText(&real);
+        if(SC0_iEntry_imag != nullptr) eResult = SC0_iEntry_imag->QueryDoubleText(&imag);
+        SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] = real + I*imag;
+        std::cout << std::to_string(i) + std::to_string(s1) + std::to_string(s2) << "\t" << SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] << std::endl;
+      }
+    }
+  }
   // Get color correlators
   // <M|Ti.Tj|M>
   XMLElement * M0_ijElement = pRoot->FirstChildElement("M0_ij");
@@ -364,7 +398,7 @@ int main() {
   std::cout << "reference = " << clusterTree.getRoot()->children[0]->data.reference << std::endl;
 
   // Generate phase-space points
-  double scale = 1;
+  double scale = std::sqrt(0.1);
   std::vector<double> etas(nUnresolved);
   std::vector<double> phis(nUnresolved);
   double dummy = PSF::rnd(0., 1.);
@@ -372,9 +406,9 @@ int main() {
     etas[i] = PSF::rnd(0.1, 0.9);
     phis[i] = PSF::rnd(0., 1.);
   }
-  double increment = std::sqrt(0.1);
+  double increment = std::sqrt(0.5);
   int counter = 0;
-  while (scale > 3.e-4) {
+  while (scale > 3.e-10) {
     scale *= increment;
     std::vector<std::vector<std::vector<double>>> xParFull;
     int level_int = 1;
@@ -387,8 +421,15 @@ int main() {
 
         std::vector<std::vector<double>> xPar;
         for(int c = 0; c < node->data.unresolved; c++) {
-          double xi = std::pow(scale, 1);
-          double eta = etas[unresolved_counter];
+          double xi, eta;
+          if (limit == "soft") {
+            xi = std::pow(scale, 1);
+            eta = etas[unresolved_counter];
+          }
+          else if(limit == "collinear") {
+            xi = 0.5; //etas[unresolved_counter];
+            eta = std::pow(scale, 1);
+          }
           double phi = phis[unresolved_counter];
           unresolved_counter++;
           std::vector<double> xPar_c = {eta, xi, phi};
@@ -402,6 +443,7 @@ int main() {
     }
     PSF::PhaseSpace ppFull = PSF::GenMomenta2(pp, clusterTree, xParFull);
     ppFull.print();
+
     double pp_full[4*(nBorn+nUnresolved)];
     for(int i = 0; i < ppFull.momenta.size(); i++) {
       for(int j = 0; j < 4; j++) {
@@ -409,28 +451,42 @@ int main() {
         ppFull_rcl[i][j] = (i<2?-1.:1.)*ppFull.momenta[i].components[j];
       }
     }
-    std::vector<Stripper::Momentum<double>> pp_Stripper;
-    for(int i = 0; i < nBorn+nUnresolved; i++) {
-      Stripper::Momentum<double> p_Stripper = {ppFull_rcl[i][0], ppFull_rcl[i][1], ppFull_rcl[i][2], ppFull_rcl[i][3],0.,0.};
-      //Stripper::Momentum<double> p_Stripper = {ppFull.momenta[i].components[0], ppFull.momenta[i].components[1], ppFull.momenta[i].components[2], ppFull.momenta[i].components[3],0.,0.};
+    std::vector<Stripper::Momentum<Real>> ppFull_Stripper, pp_Stripper;
+    for(int i = 0; i < nBorn; i++) {
+      Stripper::Momentum<Real> p_Stripper = {pp_rcl[i][0], pp_rcl[i][1], pp_rcl[i][2], pp_rcl[i][3],0.,0.};
       pp_Stripper.push_back(p_Stripper);
+    }
+    for(int i = 0; i < nBorn+nUnresolved; i++) {
+      Stripper::Momentum<Real> p_Stripper = {ppFull_rcl[i][0], ppFull_rcl[i][1], ppFull_rcl[i][2], ppFull_rcl[i][3],0.,0.};
+      //Stripper::Momentum<double> p_Stripper = {ppFull.momenta[i].components[0], ppFull.momenta[i].components[1], ppFull.momenta[i].components[2], ppFull.momenta[i].components[3],0.,0.};
+      ppFull_Stripper.push_back(p_Stripper);
     }
 
     double M2_Full = 0.;
     if(!custom) {
       if(order == "LO" or order == "NLO") {
+        double M2_test = 0;
+        Recola::compute_process_rcl(1, pp_rcl, order);
+        Recola::get_squared_amplitude_rcl(1, power + delta_power/2, order, M2_test);
+        std::cout << "M2 = " << M2_test << std::endl;
         Recola::compute_process_rcl(2, ppFull_rcl, order);
         Recola::get_squared_amplitude_rcl(2, power + nUnresolved + delta_power/2, order, M2_Full);
+        //Stripper one-loop
         double M2_Full_Stripper = 0.;
-        Stripper::OneLoop<double> me(process_full,pp_Stripper);
-        for(int i = 0; i <= 2; i++) M2_Full_Stripper += ((me()[i])*std::pow(std::log(mu*mu/COM/COM), i))*average_factor_full*std::pow(gs, 2*(power + nUnresolved) + 4);
-        std::cout << "gs = " << gs << std::endl;
-        std::cout << M2_Full/average_factor << "\t" << M2_Full_Stripper/average_factor << "\t" << M2_Full/M2_Full_Stripper << std::endl;
+        Stripper::Born<Real> me(process_full, ppFull_Stripper);
+        M2_Full_Stripper = Stripper::toDouble(me())*average_factor_full*std::pow(gs, 2*(power));
+        M2_Full = M2_Full_Stripper;
+        std::cout << "M2_Stripper_full = " << M2_Full_Stripper << std::endl;
+        //Stripper::OneLoop<double> me(process_full,ppFull_Stripper);
+        //for(int i = 0; i <= 2; i++) M2_Full_Stripper += ((me()[i])*std::pow(std::log(mu*mu/COM/COM), i))*average_factor_full*std::pow(gs, 2*(power + nUnresolved) + 4);
+        //std::cout << "gs = " << gs << std::endl;
+        //std::cout << M2_Full/average_factor << "\t" << M2_Full_Stripper/average_factor << "\t" << M2_Full/M2_Full_Stripper << std::endl;
+        //M2_Full = M2_Full_Stripper*2.;
       }
       else if(order == "NNLO") {
-        Stripper::TwoLoop<double> me(process_full,pp_Stripper);
-        //Stripper::OneLoop<double> me(process_full,pp_Stripper);
-        for(int i = 0; i <= 4; i++) M2_Full += ((me()[i])*std::pow(std::log(mu*mu/COM/COM), i))*average_factor_full;
+        Stripper::TwoLoop<Real> me(process_full, ppFull_Stripper);
+        //Stripper::OneLoop<double> me(process_full,ppFull_Stripper);
+        for(int i = 0; i <= 4; i++) M2_Full += ((Stripper::toDouble(me()[i]))*std::pow(std::log(mu*mu/COM/COM), i))*average_factor_full;
       }
     }
     else {
@@ -440,12 +496,25 @@ int main() {
 
     double M2_approx, M2_test;
     if(unresolved_str == " g") {
-      if(order=="LO") M2_approx = soft_g_squared(pp_full, M0_ij, A)*average_factor_full/average_factor;
-      else if(order=="NLO") M2_approx = soft_g_squared_1l(pp_full, M0_ij, M0_ijk, M1_ij, A)*average_factor_full/average_factor;
-      else if(order=="NNLO") {
-        //M2_test = soft_g_squared_1l(pp_full, M1_ij, M1_ijk, M2_ij, A)*average_factor_full/average_factor;
-        M2_approx = soft_g_squared_2l(pp_full, M0_ij, M0_ijk, Q_ijkl, M1_ij, M1_ijk, M2_ij, A, n_f)*average_factor_full/average_factor;
-        M2_test = soft_g_squared_2l_reducible(pp_full, M0_ij, M0_ijk, Q_ijkl, M1_ij, M1_ijk, M2_ij, A, n_f)*average_factor_full/average_factor;
+      if(limit=="soft") {
+        if(order=="LO") M2_approx = soft_g_squared(pp_full, M0_ij, A)*average_factor_full/average_factor;
+        else if(order=="NLO") M2_approx = soft_g_squared_1l(pp_full, M0_ij, M0_ijk, M1_ij, A)*average_factor_full/average_factor;
+        else if(order=="NNLO") {
+          //M2_test = soft_g_squared_1l(pp_full, M1_ij, M1_ijk, M2_ij, A)*average_factor_full/average_factor;
+          M2_approx = soft_g_squared_2l(pp_full, M0_ij, M0_ijk, Q_ijkl, M1_ij, M1_ijk, M2_ij, A, n_f)*average_factor_full/average_factor;
+          M2_test = soft_g_squared_2l_reducible(pp_full, M0_ij, M0_ijk, Q_ijkl, M1_ij, M1_ijk, M2_ij, A, n_f)*average_factor_full/average_factor;
+        }
+      }
+      else if(limit=="collinear") {
+        std::cout << "marker -1" << std::endl;
+        if(order=="LO") M2_approx = collinear_squared(pp_full, SC0, A, A_full, clusterTree.getRoot()->children[0]->data.reference)*average_factor_full/average_factor;
+        else if(order=="NLO") {
+          M2_test = collinear_squared(pp_full, SC1, A, A_full, clusterTree.getRoot()->children[0]->data.reference)*average_factor_full/average_factor;
+          //M2_approx = collinear_squared_1l(pp_full, M0, M1, A, A_full)*average_factor_full/average_factor;
+        }
+      }
+      else {
+        std::cout << "undefined limit" << std::endl;
       }
     }
     else if(unresolved_str == " d d~") {
@@ -460,7 +529,7 @@ int main() {
       M2_approx = soft_gqq_squared(pp_full, M0_ij, M0_ijkl, dM0_ijk, A)*average_factor_full/average_factor;
     //else if(unresolved_str == " g g g")
     //  M2_approx = soft_ggg_squared(pp_full, M_ij, M0_ijkl, M_ijklab, dM0_ijk, fM_ijkl)*average_factor_full/average_factor;
-    std::cout << scale << "\t" << M2_Full << "\t" << M2_approx << "\t" << M2_test << "\t" << (M2_Full - M2_test)/M2_approx << "\t" << std::abs(1. - M2_Full/(M2_approx + M2_test)) << std::endl;
+    std::cout << scale << "\t" << M2_Full << "\t" << M2_approx << "\t" << M2_test << "\t" << M2_approx + M2_test << "\t" << (M2_Full - M2_test)/M2_approx << "\t" << std::abs(1. - M2_Full/(M2_approx + M2_test)) << std::endl;
     outfile1 << scale << ", " << std::abs(1. - M2_Full/(M2_approx + M2_test)) << std::endl;
   }
   }

@@ -1,0 +1,4 @@
+jobs:
+- reduce_sectors:
+    reduce:
+    - {r: 9, s: 2}

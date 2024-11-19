@@ -1,15 +1,15 @@
 #include "main.hpp"
 
 // Evaluation of input
-std::string process_str = "u u~ -> A A";
+std::string process_str = "d d~ -> g g";
 std::string unresolved_str = " g";
-std::string suffix = "_QED";
+std::string suffix = "";
 
 
 const int nBorn = 4;
-const int power = 0;
-const std::array<unsigned, 3> powerNonQCD = {2,0,0};
-const std::string order = "NNLO";
+const int power = 2;
+const std::array<unsigned, 3> powerNonQCD = {0,0,0};
+const std::string order = "NLO";
 
 void replace(std::string& str, const std::string& from, const std::string& to) {
   if(from.empty())
@@ -42,7 +42,7 @@ int main() {
   amplitude A(process_str);
 
   // Stripper Settings
-  Stripper::Model::config(true,false,false,false,powerNonQCD[0],powerNonQCD[1],powerNonQCD[2],1.,1.,1.);
+  Stripper::Model::config((powerNonQCD[0]!=0),false,false,false,powerNonQCD[0],powerNonQCD[1],powerNonQCD[2],1.,1.,1.);
   const Stripper::Process process(process_str);
   Stripper::Model::nf = 5;
 
@@ -55,8 +55,8 @@ int main() {
   Recola::set_momenta_correction_rcl(false);
 
   Recola::use_alpha0_scheme_rcl(e*e/4./M_PI);
-  Recola::set_pole_mass_z_rcl(1.e8, 0.0001);
-  Recola::set_pole_mass_w_rcl(1.e15, 0.0001);
+  //Recola::set_pole_mass_z_rcl(1.e8, 0.0001);
+  //Recola::set_pole_mass_w_rcl(1.e15, 0.0001);
 
   // Define & generate process
   Recola::define_process_rcl(1, process_str, order_rcl);
@@ -65,7 +65,9 @@ int main() {
   Recola::generate_processes_rcl();
   // Define initial state
   PSF::PhaseSpace dumn = PSF::Splitting(nBorn - 2, COM);
-  //PSF::PhaseSpace dumn2 = PSF::Splitting(nBorn - 2, COM);
+  PSF::PhaseSpace dumn2 = PSF::Splitting(nBorn - 2, COM);
+  PSF::PhaseSpace dumn3 = PSF::Splitting(nBorn - 2, COM);
+  PSF::PhaseSpace dumn4 = PSF::Splitting(nBorn - 2, COM);
   PSF::PhaseSpace pp = PSF::Splitting(nBorn - 2, COM);
   pp.print();
   // Transform to Recola format
@@ -190,8 +192,11 @@ int main() {
   }
   std::cout << std::endl;
 
-  std::shared_ptr<Stripper::LoopImplementation<double>> matrixelements = std::make_shared<Stripper::Hardcoded<double>>(loopOrder,process,powerNonQCD);
-  matrixelements->setKinematics(pp_Stripper);
+  std::shared_ptr<Stripper::LoopImplementation<double>> matrixelements;
+  if(order=="NNLO") {
+    matrixelements = std::make_shared<Stripper::Hardcoded<double>>(loopOrder,process,powerNonQCD);
+    matrixelements->setKinematics(pp_Stripper);
+  }
 
   // Squared Matrixelements
   double M2_averaged_NNLO;
@@ -204,11 +209,85 @@ int main() {
   std::cout << "M2 (LO) = " << M2_averaged_LO << std::endl;
   std::cout << "M2 (NLO) = " << M2_averaged_NLO << std::endl;
   std::cout << "M2 (NNLO) = " << M2_averaged_NNLO << std::endl;
+
+  XMLElement* M2_Element_LO = xmlDoc.NewElement("M0");
+  M2_Element_LO->SetText(M2_averaged_LO);
+  pRoot->InsertEndChild(M2_Element_LO);
+
+  XMLElement* M2_Element_NLO = xmlDoc.NewElement("M1");
+  M2_Element_NLO->SetText(M2_averaged_NLO);
+  pRoot->InsertEndChild(M2_Element_NLO);
+
+  if(order == "NNLO") {
+    XMLElement* M2_Element_NNLO = xmlDoc.NewElement("M2");
+    M2_Element_NNLO->SetText(M2_averaged_NNLO);
+    pRoot->InsertEndChild(M2_Element_NNLO);
+  }
+
+  // Get spin correlators
+  std::unordered_map<std::string, std::complex<double>> SC0, SC1;
+  for(int i = 0; i < A.process.size(); i++) {
+    if(A.particle_type[i] == 0) continue;
+    for(std::vector<int> hel : helicities) {  // color and helicity of the bra <M|
+      std::string hel_string;
+      for (int dummy = 0; dummy < hel.size(); dummy++) {
+        hel_string += std::to_string(hel[dummy]);
+      }
+      for(std::vector<int> col : colors) {
+        std::string col_string;
+        for(int dummy = 0; dummy < col.size(); dummy++) {
+          col_string += std::to_string(col[dummy]);
+        }
+        std::string key = hel_string + col_string;
+        std::complex<double> M0_bra = std::conj(M0[key]);
+        std::complex<double> M1_bra = std::conj(M1[key]);
+
+        std::vector<int> hel2 = hel;
+        for(int hel_i = -1; hel_i <= 1; hel_i += 2) {
+          hel2[i] = hel_i;
+          std::string hel2_string;
+          for(int dummy = 0; dummy < hel.size(); dummy++) {
+            hel2_string += std::to_string(hel2[dummy]);
+          }
+          std::complex<double> M0_ket = M0[hel2_string + col_string];
+          std::complex<double> M1_ket = M1[hel2_string + col_string];
+          SC0[std::to_string(i) + std::to_string(hel[i]) + std::to_string(hel2[i])] += (M0_bra*M0_ket)*average_factor;
+          SC1[std::to_string(i) + std::to_string(hel[i]) + std::to_string(hel2[i])] += (M0_bra*M1_ket + M1_bra*M0_ket)*average_factor;
+
+        }
+      }
+    }
+  }
+
+  // Get Spin corrletors
+  XMLElement* SC0_Element = xmlDoc.NewElement("SC0");
+  XMLElement* SC1_Element = xmlDoc.NewElement("SC1");
+  for (int i = 0; i < A.process.size(); i++) {
+    if(A.particle_type[i] == 0) continue;
+    for(int s1 = -1; s1 <= 1; s1 += 2) {
+      for(int s2 = -1; s2 <= 1; s2 += 2) {
+        XMLElement* SC0_iEntry_real = xmlDoc.NewElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+        XMLElement* SC1_iEntry_real = xmlDoc.NewElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+        XMLElement* SC0_iEntry_imag = xmlDoc.NewElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+        XMLElement* SC1_iEntry_imag = xmlDoc.NewElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+        SC0_iEntry_real->SetText(std::real(SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
+        SC1_iEntry_real->SetText(std::real(SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
+        SC0_iEntry_imag->SetText(std::imag(SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
+        SC1_iEntry_imag->SetText(std::imag(SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
+        std::cout << i << ", " << s1 << ", " << s2 << "\t" << SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] << "\t" <<SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] << std::endl;
+        SC0_Element->InsertEndChild(SC0_iEntry_real);
+        SC0_Element->InsertEndChild(SC0_iEntry_imag);
+        SC1_Element->InsertEndChild(SC1_iEntry_real);
+        SC1_Element->InsertEndChild(SC1_iEntry_imag);
+      }
+    }
+  }
+  pRoot->InsertEndChild(SC0_Element);
+  pRoot->InsertEndChild(SC1_Element);
+
   // Get color correlators
   // <M|Ti.Tj|M>
-
   XMLElement* M2_ijElement = xmlDoc.NewElement("M2_ij");
-
   for (int i = 0; i < A.process.size(); i++) {
     if(A.particle_type[i] == 0) continue;
     for(int j = 0; j < A.process.size(); j++) {
@@ -1063,6 +1142,7 @@ int main() {
   }
 
   std::cout << "Filled the Hashmaps" << std::endl;
+  std::cout << "Save results to " << "results/ColorCorrelators/" + process_str + suffix + ".xml" << std::endl;
   XMLError eResult = xmlDoc.SaveFile(const_cast<char*>(("results/ColorCorrelators/" + process_str + suffix + ".xml").c_str()));
   return 0;
 }

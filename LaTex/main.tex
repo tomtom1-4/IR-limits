@@ -12,7 +12,7 @@
 
 \usepackage{amsmath, amsthm, amsfonts, amssymb}
 \usepackage{mathtools, mathabx, bm, bbm, scalerel, xfrac}
-\usepackage{empheq, physics, slashed, cancel}
+\usepackage{empheq, physics, slashed, cancel, braket}
 
 \usepackage{hyperref}
 \usepackage{color}
@@ -108,7 +108,7 @@ r_\Gamma = \frac{\Gamma^2 (1 - \epsilon) \Gamma (1 + \epsilon)}{\Gamma(1 - 2 \ep
 \begin{equation}
 \begin{split}
 &\mathbf{J}^{(0)\dagger} \big( q,\{ p_i \}_{i=1}^m \big) \cdot \mathbf{J}^{(1)}\big( q,\{ p_i \}_{i=1}^m \big) + \text{h.c.} \\
-& \quad =  \sum_{i \neq j} \mathbf{T}_i \cdot \mathbf{T}_j \; 2 \, \text{Re}\big(j(q, p_i) \cdot \gamma^{(1)} (q, p_i, p_j)  \big)   + \sum_{(i,j,k)} f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \; 2 \, \text{Im} \big( j(q, p_i) \cdot \gamma^{(1)}(q, p_j, p_k) \big)
+& \quad =  \sum_{i \neq j}C_A \mathbf{T}_i \cdot \mathbf{T}_j \; 2 \, \text{Re}\big(j(q, p_i) \cdot \gamma^{(1)} (q, p_i, p_j)  \big)   + \sum_{(i,j,k)} f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \; 2 \, \text{Im} \big( j(q, p_i) \cdot \gamma^{(1)}(q, p_j, p_k) \big)
 \end{split}
 \end{equation}
 %
@@ -196,6 +196,82 @@ S^{(0)}&(q_1, q_2, p_i, p_j) = - \gamma^{(0)}_{\alpha_1 \alpha_2}(q_1, q_2, p_i)
 & \hspace{2cm}  + \frac{2 p_j \cdot q_1 p_j \cdot q_2}{(q_1 \cdot q_2)^2 (p_j \cdot q_1 + p_j \cdot q_2)^2}  \; \text{Re} \bigg \lbrace J_{q \bar{q}} (q_1, q_2, p_j, p_i) - J_{q \bar{q}} (q_2, q_1, p_j, p_i) \bigg \rbrace \bigg ] \\ 
 & + C_A T_F \sum_{(i,j)} \mathbf{T}_i \cdot \mathbf{T}_j \left[- \mathcal{I}(q_1, q_2, p_i, p_j) + \frac{2 p_i \cdot q_1 p_i \cdot q_2}{(q_1 \cdot q_2)^2 (p_i \cdot q_1 + p_i \cdot q_2)^2} \right] \\ 
 &\hspace{5cm} \times \text{Re} \bigg \lbrace J_{q \bar{q}}(q_1, q_2, p_i, p_j) + J_{q \bar{q}} (q_2, q_1, p_i, p_j) \bigg \rbrace
+\end{split}
+\end{equation}
+
+\section{Collinear Limits}
+\subsection{Tree-Level Collinear Limits}
+We consider the collinear limit of two final state momenta $p_1$ and $p_2$ 
+\begin{equation} 
+\begin{split}
+&p_1^\mu = z p^\mu + k_\perp^\mu - \frac{k_\perp^2}{z} \frac{n^\mu}{2 p \cdot n}, \qquad p_2^\mu = (1 - z) p^\mu - k_\perp^\mu - \frac{k_\perp^2}{1 - z} \frac{n^\mu}{2 p \cdot n} \\ 
+&s_12 = 2 p_1 \cdot p_2 = - \frac{k_\perp^2}{z (1 - z)}, \qquad p^2 = n^2 = p \cdot k_\perp = n \cdot k_\perp  = 0, \\
+& \hspace{4.5cm} k_\perp^\mu \rightarrow 0.
+\end{split}
+\end{equation}
+The matrix element factorizes as 
+\begin{equation}
+|\mathcal{M}^{(0)}_{a_1, a_2, \dots} \! (p_1, p_2, \ldots)|^2 \simeq 4 \pi \alpha_s \frac{2}{s_{12}} \braket{\mathcal{M}^{(0)}_{a, \dots} (p, \ldots) | \mathbf{\hat{P}}_{a_1 a_2}^{(0)} (z, k_\perp; \epsilon) | \mathcal{M}_{a, \dots}^{(0)} (p, \ldots)}. 
+\label{eq:CollinearFactorization}
+\end{equation} 
+The flavor $a$ is set by flavor conservation, i.e.\ if $a_{1,2} = g$ then $a = a_{2, 1}$, while if $a_1 = \bar{a}_2$ then $a = g$. The splitting functions are operator in spin space, and act on the spin of the parton with flavor. We will need the average of Eq. \eqref{eq:CollinearFactorization} over the transverse direction 
+\begin{equation}
+\overline{|\mathcal{M}^{(0)}_{a_1, a_2, \dots} (p_1, p_2, \ldots)|^2} \simeq 4 \pi \alpha_s \frac{2}{s_{12}} \braket{\mathbf{\hat{P}}_{a_1 a_2}^{(0)}(z; \epsilon)} |\mathcal{M}^{(0)}_{a,\dots} (p, \ldots)|^2,
+\end{equation}
+where the averaged splitting functions are 
+\begin{equation}
+\begin{split}
+\braket{\mathbf{\hat{P}}_{gg}^{(0)}(z; \epsilon)} &= 2 C_A \left[ \frac{z}{1 - z} + \frac{1 - z}{z} + z (1 - z) \right], \\  
+\braket{\mathbf{\hat{P}}_{q \bar{q}}^{(0)}(z; \epsilon)} = \braket{\mathbf{\hat{P}}_{\bar{q} q}^{(0)}(z; \epsilon)} &= T_F \left[1 - \frac{2 z (1 - z)}{1 - \epsilon} \right], \\ 
+\braket{\mathbf{\hat{P}}_{q g}^{(0)}(z; \epsilon)} = \braket{\mathbf{\hat{P}}_{\bar{q} g}^{(0)}(z; \epsilon)} &= C_F \left[ \frac{1 + z^2}{1 - z} - \epsilon (1 - z) \right], \\ 
+\braket{\mathbf{\hat{P}}_{gq}^{(0)}(z; \epsilon)} = \braket{\mathbf{\hat{P}}_{g\bar{q}}^{(0)}(z; \epsilon)} &= \braket{\mathbf{\hat{P}}_{qg}^{(0)}(1 - z; \epsilon)}
+\end{split}
+\end{equation} 
+
+\subsection{One-Loop Collinear Limits}
+The factorization of one-loop amplitudes in the final state collinear limit reads 
+\begin{equation}
+\begin{split}
+&2 \text{Re} \braket{\mathcal{M}_{a_1, a_2, \dots}^{(0)} (p_1, p_2, \dots) | \mathcal{M}^{(1)}_{a_1, a_2, \dots}(p_1, p_2, \dots)} \simeq \\ 
+&\quad 4 \pi \alpha_s \frac{2}{s_{12}} \left[ 2 \text{Re} \braket{\mathcal{M}^{(0)}_{a, \dots} (p, \ldots) \mathbf{\hat{P}}_{a_1 a_2}^{(0)}(z, k_\perp; \epsilon) | \mathcal{M}^{(1)}_{a, \dots} (p, \ldots)} + \frac{\alpha_s}{4 \pi} \braket{\mathcal{M}^{(0)}_{a, \dots} (p, \ldots) | \mathbf{\hat{P}}_{a_1 a_2}^{(1)}(z; \epsilon) | \mathcal{M}^{(0)}_{a, \dots} (p, \ldots)} \right]
+\end{split}
+\end{equation}
+The one-loop splitting functions read 
+\begin{equation}
+\hat{P}_{qg}^{(1), s s^\prime} (z, k_\perp; \epsilon) = r_{SR}^{qg}(z) \hat{P}_{qg}^{(0), s s^\prime} (z, k_\perp; \epsilon) + C_F r_{NS}^{qg}  \left[1 - \epsilon (1 - z) \right] \delta^{s s^\prime}
+\end{equation}
+The renormalized singular coefficients $r_{SR}^{a_1 a_2}$ are related to the unrenormalized singular coefficients $r_{S}^{a_1 a_2}$ through 
+\begin{equation}
+r_{SR}^{a_1 a_2} (z) = 2 \text{Re} \left(- \frac{\mu_R^2}{s_{12}} \right)^\epsilon r_\Gamma r_S^{a_1 a_2}(z) - \frac{\beta_0}{\epsilon}.
+\end{equation} 
+And the bare singuar coefficients read 
+\begin{equation}
+\begin{split}
+r_{S}^{qg}(z) = -\frac{1}{\epsilon^2} \left[ C_A \left(\frac{z}{1 - z} \right)^\epsilon \frac{\pi \epsilon}{\sin (\pi \epsilon)} + \sum_{m = 1}^\infty \epsilon^m \left[ (1 + (-1)^m) C_A - 2 C_F \right] \text{Li}_m\! \left(- \frac{1 - z}{z} \right) \right].
+\end{split}
+\end{equation}
+The non-singular coefficient are 
+\begin{equation}
+r_{NS}^{qg} = 2 \text{Re} \left(- \frac{\mu_R^2}{s_{12}} \right)^\epsilon r_\Gamma \frac{C_A - C_F}{1 - 2 \epsilon}
+\end{equation}
+
+\section{Soft-Collinear Limits}
+In this section we want to investigate the soft-collinear limit. In particular we want to analyze if the collinear limit of the soft functions is identical to the soft limit of the splitting functions. This has important consequences related to factorization breaking effects. 
+\subsection{Tree-Level Soft-Collinear Limit}
+We say that the soft gluon is now also collinear to the first parton 
+\begin{equation}
+p_1 = (1 - z) p - k_\perp - \frac{k_\perp^2}{(1 - z)} \frac{n}{2p \cdot n}, \qquad q = z p + k_\perp - \frac{k_\perp^2}{z} \frac{n}{2 p \cdot n}, \qquad z \rightarrow 0,\ k_\perp \rightarrow 0
+\end{equation}
+\begin{equation}
+|\mathbf{J}^{(0)} (q, \lbrace p_i \rbrace_{i = 1}^m ) |^2 \simeq -2\frac{1}{p_1 \cdot q} \sum_{j \neq 1} \frac{p_1 \cdot p_j}{q \cdot p_j} \mathbf{T}_1 \cdot \mathbf{T}_j \simeq 2 C_1 \frac{1}{p_1 \cdot q} \frac{1}{z} = \frac{1}{p_1 \cdot q} \braket{\hat{\mathbf{P}}_{ga_1}^{(0)}}
+\end{equation} 
+So we see that the limits permute. Further we see that $\braket{\mathbf{\hat{P}}_{q \bar{q}}^{(0)} }$ is non-singular in the limit $z \rightarrow 0, 1$. 
+
+\subsection{One-Loop Soft-Collinear Limit}
+\begin{equation}
+\begin{split}
+&\mathbf{J}^{(0)\dagger} \big( q,\{ p_i \}_{i=1}^m \big) \cdot \mathbf{J}^{(1)}\big( q,\{ p_i \}_{i=1}^m \big) + \text{h.c.} \\
+& \quad =  \sum_{i \neq j} \mathbf{T}_i \cdot \mathbf{T}_j \; 2 \, \text{Re}\big(j(q, p_i) \cdot \gamma^{(1)} (q, p_i, p_j)  \big)   + \sum_{(i,j,k)} f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \; 2 \, \text{Im} \big( j(q, p_i) \cdot \gamma^{(1)}(q, p_j, p_k) \big)
 \end{split}
 \end{equation}
 

@@ -19,3 +19,14 @@ numerics/src/amplitude
 numerics/references/arXiv-hep-ph0112081v1
 *.pdf
 numerics/references
+form/soft2l/diagrams/topologies
+form/soft2l/IBP/sectormappings
+form/soft2l/IBP/results
+*.aux
+*.toc
+numerics/example
+numerics/example.cpp
+*.fdb_latexmk
+*.fls
+*.out
+form/soft2l/diagrams/diags
