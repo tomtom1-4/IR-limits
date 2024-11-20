@@ -1,14 +1,14 @@
 #include "main.hpp"
 
 // Evaluation of input
-std::string process_str = "d d~ -> g g";
+std::string process_str = "e- e+ -> u u~";
 std::string unresolved_str = " g";
 std::string suffix = "";
 
 
 const int nBorn = 4;
-const int power = 2;
-const std::array<unsigned, 3> powerNonQCD = {0,0,0};
+const int power = 0;
+const std::array<unsigned, 3> powerNonQCD = {2,0,0};
 const std::string order = "NLO";
 
 void replace(std::string& str, const std::string& from, const std::string& to) {
@@ -55,8 +55,8 @@ int main() {
   Recola::set_momenta_correction_rcl(false);
 
   Recola::use_alpha0_scheme_rcl(e*e/4./M_PI);
-  //Recola::set_pole_mass_z_rcl(1.e8, 0.0001);
-  //Recola::set_pole_mass_w_rcl(1.e15, 0.0001);
+  Recola::set_pole_mass_z_rcl(1.e8, 0.0001);
+  Recola::set_pole_mass_w_rcl(1.e15, 0.0001);
 
   // Define & generate process
   Recola::define_process_rcl(1, process_str, order_rcl);

@@ -71,17 +71,18 @@ ifeq ($(strip $(USE_QCDL)),true)
 LIBS += -lqcdloop
 endif
 
-SRCS = main.cpp src/amplitude.cpp src/color.cpp src/eikonal.cpp src/tinyxml2.cpp \
+SRCS = src/amplitude.cpp src/color.cpp src/eikonal.cpp src/tinyxml2.cpp src/splitting_functions.cpp src/utilities.cpp \
 	/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Tree.cpp /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/PhaseSpace.cpp \
 	/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Utilities.cpp
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
-EXEC = $(patsubst %.cpp,%,$(SRCS))
 
 .PHONY: clean
 
-target: $(OBJS) $(EXEC)
+.PRECIOUS: src/amplitude.o src/color.o src/eikonal.o src/tinyxml2.o src/splitting_functions.o src/utilities.o /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Tree.o /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/PhaseSpace.o /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Utilities.o
 
-%: %.o $(OBJS)
+#target: $(OBJS)
+
+%.exe: %.o $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS) -DGNU_NAME_MANGLING -lpthread
 
 # Compilation rule
@@ -89,4 +90,5 @@ target: $(OBJS) $(EXEC)
 	$(CXX) $(CXXFLAGS) -c -DGNU_NAME_MANGLING $< -o $@
 
 clean:
-	rm -f *.o $(EXEC) $(OBJS)
+	rm -f *.o $(EXEC) $(OBJS) *.exe
+

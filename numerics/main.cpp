@@ -4,16 +4,16 @@
 //using namespace Stripper;
 
 // Evaluation of input
-std::string process_str = "d d~ -> g d d~";
-std::string unresolved_str = " g";
+std::string process_str = "d d~ -> g g";
+std::string unresolved_str = " g g";
 std::string limit = "collinear";
 //std::string process_full_str = process_str + unresolved_str;
-std::string process_full_str = "d d~ -> d d d~ d~";
+std::string process_full_str = "d d~ -> g g g g";
 
-const int nBorn = 5;
-const int power = 3;
+const int nBorn = 4;
+const int power = 2;
 const std::array<unsigned, 3> powerNonQCD = {0,0,0};
-const std::vector<int> flavor = {0,0,1,1,1};
+const std::vector<int> flavor = {0,0,1,1};
 const std::string order = "LO";
 const std::string suffix = ""; // "" or "_EW" or "_QED"
 double M2_custom[13];
@@ -27,7 +27,7 @@ int main() {
   if(order == "NNLO") loopOrder = 2;
 
   // user defined matrix element configuration
-  Stripper::Model::config((powerNonQCD[0]==0),false,false,false,powerNonQCD[0],powerNonQCD[1],powerNonQCD[2],1.,0.,0.);
+  Stripper::Model::config((powerNonQCD[0]!=0),false,false,false,powerNonQCD[0],powerNonQCD[1],powerNonQCD[2],1.,0.,0.);
   const Stripper::Process process_full(process_full_str);
   const Stripper::Process process(process_str);
   Stripper::Model::nf = 5;
@@ -224,151 +224,161 @@ int main() {
   }
   // Get spin correlator
   std::unordered_map<std::string, std::complex<double>> SC0, SC1;
-  XMLElement * SC0_iElement = pRoot->FirstChildElement("SC0");
-  XMLElement * SC1_iElement = pRoot->FirstChildElement("SC1");
-  for(int i = 0; i < A.process.size(); i++) {
-    if(A.particle_type[i] == 0) continue;
-    for(int s1 = -1; s1 <= 1; s1 += 2) {
-      for(int s2 = -1; s2 <= 1; s2 += 2) {
-        XMLElement * SC0_iEntry_real = SC0_iElement->FirstChildElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
-        XMLElement * SC0_iEntry_imag = SC0_iElement->FirstChildElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
-        double real, imag;
-        if(SC0_iEntry_real != nullptr) eResult = SC0_iEntry_real->QueryDoubleText(&real);
-        if(SC0_iEntry_imag != nullptr) eResult = SC0_iEntry_imag->QueryDoubleText(&imag);
-        SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] = real + I*imag;
-        std::cout << std::to_string(i) + std::to_string(s1) + std::to_string(s2) << "\t" << SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] << std::endl;
-      }
-    }
-  }
-  // Get color correlators
-  // <M|Ti.Tj|M>
-  XMLElement * M0_ijElement = pRoot->FirstChildElement("M0_ij");
-  XMLElement * M1_ijElement = pRoot->FirstChildElement("M1_ij");
-  XMLElement * M2_ijElement = pRoot->FirstChildElement("M2_ij");
-  for (int i = 0; i < A.process.size(); i++) {
-    if(A.particle_type[i] == 0) continue;
-    for(int j = 0; j < A.process.size(); j++) {
-      if(A.particle_type[j] == 0) continue;
-      if(M0_ijElement != nullptr) {
-        XMLElement * M0_ijEntry = M0_ijElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
-        if(M0_ijEntry != nullptr) eResult = M0_ijEntry->QueryDoubleText(&M0_ij[std::to_string(i) + std::to_string(j)]);
-      }
-      if(M1_ijElement != nullptr) {
-        XMLElement * M1_ijEntry = M1_ijElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
-        if(M1_ijEntry != nullptr) eResult = M1_ijEntry->QueryDoubleText(&M1_ij[std::to_string(i) + std::to_string(j)]);
-      }
-      if(M2_ijElement != nullptr) {
-        XMLElement * M2_ijEntry = M2_ijElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
-        if(M2_ijEntry != nullptr) eResult = M2_ijEntry->QueryDoubleText(&M2_ij[std::to_string(i) + std::to_string(j)]);
-      }
-    }
-  }
-  // <M|Ti.Tj Tk.Tl|M>
-  if(unresolved_str==" g g" || unresolved_str==" g g g") {
-    XMLElement * M0_ijklElement = pRoot->FirstChildElement("M0_ijkl");
-    XMLElement * M1_ijklElement = pRoot->FirstChildElement("M1_ijkl");
-    for (int i = 0; i < A.process.size(); i++) {
+  if(limit == "collinear") {
+    XMLElement * SC0_iElement = pRoot->FirstChildElement("SC0");
+    XMLElement * SC1_iElement = pRoot->FirstChildElement("SC1");
+    for(int i = 0; i < A.process.size(); i++) {
       if(A.particle_type[i] == 0) continue;
-      for(int j = 0; j < A.process.size(); j++) {
-        if(A.particle_type[j] == 0) continue;
-        for(int k = 0; k < A.process.size(); k++) {
-          if(A.particle_type[k] == 0) continue;
-          for(int l = 0; l < A.process.size(); l++) {
-            if(A.particle_type[l] == 0) continue;
-            if(M0_ijklElement != nullptr) {
-              XMLElement * M0_ijklEntry = M0_ijklElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
-              if(M0_ijklEntry != nullptr) eResult = M0_ijklEntry->QueryDoubleText(&M0_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
-            }
-            if(M1_ijklElement != nullptr) {
-              XMLElement * M1_ijklEntry = M1_ijklElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
-              if(M1_ijklEntry != nullptr) eResult = M1_ijklEntry->QueryDoubleText(&M1_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
-            }
-          }
+      for(int s1 = -1; s1 <= 1; s1 += 2) {
+        for(int s2 = -1; s2 <= 1; s2 += 2) {
+          XMLElement * SC0_iEntry_real = SC0_iElement->FirstChildElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+          XMLElement * SC0_iEntry_imag = SC0_iElement->FirstChildElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+          XMLElement * SC1_iEntry_real = SC1_iElement->FirstChildElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+          XMLElement * SC1_iEntry_imag = SC1_iElement->FirstChildElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+          double real0, imag0, real1, imag1;
+          if(SC0_iEntry_real != nullptr) eResult = SC0_iEntry_real->QueryDoubleText(&real0);
+          if(SC0_iEntry_imag != nullptr) eResult = SC0_iEntry_imag->QueryDoubleText(&imag0);
+          if(SC1_iEntry_real != nullptr) eResult = SC1_iEntry_real->QueryDoubleText(&real1);
+          if(SC1_iEntry_imag != nullptr) eResult = SC1_iEntry_imag->QueryDoubleText(&imag1);
+          SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] = real0 + I*imag0;
+          SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] = real1 + I*imag1;
+          std::cout << std::to_string(i) + std::to_string(s1) + std::to_string(s2) << "\t" << SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]
+            << SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] << std::endl;
         }
       }
     }
   }
-
-  // f^{a,d;b,c} <M|Ti^a {Tj^b, Tk^c} Tl^d|M> + h.c.
-  if((order=="NLO" && unresolved_str==" g g") || unresolved_str==" g g g" or order=="NNLO") {
-    XMLElement * Q_ijklElement = pRoot->FirstChildElement("Q_ijkl");
-    if(Q_ijklElement != nullptr) {
+  else if(limit == "soft") {
+    // Get color correlators
+    // <M|Ti.Tj|M>
+    XMLElement * M0_ijElement = pRoot->FirstChildElement("M0_ij");
+    XMLElement * M1_ijElement = pRoot->FirstChildElement("M1_ij");
+    XMLElement * M2_ijElement = pRoot->FirstChildElement("M2_ij");
+    for (int i = 0; i < A.process.size(); i++) {
+      if(A.particle_type[i] == 0) continue;
+      for(int j = 0; j < A.process.size(); j++) {
+        if(A.particle_type[j] == 0) continue;
+        if(M0_ijElement != nullptr) {
+          XMLElement * M0_ijEntry = M0_ijElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
+          if(M0_ijEntry != nullptr) eResult = M0_ijEntry->QueryDoubleText(&M0_ij[std::to_string(i) + std::to_string(j)]);
+        }
+        if(M1_ijElement != nullptr) {
+          XMLElement * M1_ijEntry = M1_ijElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
+          if(M1_ijEntry != nullptr) eResult = M1_ijEntry->QueryDoubleText(&M1_ij[std::to_string(i) + std::to_string(j)]);
+        }
+        if(M2_ijElement != nullptr) {
+          XMLElement * M2_ijEntry = M2_ijElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j)).c_str()));
+          if(M2_ijEntry != nullptr) eResult = M2_ijEntry->QueryDoubleText(&M2_ij[std::to_string(i) + std::to_string(j)]);
+        }
+      }
+    }
+    // <M|Ti.Tj Tk.Tl|M>
+    if(unresolved_str==" g g" || unresolved_str==" g g g") {
+      XMLElement * M0_ijklElement = pRoot->FirstChildElement("M0_ijkl");
+      XMLElement * M1_ijklElement = pRoot->FirstChildElement("M1_ijkl");
       for (int i = 0; i < A.process.size(); i++) {
         if(A.particle_type[i] == 0) continue;
         for(int j = 0; j < A.process.size(); j++) {
           if(A.particle_type[j] == 0) continue;
           for(int k = 0; k < A.process.size(); k++) {
             if(A.particle_type[k] == 0) continue;
-            if(k == j) continue;
             for(int l = 0; l < A.process.size(); l++) {
               if(A.particle_type[l] == 0) continue;
-              if(l == i) continue;
-              XMLElement * Q_ijklEntry = Q_ijklElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
-              if(Q_ijklEntry != nullptr) Q_ijklEntry->QueryDoubleText(&Q_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
+              if(M0_ijklElement != nullptr) {
+                XMLElement * M0_ijklEntry = M0_ijklElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
+                if(M0_ijklEntry != nullptr) eResult = M0_ijklEntry->QueryDoubleText(&M0_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
+              }
+              if(M1_ijklElement != nullptr) {
+                XMLElement * M1_ijklEntry = M1_ijklElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
+                if(M1_ijklEntry != nullptr) eResult = M1_ijklEntry->QueryDoubleText(&M1_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
+              }
             }
           }
         }
       }
     }
-  }
 
-  // f^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
-  if(unresolved_str==" g g g" or order=="NLO" or order=="NNLO") {
-    XMLElement * M0_ijkElement = pRoot->FirstChildElement("M0_ijk");
-    XMLElement * M1_ijkElement = pRoot->FirstChildElement("M1_ijk");
-    if(M0_ijkElement != nullptr) {
-      for(int i = 0; i < A.process.size(); i++) {
-        if(A.particle_type[i] == 0) continue;
-        for(int j = 0; j < A.process.size(); j++) {
-          if(A.particle_type[j] == 0) continue;
-          if(j == i) continue;
-          for(int k = 0; k < A.process.size(); k++) {
-            if(A.particle_type[k] == 0) continue;
-            if(k == i or k == j) continue;
-            XMLElement * M0_ijkEntry = M0_ijkElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
-            if(M0_ijkEntry != nullptr) M0_ijkEntry->QueryDoubleText(&M0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]);
-            XMLElement * M1_ijkEntry = M1_ijkElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
-            if(M1_ijkEntry != nullptr) M1_ijkEntry->QueryDoubleText(&M1_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]);
+    // f^{a,d;b,c} <M|Ti^a {Tj^b, Tk^c} Tl^d|M> + h.c.
+    if((order=="NLO" && unresolved_str==" g g") || unresolved_str==" g g g" or order=="NNLO") {
+      XMLElement * Q_ijklElement = pRoot->FirstChildElement("Q_ijkl");
+      if(Q_ijklElement != nullptr) {
+        for (int i = 0; i < A.process.size(); i++) {
+          if(A.particle_type[i] == 0) continue;
+          for(int j = 0; j < A.process.size(); j++) {
+            if(A.particle_type[j] == 0) continue;
+            for(int k = 0; k < A.process.size(); k++) {
+              if(A.particle_type[k] == 0) continue;
+              if(k == j) continue;
+              for(int l = 0; l < A.process.size(); l++) {
+                if(A.particle_type[l] == 0) continue;
+                if(l == i) continue;
+                XMLElement * Q_ijklEntry = Q_ijklElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)).c_str()));
+                if(Q_ijklEntry != nullptr) Q_ijklEntry->QueryDoubleText(&Q_ijkl[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l)]);
+              }
+            }
           }
         }
       }
     }
-  }
 
-  // d^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
-  if(unresolved_str==" g g g" or order=="NLO") {
-    XMLElement * dM0_ijkElement = pRoot->FirstChildElement("dM0_ijk");
-    if(dM0_ijkElement != nullptr) {
-      for(int i = 0; i < A.process.size(); i++) {
-        if(A.particle_type[i] == 0) continue;
-        for(int j = 0; j < A.process.size(); j++) {
-          if(A.particle_type[j] == 0) continue;
-          for(int k = 0; k < A.process.size(); k++) {
-            if(A.particle_type[k] == 0) continue;
-            XMLElement * dM0_ijkEntry = dM0_ijkElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
-            if(dM0_ijkEntry != nullptr) dM0_ijkEntry->QueryDoubleText(&dM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]);
+    // f^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
+    if(unresolved_str==" g g g" or order=="NLO" or order=="NNLO") {
+      XMLElement * M0_ijkElement = pRoot->FirstChildElement("M0_ijk");
+      XMLElement * M1_ijkElement = pRoot->FirstChildElement("M1_ijk");
+      if(M0_ijkElement != nullptr) {
+        for(int i = 0; i < A.process.size(); i++) {
+          if(A.particle_type[i] == 0) continue;
+          for(int j = 0; j < A.process.size(); j++) {
+            if(A.particle_type[j] == 0) continue;
+            if(j == i) continue;
+            for(int k = 0; k < A.process.size(); k++) {
+              if(A.particle_type[k] == 0) continue;
+              if(k == i or k == j) continue;
+              XMLElement * M0_ijkEntry = M0_ijkElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
+              if(M0_ijkEntry != nullptr) M0_ijkEntry->QueryDoubleText(&M0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]);
+              XMLElement * M1_ijkEntry = M1_ijkElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
+              if(M1_ijkEntry != nullptr) M1_ijkEntry->QueryDoubleText(&M1_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]);
+            }
           }
         }
       }
     }
-  }
 
-  // <M|Ti.Tj f^{ck, cl, ca} Tk^ck Tl^cl Ta^ca|M> + c.c.
-  if((order=="NLO") and (unresolved_str== " g g") and (suffix == "_EW")) {
-    XMLElement * M0_ijklaElement = pRoot->FirstChildElement("M0_ijkla");
-    if(M0_ijklaElement != nullptr) {
-      for(int i = 0; i < A.process.size(); i++) {
-        if(A.particle_type[i] == 0) continue;
-        for(int j = 0; j < A.process.size(); j++) {
-          if(A.particle_type[j] == 0) continue;
-          for(int k = 0; k < A.process.size(); k++) {
-            if(A.particle_type[k] == 0) continue;
-            for(int l = 0; l < A.process.size(); l++) {
-              if(A.particle_type[l] == 0) continue;
-              for(int a = 0; a < A.process.size(); a++) {
-                if(A.particle_type[a] == 0) continue;
-                XMLElement * M0_ijklaEntry = M0_ijklaElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l) + std::to_string(a)).c_str()));
-                if(M0_ijklaEntry != nullptr) M0_ijklaEntry->QueryDoubleText(&M0_ijkla[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l) + std::to_string(a)]);
+    // d^{a,b,c} <M|Ti^a Tj^b Tk^c|M>
+    if(unresolved_str==" g g g" or order=="NLO") {
+      XMLElement * dM0_ijkElement = pRoot->FirstChildElement("dM0_ijk");
+      if(dM0_ijkElement != nullptr) {
+        for(int i = 0; i < A.process.size(); i++) {
+          if(A.particle_type[i] == 0) continue;
+          for(int j = 0; j < A.process.size(); j++) {
+            if(A.particle_type[j] == 0) continue;
+            for(int k = 0; k < A.process.size(); k++) {
+              if(A.particle_type[k] == 0) continue;
+              XMLElement * dM0_ijkEntry = dM0_ijkElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k)).c_str()));
+              if(dM0_ijkEntry != nullptr) dM0_ijkEntry->QueryDoubleText(&dM0_ijk[std::to_string(i) + std::to_string(j) + std::to_string(k)]);
+            }
+          }
+        }
+      }
+    }
+
+    // <M|Ti.Tj f^{ck, cl, ca} Tk^ck Tl^cl Ta^ca|M> + c.c.
+    if((order=="NLO") and (unresolved_str== " g g") and (suffix == "_EW")) {
+      XMLElement * M0_ijklaElement = pRoot->FirstChildElement("M0_ijkla");
+      if(M0_ijklaElement != nullptr) {
+        for(int i = 0; i < A.process.size(); i++) {
+          if(A.particle_type[i] == 0) continue;
+          for(int j = 0; j < A.process.size(); j++) {
+            if(A.particle_type[j] == 0) continue;
+            for(int k = 0; k < A.process.size(); k++) {
+              if(A.particle_type[k] == 0) continue;
+              for(int l = 0; l < A.process.size(); l++) {
+                if(A.particle_type[l] == 0) continue;
+                for(int a = 0; a < A.process.size(); a++) {
+                  if(A.particle_type[a] == 0) continue;
+                  XMLElement * M0_ijklaEntry = M0_ijklaElement->FirstChildElement(const_cast<char*>(("d" + std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l) + std::to_string(a)).c_str()));
+                  if(M0_ijklaEntry != nullptr) M0_ijklaEntry->QueryDoubleText(&M0_ijkla[std::to_string(i) + std::to_string(j) + std::to_string(k) + std::to_string(l) + std::to_string(a)]);
+                }
               }
             }
           }
@@ -468,15 +478,15 @@ int main() {
         double M2_test = 0;
         Recola::compute_process_rcl(1, pp_rcl, order);
         Recola::get_squared_amplitude_rcl(1, power + delta_power/2, order, M2_test);
-        std::cout << "M2 = " << M2_test << std::endl;
+        //std::cout << "M2 = " << M2_test << std::endl;
         Recola::compute_process_rcl(2, ppFull_rcl, order);
         Recola::get_squared_amplitude_rcl(2, power + nUnresolved + delta_power/2, order, M2_Full);
         //Stripper one-loop
-        double M2_Full_Stripper = 0.;
-        Stripper::Born<Real> me(process_full, ppFull_Stripper);
-        M2_Full_Stripper = Stripper::toDouble(me())*average_factor_full*std::pow(gs, 2*(power));
-        M2_Full = M2_Full_Stripper;
-        std::cout << "M2_Stripper_full = " << M2_Full_Stripper << std::endl;
+        //double M2_Full_Stripper = 0.;
+        //Stripper::Born<Real> me(process_full, ppFull_Stripper);
+        //M2_Full_Stripper = Stripper::toDouble(me())*average_factor_full*std::pow(gs, 2*(power));
+        //M2_Full = M2_Full_Stripper;
+        //std::cout << "M2_Stripper_full = " << M2_Full_Stripper << std::endl;
         //Stripper::OneLoop<double> me(process_full,ppFull_Stripper);
         //for(int i = 0; i <= 2; i++) M2_Full_Stripper += ((me()[i])*std::pow(std::log(mu*mu/COM/COM), i))*average_factor_full*std::pow(gs, 2*(power + nUnresolved) + 4);
         //std::cout << "gs = " << gs << std::endl;
@@ -495,8 +505,8 @@ int main() {
     }
 
     double M2_approx, M2_test;
-    if(unresolved_str == " g") {
-      if(limit=="soft") {
+    if(limit == "soft") {
+      if(unresolved_str == " g") {
         if(order=="LO") M2_approx = soft_g_squared(pp_full, M0_ij, A)*average_factor_full/average_factor;
         else if(order=="NLO") M2_approx = soft_g_squared_1l(pp_full, M0_ij, M0_ijk, M1_ij, A)*average_factor_full/average_factor;
         else if(order=="NNLO") {
@@ -505,30 +515,38 @@ int main() {
           M2_test = soft_g_squared_2l_reducible(pp_full, M0_ij, M0_ijk, Q_ijkl, M1_ij, M1_ijk, M2_ij, A, n_f)*average_factor_full/average_factor;
         }
       }
-      else if(limit=="collinear") {
-        std::cout << "marker -1" << std::endl;
-        if(order=="LO") M2_approx = collinear_squared(pp_full, SC0, A, A_full, clusterTree.getRoot()->children[0]->data.reference)*average_factor_full/average_factor;
+      else if(unresolved_str == " d d~") {
+        if(order == "LO") M2_approx = soft_qq_squared(pp_full, M0_ij, A)*average_factor_full/average_factor;
+        else if(order == "NLO") M2_approx = soft_qq_squared_1l(pp_full, M0_ij, M1_ij, M0_ijk, dM0_ijk, A, n_f);
+      }
+      else if(unresolved_str == " g g") {
+        if(order=="LO") M2_approx = soft_gg_squared(pp_full, M0_ij, M0_ijkl, A)*average_factor_full/average_factor;
+        else if(order=="NLO") M2_approx = soft_gg_squared_1l(pp_full, M0_ij, M1_ij, M0_ijkl, M1_ijkl, M0_ijk, M0_ijkla, Q_ijkl, A, n_f)*average_factor_full/average_factor;
+      }
+      else if(unresolved_str == " g d d~")
+        M2_approx = soft_gqq_squared(pp_full, M0_ij, M0_ijkl, dM0_ijk, A)*average_factor_full/average_factor;
+      //else if(unresolved_str == " g g g")
+      //  M2_approx = soft_ggg_squared(pp_full, M_ij, M0_ijkl, M_ijklab, dM0_ijk, fM_ijkl)*average_factor_full/average_factor;
+
+    }
+    else if(limit == "collinear") {
+      int i_reference = clusterTree.getRoot()->children[0]->data.reference;
+      switch (nUnresolved)
+      {
+      case 1:
+        if(order=="LO") M2_approx = collinear_squared(pp_full, SC0, A, A_full, i_reference)*average_factor_full/average_factor;
         else if(order=="NLO") {
-          M2_test = collinear_squared(pp_full, SC1, A, A_full, clusterTree.getRoot()->children[0]->data.reference)*average_factor_full/average_factor;
-          //M2_approx = collinear_squared_1l(pp_full, M0, M1, A, A_full)*average_factor_full/average_factor;
+          M2_test = collinear_squared(pp_full, SC1, A, A_full, i_reference)*average_factor_full/average_factor;
+          M2_approx = collinear_squared_1l(pp_full, SC0, SC1, A, A_full, i_reference)*average_factor_full/average_factor;
         }
+        break;
+      case 2:
+        if(order=="LO") M2_approx = triple_collinear_squared(pp_full, SC0, A, A_full, i_reference)*average_factor_full/average_factor;
+
+      default:
+        break;
       }
-      else {
-        std::cout << "undefined limit" << std::endl;
-      }
     }
-    else if(unresolved_str == " d d~") {
-      if(order == "LO") M2_approx = soft_qq_squared(pp_full, M0_ij, A)*average_factor_full/average_factor;
-      else if(order == "NLO") M2_approx = soft_qq_squared_1l(pp_full, M0_ij, M1_ij, M0_ijk, dM0_ijk, A, n_f);
-    }
-    else if(unresolved_str == " g g") {
-      if(order=="LO") M2_approx = soft_gg_squared(pp_full, M0_ij, M0_ijkl, A)*average_factor_full/average_factor;
-      else if(order=="NLO") M2_approx = soft_gg_squared_1l(pp_full, M0_ij, M1_ij, M0_ijkl, M1_ijkl, M0_ijk, M0_ijkla, Q_ijkl, A, n_f)*average_factor_full/average_factor;
-    }
-    else if(unresolved_str == " g d d~")
-      M2_approx = soft_gqq_squared(pp_full, M0_ij, M0_ijkl, dM0_ijk, A)*average_factor_full/average_factor;
-    //else if(unresolved_str == " g g g")
-    //  M2_approx = soft_ggg_squared(pp_full, M_ij, M0_ijkl, M_ijklab, dM0_ijk, fM_ijkl)*average_factor_full/average_factor;
     std::cout << scale << "\t" << M2_Full << "\t" << M2_approx << "\t" << M2_test << "\t" << M2_approx + M2_test << "\t" << (M2_Full - M2_test)/M2_approx << "\t" << std::abs(1. - M2_Full/(M2_approx + M2_test)) << std::endl;
     outfile1 << scale << ", " << std::abs(1. - M2_Full/(M2_approx + M2_test)) << std::endl;
   }

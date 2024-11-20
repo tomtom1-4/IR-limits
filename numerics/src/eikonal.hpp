@@ -7,6 +7,9 @@
 #include "amplitude.hpp"
 #include "color.hpp"
 #include "dirac.hpp"
+#include "splitting_functions.hpp"
+#include "Lorentz.hpp"
+#include "utilities.hpp"
 
 std::unordered_map<std::string, std::complex<double>> J_g_eikonal(double *pp, double *q, amplitude& A);
 
@@ -73,6 +76,9 @@ double soft_g_squared_2l_reducible(double *pp_full, std::unordered_map<std::stri
 
 double collinear_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> SC0, amplitude& A, amplitude& A_full, int reference_index);
 
-//double collinear_squared_1l(double *pp_full, double M0, double M1, amplitude& A, amplitude& A_full);
+double collinear_squared_1l(double *pp_full, std::unordered_map<std::string, std::complex<double>> SC0,
+    std::unordered_map<std::string, std::complex<double>> SC1, amplitude& A, amplitude& A_full, int reference_index);
 
+double triple_collinear_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> SC0,
+    amplitude& A, amplitude& A_full, int index);
 #endif
