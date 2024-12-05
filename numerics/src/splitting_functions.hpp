@@ -33,4 +33,10 @@ std::vector<std::vector<std::complex<double>>> P0_gqqbar(LV<double> p1, LV<doubl
 
 std::vector<std::vector<std::complex<double>>> P0_ggg(LV<double> p1, LV<double> p2, LV<double> p3);
 
+std::vector<std::vector<std::complex<double>>> P1_qqPqPbar(LV<double> p1, LV<double> p2, LV<double> p3, double muR, int nl);
+
+std::vector<std::vector<std::complex<double>>> P1_qqqbar(LV<double> p1, LV<double> p2, LV<double> p3, double muR, int nl);
+
+std::vector<std::vector<std::complex<double>>> P1_qgg(LV<double> p1, LV<double> p2, LV<double> p3, double muR, int nl);
+
 #endif

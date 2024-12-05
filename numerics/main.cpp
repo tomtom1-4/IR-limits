@@ -4,17 +4,17 @@
 //using namespace Stripper;
 
 // Evaluation of input
-std::string process_str = "d d~ -> g g";
-std::string unresolved_str = " g g";
+std::string process_str = "d d~ -> d d~";
+std::string unresolved_str = " d d~";
 std::string limit = "collinear";
 //std::string process_full_str = process_str + unresolved_str;
-std::string process_full_str = "d d~ -> g g g g";
+std::string process_full_str = "d d~ -> d d~ d d~";
 
 const int nBorn = 4;
 const int power = 2;
 const std::array<unsigned, 3> powerNonQCD = {0,0,0};
 const std::vector<int> flavor = {0,0,1,1};
-const std::string order = "LO";
+const std::string order = "NLO";
 const std::string suffix = ""; // "" or "_EW" or "_QED"
 double M2_custom[13];
 
@@ -30,7 +30,7 @@ int main() {
   Stripper::Model::config((powerNonQCD[0]!=0),false,false,false,powerNonQCD[0],powerNonQCD[1],powerNonQCD[2],1.,0.,0.);
   const Stripper::Process process_full(process_full_str);
   const Stripper::Process process(process_str);
-  Stripper::Model::nf = 5;
+  Stripper::Model::nf = n_f;
   Stripper::Model::print(std::cout);
 
   // phase space point
@@ -104,10 +104,11 @@ int main() {
     // Recola Settings
     Recola::set_reduction_mode_rcl(4);
     Recola::set_print_level_amplitude_rcl(2);
-    Recola::set_alphas_rcl(gs * gs/(4 * M_PI), mu, 5);
+    Recola::set_alphas_rcl(gs * gs/(4 * M_PI), mu, n_f);
     Recola::set_mu_ir_rcl(mu);
-    Recola::set_delta_ir_rcl(0, M_PI * M_PI/12.);
-    Recola::set_momenta_correction_rcl(false);
+    Recola::set_mu_uv_rcl(mu);
+    Recola::set_delta_ir_rcl(0., M_PI*M_PI/12.);
+    Recola::set_momenta_correction_rcl(true);
 
     Recola::use_alpha0_scheme_rcl(e*e/4./M_PI);
     //Recola::set_pole_mass_z_rcl(1.e8, 0.0001);
@@ -416,9 +417,13 @@ int main() {
     etas[i] = PSF::rnd(0.1, 0.9);
     phis[i] = PSF::rnd(0., 1.);
   }
+  //etas[0] = 1./3.;
+  //etas[1] = 0.5;
+  //phis[0] = 0.;
+  //phis[1] = 1./6.;
   double increment = std::sqrt(0.5);
   int counter = 0;
-  while (scale > 3.e-10) {
+  while (scale > 3.e-8) {
     scale *= increment;
     std::vector<std::vector<std::vector<double>>> xParFull;
     int level_int = 1;
@@ -437,7 +442,7 @@ int main() {
             eta = etas[unresolved_counter];
           }
           else if(limit == "collinear") {
-            xi = 0.5; //etas[unresolved_counter];
+            xi = etas[unresolved_counter];
             eta = std::pow(scale, 1);
           }
           double phi = phis[unresolved_counter];
@@ -452,6 +457,34 @@ int main() {
       level = clusterTree.getLevel(level_int);
     }
     PSF::PhaseSpace ppFull = PSF::GenMomenta2(pp, clusterTree, xParFull);
+
+    /*std::vector<std::vector<double>> ppFull_Czakon = {{-500, 0, 0, -500},
+                                                      {-500, 0, 0, 500},
+                                                      {147.007014381999, 22.7892195077585, 80.3801605332046, 120.957610526964},
+                                                      {498.149814230802, -119.484173505835, -274.060451246318, -398.456570735726},
+                                                      {255.827248217417, 86.4943126019991, 146.564938118912, 191.010559216508},
+                                                      {99.015923169782, 10.2006413960771, 47.1153525942017, 86.4884009922537}};*/
+
+    /*std::vector<std::vector<double>> ppFull_Czakon = {{-500, 0, 0, -500},
+                                                      {-500, 0, 0, 500},
+                                                      {146.188063701903, 22.662264702961, 79.9323765454025, 120.283776575433},
+                                                      {499.981617676983, -81.7917596850477, -273.650976116417, -410.374060258502},
+                                                      {255.827248217417, 44.4373789862989, 140.805584274478, 208.917897070708},
+                                                      {98.0030704036962, 14.6921159957878, 52.9130152965365, 81.1723866123613}};*/
+
+    /*std::vector<std::vector<double>> ppFull_Czakon = {{-500, 0, 0, -500},
+                                                      {-500, 0, 0, 500},
+                                                      {146.179927899129, 22.6610034801814, 79.9279280696898, 120.277082423678},
+                                                      {499.999816188666, -77.9393229201516, -273.416943660768, -411.300927607333},
+                                                      {255.827248217417, 40.1372823969375, 139.975657144687, 210.341139340828},
+                                                      {97.9930076947875, 15.1410370430326, 53.5133584463913, 80.6827058428276}};*/
+
+    /*for(int i = 0; i < 6; i++) {
+      for(int mu = 0; mu < 4; mu++) {
+        ppFull.momenta[i].components[mu] = ppFull_Czakon[i][mu];
+      }
+    }*/
+
     ppFull.print();
 
     double pp_full[4*(nBorn+nUnresolved)];
@@ -542,6 +575,10 @@ int main() {
         break;
       case 2:
         if(order=="LO") M2_approx = triple_collinear_squared(pp_full, SC0, A, A_full, i_reference)*average_factor_full/average_factor;
+        else if(order=="NLO") {
+          M2_test = triple_collinear_squared(pp_full, SC1, A, A_full, i_reference)*average_factor_full/average_factor;
+          M2_approx = triple_collinear_squared_1l(pp_full, SC0, SC1, A, A_full, i_reference)*average_factor_full/average_factor;
+        }
 
       default:
         break;

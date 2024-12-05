@@ -1,14 +1,14 @@
 #include "main.hpp"
 
 // Evaluation of input
-std::string process_str = "e- e+ -> u u~";
+std::string process_str = "d d~ -> d d~";
 std::string unresolved_str = " g";
 std::string suffix = "";
 
 
 const int nBorn = 4;
-const int power = 0;
-const std::array<unsigned, 3> powerNonQCD = {2,0,0};
+const int power = 2;
+const std::array<unsigned, 3> powerNonQCD = {0,0,0};
 const std::string order = "NLO";
 
 void replace(std::string& str, const std::string& from, const std::string& to) {
@@ -51,7 +51,7 @@ int main() {
   Recola::set_print_level_amplitude_rcl(2);
   Recola::set_alphas_rcl(gs * gs/(4 * M_PI), mu, 5);
   Recola::set_mu_ir_rcl(mu);
-  Recola::set_delta_ir_rcl(0, M_PI * M_PI/12.);
+  Recola::set_delta_ir_rcl(0., M_PI*M_PI/12.);
   Recola::set_momenta_correction_rcl(false);
 
   Recola::use_alpha0_scheme_rcl(e*e/4./M_PI);
@@ -67,7 +67,7 @@ int main() {
   PSF::PhaseSpace dumn = PSF::Splitting(nBorn - 2, COM);
   PSF::PhaseSpace dumn2 = PSF::Splitting(nBorn - 2, COM);
   PSF::PhaseSpace dumn3 = PSF::Splitting(nBorn - 2, COM);
-  PSF::PhaseSpace dumn4 = PSF::Splitting(nBorn - 2, COM);
+  //PSF::PhaseSpace dumn4 = PSF::Splitting(nBorn - 2, COM);
   PSF::PhaseSpace pp = PSF::Splitting(nBorn - 2, COM);
   pp.print();
   // Transform to Recola format
