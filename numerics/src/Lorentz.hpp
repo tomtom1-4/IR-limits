@@ -3,18 +3,23 @@
 
 template <typename Field> struct LV {
   std::vector<Field> components = std::vector<Field>(4);
+
   LV(){
     components = std::vector<Field>(4);
   }
+
   LV(std::vector<Field> lv):components(lv){};
+
   LV(Field* lv) {
     for(int i = 0; i < 4; i++) components[i] = lv[i];
   }
-  LV<Field> conj() {
+
+  LV<Field> conj() const {
     LV<Field> output;
     for(int i = 0; i < 4; i++) output.components[i] = std::conj(components[i]);
     return output;
   }
+
   void print() const {
     std::cout << "{" << components[0] << ", "
                      << components[1] << ", "
@@ -30,6 +35,10 @@ template <typename Field> struct LV {
       result.components[i] = scalar*components[i];
     }
     return result;
+  }
+
+  Field* to_arr() const {
+    return &components[0];
   }
 };
 
@@ -88,11 +97,6 @@ template <typename Field> struct LM {
   }
 };
 
-template <typename Field1, typename Field2>
-LV<typename std::common_type<Field1, Field2>::type> operator*(const Field1& scalar, const LV<Field2>& v) {
-  LV<typename std::common_type<Field1, Field2>::type> output = v*scalar;
-  return output;
-}
 
 template <typename Field1, typename Field2>
 LV<typename std::common_type<Field1, Field2>::type> operator/(const LV<Field1>& v, const Field2& scalar) {
@@ -101,6 +105,12 @@ LV<typename std::common_type<Field1, Field2>::type> operator/(const LV<Field1>& 
     result.components[i] = v.components[i]/scalar;
   }
   return result;
+}
+
+template <typename Field1, typename Field2>
+LV<typename std::common_type<Field1, Field2>::type> operator*(const Field1& scalar, const LV<Field2>& v) {
+  LV<typename std::common_type<Field1, Field2>::type> output = v*scalar;
+  return output;
 }
 
 template <class Field1, class Field2>
@@ -123,7 +133,7 @@ LV<typename std::common_type<Field1, Field2>::type> operator-(const LV<Field1>& 
 
 template <class Field1, class Field2>
 typename std::common_type<Field1, Field2>::type operator*(const LV<Field1>& v1, const LV<Field2>& v2) {
-  typename std::common_type<Field1, Field2>::type output;
+  typename std::common_type<Field1, Field2>::type output = 0;
   for(int i = 0; i < 4; i++) {
     output += (i==0?1.:-1.)*v1.components[i]*v2.components[i];
   }
@@ -132,7 +142,7 @@ typename std::common_type<Field1, Field2>::type operator*(const LV<Field1>& v1, 
 
 template <class Field1, class Field2>
 LV<typename std::common_type<Field1, Field2>::type> operator*(const LM<Field1>& m, const LV<Field2>& v) {
-  LV<typename std::common_type<Field1, Field2>::type> output;
+  LV<typename std::common_type<Field1, Field2>::type> output = 0;
   for(int i = 0; i < 4; i++) for(int j = 0; j < 4; j++) {
     output.components[i] += m.components[i][j]*v.components[j]*(j==0?1.:-1.);
   }

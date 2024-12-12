@@ -30,3 +30,4 @@ numerics/example.cpp
 *.fls
 *.out
 form/soft2l/diagrams/diags
+numerics/mathematica/triple_collinear/*.m

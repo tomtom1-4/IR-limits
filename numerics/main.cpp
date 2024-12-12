@@ -4,11 +4,11 @@
 //using namespace Stripper;
 
 // Evaluation of input
-std::string process_str = "d d~ -> d d~";
-std::string unresolved_str = " d d~";
+std::string process_str = "d d~ -> g g";
+std::string unresolved_str = " g g";
 std::string limit = "collinear";
 //std::string process_full_str = process_str + unresolved_str;
-std::string process_full_str = "d d~ -> d d~ d d~";
+std::string process_full_str = "d d~ -> g g g g";
 
 const int nBorn = 4;
 const int power = 2;
@@ -16,7 +16,7 @@ const std::array<unsigned, 3> powerNonQCD = {0,0,0};
 const std::vector<int> flavor = {0,0,1,1};
 const std::string order = "NLO";
 const std::string suffix = ""; // "" or "_EW" or "_QED"
-double M2_custom[13];
+std::vector<double> M2_custom;
 
 int main() {
   // switch floating point type here
@@ -43,51 +43,101 @@ int main() {
   bool custom = false;
   if((process_full_str == "u u~ -> u u~ e- e+ g g") and (order == "NLO")) {
     custom = true;
-    M2_custom[0] = -4.58613727787852e-26;
-    M2_custom[1] = -3.05566873598841e-22;
-    M2_custom[2] = -6.78415558513149e-20;
-    M2_custom[3] = -1.2213501061979e-17;
-    M2_custom[4] = -1.93961648681395e-15;
-    M2_custom[5] = -2.82993140226372e-13;
-    M2_custom[6] = -3.88880026114949e-11;
-    M2_custom[7] = -5.11393342703531e-09;
-    M2_custom[8] = -6.5040578409581e-07;
-    M2_custom[9] = -8.05858355886322e-05;
-    M2_custom[10] = -0.0097845849231643;
-    M2_custom[11] = -1.16517247862666;
-    M2_custom[12] = -136.406428204994;
+    M2_custom.push_back(-4.58613727787852e-26);
+    M2_custom.push_back(-3.05566873598841e-22);
+    M2_custom.push_back(-6.78415558513149e-20);
+    M2_custom.push_back(-1.2213501061979e-17);
+    M2_custom.push_back(-1.93961648681395e-15);
+    M2_custom.push_back(-2.82993140226372e-13);
+    M2_custom.push_back(-3.88880026114949e-11);
+    M2_custom.push_back(-5.11393342703531e-09);
+    M2_custom.push_back(-6.5040578409581e-07);
+    M2_custom.push_back(-8.05858355886322e-05);
+    M2_custom.push_back( -0.0097845849231643);
+    M2_custom.push_back( -1.16517247862666);
+    M2_custom.push_back( -136.406428204994);
   }
   else if((process_full_str == "e- e+ -> u u~ u u~ g g") and (order == "NLO")) {
     custom = true;
-    M2_custom[0] = 8.42714370716502e-25;
-    M2_custom[1] = -1.07948493039382e-22;
-    M2_custom[2] = -3.1589420159308e-20;
-    M2_custom[3] = -1.25043991989418e-17;
-    M2_custom[4] = -1.01797400996888e-15;
-    M2_custom[5] = -1.50917187473323e-13;
-    M2_custom[6] = -2.09150310626981e-11;
-    M2_custom[7] = -2.76442260780936e-09;
-    M2_custom[8] = -3.52770343464854e-07;
-    M2_custom[9] = -4.38128658522702e-05;
-    M2_custom[10] = -0.00532339243608503;
-    M2_custom[11] = -0.632583283928193;
-    M2_custom[12] = -72.7129589447317;
+    M2_custom.push_back(8.42714370716502e-25);
+    M2_custom.push_back(-1.07948493039382e-22);
+    M2_custom.push_back(-3.1589420159308e-20);
+    M2_custom.push_back(-1.25043991989418e-17);
+    M2_custom.push_back(-1.01797400996888e-15);
+    M2_custom.push_back(-1.50917187473323e-13);
+    M2_custom.push_back(-2.09150310626981e-11);
+    M2_custom.push_back(-2.76442260780936e-09);
+    M2_custom.push_back(-3.52770343464854e-07);
+    M2_custom.push_back(-4.38128658522702e-05);
+    M2_custom.push_back( -0.00532339243608503);
+    M2_custom.push_back( -0.632583283928193);
+    M2_custom.push_back( -72.7129589447317);
   }
   else if((process_full_str == "u u~ -> A A g") and (order == "NNLO") and false) {
     custom = true;
-    M2_custom[0] = std::pow(gs, 2*(power + nUnresolved) + 4)*6.01809113975941e-06;
-    M2_custom[1] = std::pow(gs, 2*(power + nUnresolved) + 4)*0.000169317125958414;
-    M2_custom[2] = std::pow(gs, 2*(power + nUnresolved) + 4)*0.00861239662585315;
-    M2_custom[3] = std::pow(gs, 2*(power + nUnresolved) + 4)*0.277316617460984;
-    M2_custom[4] = std::pow(gs, 2*(power + nUnresolved) + 4)*6.75448142638242;
-    M2_custom[5] = std::pow(gs, 2*(power + nUnresolved) + 4)*138.689232054403;
-    M2_custom[6] = std::pow(gs, 2*(power + nUnresolved) + 4)*2539.31069282765;
-    M2_custom[7] = std::pow(gs, 2*(power + nUnresolved) + 4)*42816.1520256723;
-    M2_custom[8] = std::pow(gs, 2*(power + nUnresolved) + 4)*0.;
-    M2_custom[9] = std::pow(gs, 2*(power + nUnresolved) + 4)*0.;
-    M2_custom[10] =std::pow(gs, 2*(power + nUnresolved) + 4)*0.;
-    M2_custom[11] = std::pow(gs, 2*(power + nUnresolved) + 4)*0.;
-    M2_custom[12] = std::pow(gs, 2*(power + nUnresolved) + 4)*0.;
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*6.01809113975941e-06);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.000169317125958414);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.00861239662585315);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.277316617460984);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*6.75448142638242);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*138.689232054403);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*2539.31069282765);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*42816.1520256723);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.);
+    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*0.);
+    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*0.);
+  }
+  else if((process_full_str == "d d~ -> g g g g") and (order == "NLO")) {
+    custom = true;
+    M2_custom.push_back( -1.07529890579258e-06);
+    M2_custom.push_back( -2.60045451018945e-06);
+    M2_custom.push_back( -6.03844054006154e-06);
+    M2_custom.push_back( -1.36442201108769e-05);
+    M2_custom.push_back( -3.02934353742203e-05);
+    M2_custom.push_back( -6.65012200836531e-05);
+    M2_custom.push_back( -0.00014489308977931);
+    M2_custom.push_back( -0.000314054902497589);
+    M2_custom.push_back( -0.000678129355886073);
+    M2_custom.push_back( -0.00145996160406465);
+    M2_custom.push_back( -0.00313561407655795);
+    M2_custom.push_back( -0.00672047760786235);
+    M2_custom.push_back( -0.0143769182369063);
+    M2_custom.push_back( -0.0307029256774041);
+    M2_custom.push_back( -0.0654610931772924);
+    M2_custom.push_back( -0.139349808857436);
+    M2_custom.push_back( -0.296191670082831);
+    M2_custom.push_back( -0.628641187086145);
+    M2_custom.push_back( -1.33233894317267);
+    M2_custom.push_back( -2.81985020103629);
+    M2_custom.push_back( -5.96010598030109);
+    M2_custom.push_back( -12.5810152286265);
+    M2_custom.push_back( -26.5233468681044);
+    M2_custom.push_back( -55.8481778022263);
+    M2_custom.push_back( -117.455931890383);
+    M2_custom.push_back( -246.742072703789);
+    M2_custom.push_back( -517.762403376488);
+    M2_custom.push_back( -1085.3088410625);
+    M2_custom.push_back( -2272.629051835855);
+    M2_custom.push_back( -4754.1273305696);
+    M2_custom.push_back( -9935.61738850097);
+    M2_custom.push_back( -20745.3830428635);
+    M2_custom.push_back( -43275.7168515828);
+    M2_custom.push_back( -90202.9844854199);
+    M2_custom.push_back( -187857.783735964);
+    M2_custom.push_back( -390930.416613994);
+    M2_custom.push_back( -812924.988423128);
+    M2_custom.push_back( -1688056.64421381);
+    M2_custom.push_back( -3500582.94057637);
+    M2_custom.push_back( -7254873.16785345);
+    M2_custom.push_back( -15029752.4463456);
+    M2_custom.push_back( -34014957.0833781);
+    M2_custom.push_back( -32301871.466692);
+    M2_custom.push_back( +201602230.12205);
+    M2_custom.push_back( 241911353.271096);
+    M2_custom.push_back( -9861511028.22394);
+    M2_custom.push_back( -229797749693.066);
   }
 
   int delta_power = 0;
@@ -142,6 +192,7 @@ int main() {
     }
     pp.momenta.push_back(pi);
   }
+  pp.print();
   double pp_rcl[nBorn][4], ppFull_rcl[nBorn + nUnresolved][4], pp_arr[4*nBorn];
   for(int i = 0 ; i < nBorn; i++) {
     for(int j = 0; j < 4; j++)

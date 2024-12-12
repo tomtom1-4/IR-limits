@@ -1659,7 +1659,7 @@ double collinear_squared_1l(double *pp_full, std::unordered_map<std::string, std
   for(int s1 = -1; s1 <= 1; s1 += 2) for(int s2 = -1; s2 <= 1; s2 +=2) {
     output += gs*gs/(16.*M_PI*M_PI)*SC0[std::to_string(index) + std::to_string(s1) + std::to_string(s2)]*P1[(s1+1)/2][(s2+1)/2]*gs*gs/(p1*p2);
   }
-  if(std::abs(std::imag(output)) > std::abs(output)*1.e-6) std::cout << "Warning: Result is not real" << std::endl;
+  if(std::abs(std::imag(output)) > std::abs(output)*1.e-6) std::cout << "Warning: Result is not real. Im(output)/|output| = " << std::imag(output)/std::abs(output) << std::endl;
   return std::real(output);
 }
 
@@ -1692,7 +1692,7 @@ double triple_collinear_squared(double *pp_full, std::unordered_map<std::string,
   for(int s1 = -1; s1 <= 1; s1 += 2) for(int s2 = -1; s2 <= 1; s2 +=2) {
     output += SC0[std::to_string(index) + std::to_string(s1) + std::to_string(s2)]*P0[(s1+1)/2][(s2+1)/2]*std::pow(gs,4)/std::pow(p1*p2 + p1*p3 + p2*p3, 2);
   }
-  if(std::abs(std::imag(output)) > std::abs(output)*1.e-6) std::cout << "Warning (triple_collinear_squared): Result is not real" << std::endl;
+  if(std::abs(std::imag(output)) > std::abs(output)*1.e-6) std::cout << "Warning: Result is not real. Im(output)/|output| = " << std::imag(output)/std::abs(output) << std::endl;
   return std::real(output);
 }
 
@@ -1714,10 +1714,11 @@ double triple_collinear_squared_1l(double *pp_full, std::unordered_map<std::stri
     and (A_full.process_particles[index] == A_full.process_particles[A.process.size()])) P1 = P1_qqqbar(p1, p2, p3, mu, n_f);
   else if((A_full.process[index] == 3) and (A_full.process[A.process.size()] == 8) and (A_full.process[A.process.size() + 1] == 8))
     P1 = P1_qgg(p1, p2, p3, mu, n_f);
-  //else if((A_full.process[index] == 8) and (A_full.process[A.process.size()] == 3) and (A_full.process[A.process.size() + 1] == 3))
-  //  P0 = P0_gqqbar(p1, p2, p3);
-  //else if((A_full.process[index] == 8) and (A_full.process[A.process.size()] == 8) and (A_full.process[A.process.size() + 1] == 8))
-  //  P0 = P0_ggg(p1, p2, p3);
+  else if((A_full.process[index] == 8) and (A_full.process[A.process.size()] == 3) and (A_full.process[A.process.size() + 1] == 3))
+    P1 = P1_gqqbar(p1, p2, p3, mu, n_f);
+  else if((A_full.process[index] == 8) and (A_full.process[A.process.size()] == 8) and (A_full.process[A.process.size() + 1] == 8)){
+    P1 = P1_ggg(p1, p2, p3, mu , n_f);
+  }
   else std::cout << "Unkown splitting function for " << A.process_particles[index]
     << " -> " << A_full.process_particles[index] << " + " << A_full.process_particles[A.process.size()]
                                                  << " + " << A_full.process_particles[A.process.size() + 1] << std::endl;
@@ -1725,7 +1726,7 @@ double triple_collinear_squared_1l(double *pp_full, std::unordered_map<std::stri
   for(int s1 = -1; s1 <= 1; s1 += 2) for(int s2 = -1; s2 <= 1; s2 +=2) {
     output += gs*gs/(16.*M_PI*M_PI)*SC0[std::to_string(index) + std::to_string(s1) + std::to_string(s2)]*P1[(s1+1)/2][(s2+1)/2]*std::pow(gs,4)/std::pow(p1*p2 + p1*p3 + p2*p3, 2);
   }
-  if(std::abs(std::imag(output)) > std::abs(output)*1.e-6) std::cout << "Warning (triple_collinear_squared_1l): Result is not real" << std::endl;
+  if(std::abs(std::imag(output)) > std::abs(output)*1.e-6) std::cout << "Warning: Result is not real. Im(output)/|output| = " << std::imag(output)/std::abs(output) << std::endl;
   return std::real(output);
 }
 

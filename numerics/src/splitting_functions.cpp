@@ -1,5 +1,28 @@
 #include "splitting_functions.hpp"
 
+std::complex<double> operator*(int a, std::complex<double> b) {
+  return (a*1.)*b;
+}
+
+std::complex<double> operator*(std::complex<double> b, int a) {
+  return b*(1.*a);
+}
+
+std::complex<double> operator-(std::complex<double> a, int b) {
+  return a - 1.*b;
+}
+
+std::complex<double> operator+(std::complex<double> a, int b) {
+  return a + 1.*b;
+}
+
+std::complex<double> operator-(int a, std::complex<double> b) {
+  return 1.*a - b;
+}
+
+std::complex<double> operator+(int a, std::complex<double> b) {
+  return 1.*a + b;
+}
 
 LV<std::complex<double>> polarization (LV<double> p, int pol) {
     std::vector<std::complex<double>> ep;

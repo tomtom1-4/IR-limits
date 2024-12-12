@@ -11,6 +11,8 @@
 #include "Lorentz.hpp"
 #include "utilities.hpp"
 
+LV<std::complex<double>> polarization (LV<double> p, int pol);
+
 std::vector<std::vector<std::complex<double>>> P0_qg(double z, LV<double> p, LV<double> kperp);
 
 std::vector<std::vector<std::complex<double>>> P0_gg(double z, LV<double> p, LV<double> kperp);
@@ -38,5 +40,21 @@ std::vector<std::vector<std::complex<double>>> P1_qqPqPbar(LV<double> p1, LV<dou
 std::vector<std::vector<std::complex<double>>> P1_qqqbar(LV<double> p1, LV<double> p2, LV<double> p3, double muR, int nl);
 
 std::vector<std::vector<std::complex<double>>> P1_qgg(LV<double> p1, LV<double> p2, LV<double> p3, double muR, int nl);
+
+std::vector<std::vector<std::complex<double>>> P1_gqqbar(LV<double> p1, LV<double> p2, LV<double> p3, double muR, int nl);
+
+std::vector<std::vector<std::complex<double>>> P1_ggg(LV<double> p1, LV<double> p2, LV<double> p3, double muR, int nl);
+
+std::complex<double> operator*(int a, std::complex<double> b);
+
+std::complex<double> operator*(std::complex<double> b, int a);
+
+std::complex<double> operator-(std::complex<double> a, int b);
+
+std::complex<double> operator+(std::complex<double> a, int b);
+
+std::complex<double> operator-(int a, std::complex<double> b);
+
+std::complex<double> operator+(int a, std::complex<double> b);
 
 #endif
