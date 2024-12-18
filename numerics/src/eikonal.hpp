@@ -85,4 +85,10 @@ double triple_collinear_squared(double *pp_full, std::unordered_map<std::string,
 double triple_collinear_squared_1l(double *pp_full, std::unordered_map<std::string, std::complex<double>> SC0,
     std::unordered_map<std::string, std::complex<double>> SC1, amplitude& A, amplitude& A_full, int index);
 
+double quadruple_collinear_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> SC0,
+    amplitude& A, amplitude& A_full, int index);
+
+double collinear_squared_2l(double *pp_full, std::unordered_map<std::string, std::complex<double>> SC0,
+    std::unordered_map<std::string, std::complex<double>> SC1, std::unordered_map<std::string, std::complex<double>> SC2, amplitude& A, amplitude& A_full, int index);
+
 #endif

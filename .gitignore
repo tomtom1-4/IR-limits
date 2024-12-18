@@ -19,9 +19,9 @@ numerics/src/amplitude
 numerics/references/arXiv-hep-ph0112081v1
 *.pdf
 numerics/references
-form/soft2l/diagrams/topologies
-form/soft2l/IBP/sectormappings
-form/soft2l/IBP/results
+form/soft2l/Dipole/diagrams/topologies
+form/soft2l/Dipole/IBP/sectormappings
+form/soft2l/Dipole/IBP/results
 *.aux
 *.toc
 numerics/example
@@ -29,5 +29,9 @@ numerics/example.cpp
 *.fdb_latexmk
 *.fls
 *.out
-form/soft2l/diagrams/diags
+form/soft2l/Dipole/Dipole/diagrams/diags
 numerics/mathematica/triple_collinear/*.m
+numerics/mathematica/quadruple_collinear/gluon_parent/*.cpp
+numerics/mathematica/quadruple_collinear/quark_parent/*.cpp
+numerics/mathematica/collinear/output
+numerics/mathematica/triple_collinear/SplittingFunctions

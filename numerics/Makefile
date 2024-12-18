@@ -71,19 +71,41 @@ ifeq ($(strip $(USE_QCDL)),true)
 LIBS += -lqcdloop
 endif
 
-SRCS = src/amplitude.cpp src/color.cpp src/eikonal.cpp src/tinyxml2.cpp src/splitting_functions.cpp src/utilities.cpp src/splitting_functions/P0_ab_qbp_qp_g_q.cpp \
-  src/splitting_functions/P1_qqPqPbar.cpp src/splitting_functions/P1_qqqbar.cpp src/splitting_functions/P1_qgg.cpp \
-  src/splitting_functions/P1_gqqbar.cpp src/splitting_functions/P1_ggg.cpp \
-	/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Tree.cpp /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/PhaseSpace.cpp \
+SRCS = src/amplitude.cpp src/color.cpp src/eikonal.cpp src/tinyxml2.cpp src/splitting_functions.cpp src/utilities.cpp \
+  src/splitting_functions/P0_qqPqPbarg.cpp \
+  src/splitting_functions/P0_qqqbarg.cpp \
+  src/splitting_functions/P0_qggg.cpp \
+  src/splitting_functions/P0_qqbarqPqPbar.cpp \
+  src/splitting_functions/P0_qqbarqqbar.cpp \
+  src/splitting_functions/P0_ggqqbar.cpp \
+  src/splitting_functions/P0_gggg.cpp \
+  src/splitting_functions/P1_qqPqPbar.cpp \
+  src/splitting_functions/P1_qqqbar.cpp \
+  src/splitting_functions/P1_qgg.cpp \
+  src/splitting_functions/P1_gqqbar.cpp \
+  src/splitting_functions/P1_ggg.cpp \
+  src/splitting_functions/P2_qg.o \
+	/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Tree.cpp \
+  /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/PhaseSpace.cpp \
 	/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Utilities.cpp
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
 .PHONY: clean
 
 .PRECIOUS: src/amplitude.o src/color.o src/eikonal.o src/tinyxml2.o src/splitting_functions.o src/utilities.o \
-  src/splitting_functions/P0_ab_qbp_qp_g_q.o src/splitting_functions/P1_qqPqPbar.o \
-  src/splitting_functions/P1_qqqbar.o src/splitting_functions/P1_qgg.o \
-  src/splitting_functions/P1_gqqbar.o src/splitting_functions/P1_ggg.o \
+  src/splitting_functions/P0_qqPqPbarg.o \
+  src/splitting_functions/P0_qqqbarg.o \
+  src/splitting_functions/P0_qggg.o \
+  src/splitting_functions/P0_qqbarqPqPbar.o \
+  src/splitting_functions/P0_qqbarqqbar.o \
+  src/splitting_functions/P0_ggqqbar.o \
+  src/splitting_functions/P0_gggg.o \
+  src/splitting_functions/P1_qqPqPbar.o \
+  src/splitting_functions/P1_qqqbar.o \
+  src/splitting_functions/P1_qgg.o \
+  src/splitting_functions/P1_gqqbar.o \
+  src/splitting_functions/P1_ggg.o \
+  src/splitting_functions/P2_qg.o \
   /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Tree.o \
   /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/PhaseSpace.o \
   /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Utilities.o

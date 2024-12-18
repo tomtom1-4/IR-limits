@@ -1,5 +1,0 @@
-jobs:
-- kira2math:
-    target:
-    - ["topo1", 63, 9, 2]
-    reconstruct_mass: true

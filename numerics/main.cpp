@@ -4,17 +4,17 @@
 //using namespace Stripper;
 
 // Evaluation of input
-std::string process_str = "d d~ -> g g";
-std::string unresolved_str = " g g";
+std::string process_str = "d d~ -> u u~";
+std::string unresolved_str = " g";
 std::string limit = "collinear";
 //std::string process_full_str = process_str + unresolved_str;
-std::string process_full_str = "d d~ -> g g g g";
+std::string process_full_str = "d d~ -> u u~ g";
 
 const int nBorn = 4;
 const int power = 2;
 const std::array<unsigned, 3> powerNonQCD = {0,0,0};
 const std::vector<int> flavor = {0,0,1,1};
-const std::string order = "NLO";
+const std::string order = "NNLO";
 const std::string suffix = ""; // "" or "_EW" or "_QED"
 std::vector<double> M2_custom;
 
@@ -151,6 +151,7 @@ int main() {
   outfile1.open ("results/" + process_str + " +" + unresolved_str + "_" + order + suffix + ".txt");
 
   if(!custom and (order=="NLO" or order=="LO")) {
+    std::cout << "Using Recola to compute tree-level and one-loop amplitudes" << std::endl;
     // Recola Settings
     Recola::set_reduction_mode_rcl(4);
     Recola::set_print_level_amplitude_rcl(2);
@@ -275,10 +276,11 @@ int main() {
     eResult = M2_Element->QueryDoubleText(&M2);
   }
   // Get spin correlator
-  std::unordered_map<std::string, std::complex<double>> SC0, SC1;
+  std::unordered_map<std::string, std::complex<double>> SC0, SC1, SC2;
   if(limit == "collinear") {
     XMLElement * SC0_iElement = pRoot->FirstChildElement("SC0");
     XMLElement * SC1_iElement = pRoot->FirstChildElement("SC1");
+    XMLElement * SC2_iElement = pRoot->FirstChildElement("SC2");
     for(int i = 0; i < A.process.size(); i++) {
       if(A.particle_type[i] == 0) continue;
       for(int s1 = -1; s1 <= 1; s1 += 2) {
@@ -287,15 +289,23 @@ int main() {
           XMLElement * SC0_iEntry_imag = SC0_iElement->FirstChildElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
           XMLElement * SC1_iEntry_real = SC1_iElement->FirstChildElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
           XMLElement * SC1_iEntry_imag = SC1_iElement->FirstChildElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
-          double real0, imag0, real1, imag1;
+
+          XMLElement * SC2_iEntry_real = SC2_iElement->FirstChildElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+          XMLElement * SC2_iEntry_imag = SC2_iElement->FirstChildElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+          double real0, imag0, real1, imag1, real2, imag2;
           if(SC0_iEntry_real != nullptr) eResult = SC0_iEntry_real->QueryDoubleText(&real0);
           if(SC0_iEntry_imag != nullptr) eResult = SC0_iEntry_imag->QueryDoubleText(&imag0);
           if(SC1_iEntry_real != nullptr) eResult = SC1_iEntry_real->QueryDoubleText(&real1);
           if(SC1_iEntry_imag != nullptr) eResult = SC1_iEntry_imag->QueryDoubleText(&imag1);
+          if(SC2_iEntry_real != nullptr) eResult = SC2_iEntry_real->QueryDoubleText(&real2);
+          if(SC2_iEntry_imag != nullptr) eResult = SC2_iEntry_imag->QueryDoubleText(&imag2);
           SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] = real0 + I*imag0;
           SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] = real1 + I*imag1;
+          SC2[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] = real2 + I*imag2;
+
           std::cout << std::to_string(i) + std::to_string(s1) + std::to_string(s2) << "\t" << SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]
-            << SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] << std::endl;
+                                                                                           << SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]
+                                                                                           << SC2[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] << std::endl;
         }
       }
     }
@@ -452,6 +462,8 @@ int main() {
   PSF::Tree<PSF::Cluster> tree;
   if(nUnresolved == 1) tree = trees[0];
   else if(nUnresolved == 2) tree = trees[1];
+  else if(nUnresolved == 3) tree = trees[2];
+  else std::cout << "Define Tree for " << nUnresolved << " unresolved partons" << std::endl;
   tree.print();
   std::vector<PSF::Tree<PSF::Cluster>> sectors = PSF::GenSectors(flavor, tree, nBorn);
 
@@ -508,33 +520,6 @@ int main() {
       level = clusterTree.getLevel(level_int);
     }
     PSF::PhaseSpace ppFull = PSF::GenMomenta2(pp, clusterTree, xParFull);
-
-    /*std::vector<std::vector<double>> ppFull_Czakon = {{-500, 0, 0, -500},
-                                                      {-500, 0, 0, 500},
-                                                      {147.007014381999, 22.7892195077585, 80.3801605332046, 120.957610526964},
-                                                      {498.149814230802, -119.484173505835, -274.060451246318, -398.456570735726},
-                                                      {255.827248217417, 86.4943126019991, 146.564938118912, 191.010559216508},
-                                                      {99.015923169782, 10.2006413960771, 47.1153525942017, 86.4884009922537}};*/
-
-    /*std::vector<std::vector<double>> ppFull_Czakon = {{-500, 0, 0, -500},
-                                                      {-500, 0, 0, 500},
-                                                      {146.188063701903, 22.662264702961, 79.9323765454025, 120.283776575433},
-                                                      {499.981617676983, -81.7917596850477, -273.650976116417, -410.374060258502},
-                                                      {255.827248217417, 44.4373789862989, 140.805584274478, 208.917897070708},
-                                                      {98.0030704036962, 14.6921159957878, 52.9130152965365, 81.1723866123613}};*/
-
-    /*std::vector<std::vector<double>> ppFull_Czakon = {{-500, 0, 0, -500},
-                                                      {-500, 0, 0, 500},
-                                                      {146.179927899129, 22.6610034801814, 79.9279280696898, 120.277082423678},
-                                                      {499.999816188666, -77.9393229201516, -273.416943660768, -411.300927607333},
-                                                      {255.827248217417, 40.1372823969375, 139.975657144687, 210.341139340828},
-                                                      {97.9930076947875, 15.1410370430326, 53.5133584463913, 80.6827058428276}};*/
-
-    /*for(int i = 0; i < 6; i++) {
-      for(int mu = 0; mu < 4; mu++) {
-        ppFull.momenta[i].components[mu] = ppFull_Czakon[i][mu];
-      }
-    }*/
 
     ppFull.print();
 
@@ -623,6 +608,11 @@ int main() {
           M2_test = collinear_squared(pp_full, SC1, A, A_full, i_reference)*average_factor_full/average_factor;
           M2_approx = collinear_squared_1l(pp_full, SC0, SC1, A, A_full, i_reference)*average_factor_full/average_factor;
         }
+        else if(order=="NNLO") {
+          M2_test = collinear_squared(pp_full, SC2, A, A_full, i_reference)*average_factor_full/average_factor;
+          M2_test += collinear_squared_1l(pp_full, SC1, SC2, A, A_full, i_reference)*average_factor_full/average_factor;
+          M2_approx = collinear_squared_2l(pp_full, SC0, SC1, SC2, A, A_full, i_reference)*average_factor_full/average_factor;
+        }
         break;
       case 2:
         if(order=="LO") M2_approx = triple_collinear_squared(pp_full, SC0, A, A_full, i_reference)*average_factor_full/average_factor;
@@ -630,7 +620,10 @@ int main() {
           M2_test = triple_collinear_squared(pp_full, SC1, A, A_full, i_reference)*average_factor_full/average_factor;
           M2_approx = triple_collinear_squared_1l(pp_full, SC0, SC1, A, A_full, i_reference)*average_factor_full/average_factor;
         }
-
+        break;
+      case 3:
+        if(order=="LO") M2_approx = quadruple_collinear_squared(pp_full, SC0, A, A_full, i_reference)*average_factor_full/average_factor;
+        break;
       default:
         break;
       }

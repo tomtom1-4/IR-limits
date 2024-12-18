@@ -1730,13 +1730,71 @@ double triple_collinear_squared_1l(double *pp_full, std::unordered_map<std::stri
   return std::real(output);
 }
 
-/*double soft_g_squared_2l_2partons(double *pp_full, std::unordered_map<std::string, double> M0_ij, amplitude& A, int nl) {
-  double dR = 1.;
-  std::vector<double> C2 = {1./2.,
-                            -11./12. + T_F*nl/C_A*1./3.,
-                            Zeta2 - 16./9. - 1./12.*dR + T_F*nl/C_A*5./9.,
-                            -(11./6.*Zeta3 + 11./12*Zeta2 + 181./54. + 2./9.*dR) + T_F*nl/C_A*(zeta2/3 + 19./27.),
-                            7./8.*Zeta4 + 341*Zeta3/18. - 16./9.*Zeta2 - Zeta2/12.*dR - 1037./162. - 35./54.*dR + T_F*nl/C_A*(-62./9.*Zeta3 + 5./9.*Zeta2 + 65./81.)};
-}*/
+double quadruple_collinear_squared(double *pp_full, std::unordered_map<std::string, std::complex<double>> SC0,
+  amplitude& A, amplitude& A_full, int index) {
+  double p1_arr[4], p2_arr[4], p3_arr[4], p4_arr[4];
+  part(pp_full, p1_arr, index*4, index*4 + 4);
+  part(pp_full, p2_arr, A.process.size()*4, A.process.size()*4 + 4);
+  part(pp_full, p3_arr, A.process.size()*4 + 4, A.process.size()*4 + 8);
+  part(pp_full, p4_arr, A.process.size()*4 + 8, A.process.size()*4 + 12);
+  LV<double> p1(p1_arr);
+  LV<double> p2(p2_arr);
+  LV<double> p3(p3_arr);
+  LV<double> p4(p4_arr);
+  std::complex<double> output = 0.;
+  std::vector<std::vector<std::complex<double>>> P0;
+  if((A_full.process[index] == 3) and (A_full.process[A.process.size()] == 3) and (A_full.process[A.process.size() + 1] == 3) and (A_full.process[A.process.size() + 2] == 8)
+    and (A_full.process_particles[index] != A_full.process_particles[A.process.size()])) P0 = P0_qqPqPbarg(p1, p2, p3, p4);
+  else if((A_full.process[index] == 3) and (A_full.process[A.process.size()] == 3) and (A_full.process[A.process.size() + 1] == 3) and (A_full.process[A.process.size() + 2] == 8)
+    and (A_full.process_particles[index] == A_full.process_particles[A.process.size()])) P0 = P0_qqqbarg(p1, p2, p3, p4);
+  else if((A_full.process[index] == 3) and (A_full.process[A.process.size()] == 8) and (A_full.process[A.process.size() + 1] == 8) and (A_full.process[A.process.size() + 2] == 8))
+    P0 = P0_qggg(p1, p2, p3, p4);
+  else if((A_full.process[index] == 3) and (A_full.process[A.process.size()] == 3) and (A_full.process[A.process.size() + 1] == 3) and (A_full.process[A.process.size() + 2] == 3)
+    and (A_full.process_particles[index] != A_full.process_particles[A.process.size() + 1])) {
+    P0 = P0_qqbarqPqPbar(p1, p2, p3, p4);
+  }
+  else if((A_full.process[index] == 3) and (A_full.process[A.process.size()] == 3) and (A_full.process[A.process.size() + 1] == 3) and (A_full.process[A.process.size() + 2] == 3)
+    and (A_full.process_particles[index] == A_full.process_particles[A.process.size() + 1]))
+    P0 = P0_qqbarqqbar(p1, p2, p3, p4);
+  else if((A_full.process[index] == 8) and (A_full.process[A.process.size()] == 8) and (A_full.process[A.process.size() + 1] == 3) and (A_full.process[A.process.size() + 2] == 3))
+    P0 = P0_ggqqbar(p1, p2, p3, p4);
+  else if((A_full.process[index] == 8) and (A_full.process[A.process.size()] == 8) and (A_full.process[A.process.size() + 1] == 8) and (A_full.process[A.process.size() + 2] == 8))
+    P0 = P0_gggg(p1, p2, p3, p4);
+  else std::cout << "Unkown splitting function for " << A.process_particles[index]
+    << " -> " << A_full.process_particles[index] << " + " << A_full.process_particles[A.process.size()]
+                                                 << " + " << A_full.process_particles[A.process.size() + 1] << std::endl;
+  for(int s1 = -1; s1 <= 1; s1 += 2) for(int s2 = -1; s2 <= 1; s2 +=2) {
+    output += SC0[std::to_string(index) + std::to_string(s1) + std::to_string(s2)]*P0[(s1+1)/2][(s2+1)/2]*std::pow(gs,6)*std::pow(2./((p1 + p2 + p3 + p4)*(p1 + p2 + p3 + p4)), 3);
+  }
+  std::cout << "p1*p2 = " << p1*p2 << std::endl;
+  std::cout << "p1*p3 = " << p1*p3 << std::endl;
+  std::cout << "p1*p4 = " << p1*p4 << std::endl;
+  std::cout << "p2*p3 = " << p2*p3 << std::endl;
+  std::cout << "p2*p4 = " << p2*p4 << std::endl;
+  std::cout << "p3*p4 = " << p3*p4 << std::endl;
+  std::cout << "s1234/2 = " << (p1 + p2 + p3 + p4)*(p1 + p2 + p3 + p4) << std::endl;
+  if(std::abs(std::imag(output)) > std::abs(output)*1.e-6) std::cout << "Warning: Result is not real. Im(output)/|output| = " << std::imag(output)/std::abs(output) << std::endl;
+  return std::real(output);
+}
 
+double collinear_squared_2l(double *pp_full, std::unordered_map<std::string, std::complex<double>> SC0,
+    std::unordered_map<std::string, std::complex<double>> SC1, std::unordered_map<std::string, std::complex<double>> SC2, amplitude& A, amplitude& A_full, int index) {
+  double p2_arr[4], p1_arr[4];
+  part(pp_full, p2_arr, A.process.size()*4, A.process.size()*4 + 4);
+  part(pp_full, p1_arr, index*4, index*4 + 4);
+  LV<double> p2(p2_arr);
+  LV<double> p1(p1_arr);
+  LV<double> p = p1 + p2;
+  double z = p1.components[0]/p.components[0];
+  LV<double> k_perp = p1 - z*p;
 
+  std::complex<double> output = 0.;
+  std::vector<std::vector<std::complex<double>>> P2;
+  if((A.process[index] == 3) and (A_full.process.back() == 8)) P2 = P2_qg(z, p, k_perp, p*p, mu, n_f);
+
+  for(int s1 = -1; s1 <= 1; s1 += 2) for(int s2 = -1; s2 <= 1; s2 +=2) {
+    output += std::pow(gs*gs/(16.*M_PI*M_PI), 2)*SC0[std::to_string(index) + std::to_string(s1) + std::to_string(s2)]*P2[(s1+1)/2][(s2+1)/2]*gs*gs/(p1*p2);
+  }
+  if(std::abs(std::imag(output)) > std::abs(output)*1.e-6) std::cout << "Warning: Result is not real. Im(output)/|output| = " << std::imag(output)/std::abs(output) << std::endl;
+  return std::real(output);
+}

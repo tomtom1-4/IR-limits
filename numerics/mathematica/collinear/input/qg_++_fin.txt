@@ -1,0 +1,29 @@
++{N^2}\,\Biggl (-{3\over 2}\,{\Lidx}-{5\over 4}\,{\Lidy}+{3\over 2}\,{\Lidz}+{\Licx}\,{\lx}+{1\over 3}\,{\Licx}+{\Licy}\,{\lx}\nonumber \\&&
++{13\over 24}\,{\Licy}+{1\over 8}\,{\Libx^2}+{1\over 4}\,{\Libx}\,{\lx}\,{\ly}-{1\over 6}\,{\Libx}\,{\lx}+{3\over 4}\,{\Libx}\,{\zeta_2}-{1\over 8}\,{\Libx}\nonumber \\&&
++{1\over 2}\,{\lx^2}\,{\ly^2}-{1\over 4}\,{\lx}\,{\ly^3}-{3\over 4}\,{\lx}\,{\ly}\,{\zeta_2}-{1\over 8}\,{\lx}\,{\ly}-{\lx}\,{\zeta_3}\nonumber \\&&
++{1\over 16}\,{\ly^4}+{3\over 4}\,{\ly^2}\,{\zeta_2}+{1\over 4}\,{\ly}\,{\zeta_3}+{55\over 48}\,{\ly}\,{\zeta_2}-{193\over 108}\,{\ly}+{29\over 32}\,{\zeta_4}\nonumber \\&&
++{527\over 144}\,{\zeta_3}+{335\over 288}\,{\zeta_2}-{571\over 324}\Biggr )\nonumber \\&&
++\,\Biggl (-{2}\,{\Lidx}-{7\over 4}\,{\Lidy}+{\Lidz}+{\Licx}\,{\lx}+{1\over 4}\,{\Licx}\,{\ly}+{3\over 2}\,{\Licx}\nonumber \\&&
++{1\over 2}\,{\Licy}\,{\lx}+{1\over 2}\,{\Licy}\,{\ly}+{9\over 4}\,{\Licy}-{1\over 8}\,{\Libx^2}-{1\over 4}\,{\Libx}\,{\lx}\,{\ly}\nonumber \\&&
+-{3\over 4}\,{\Libx}\,{\lx}+{3\over 4}\,{\Libx}\,{\zeta_2}-{3\over 4}\,{\Liby}\,{\ly}+{1\over 4}\,{\lx^2}\,{\ly^2}-{1\over 6}\,{\lx}\,{\ly^3}\nonumber \\&&
+-{1\over 4}\,{\lx}\,{\ly}\,{\zeta_2}-{1\over 2}\,{\lx}\,{\zeta_3}+{1\over 24}\,{\ly^4}+{1\over 2}\,{\ly^2}\,{\zeta_2}+{3\over 4}\,{\ly}\,{\zeta_3}\nonumber \\&&
++{11\over 48}\,{\ly}\,{\zeta_2}-{323\over 216}\,{\ly}+{7\over 4}\,{\zeta_4}-{9\over 4}\,{\zeta_3}\nonumber \\&&
++{w}\,\Biggl (-{3\over 4}\,{\Licx}-{3\over 4}\,{\Licy}+{1\over 4}\,{\Libx}\,{\lx}+{1\over 4}\,{\Libx}+{1\over 4}\,{\Liby}\,{\ly}\nonumber \\&&
++{1\over 8}\,{\lx}\,{\ly}+{1\over 4}\,{\lx}\,{\zeta_2}+{3\over 8}\,{\lx}+{1\over 4}\,{\ly}\,{\zeta_2}-{3\over 8}\,{\ly}-{1\over 8}\,{\zeta_2}+{3\over 32}\Biggr )\nonumber \\&&
++{w^2}\,\Biggl (-{3\over 8}\,{\Licx}-{3\over 8}\,{\Licy}+{1\over 8}\,{\Libx}\,{\lx}+{1\over 8}\,{\Liby}\,{\ly}+{1\over 8}\,{\lx}\,{\zeta_2}\nonumber \\&&
++{1\over 8}\,{\ly}\,{\zeta_2}-{1\over 32}\Biggr )\Biggr )\nonumber \\&&
++{1\over N^2}\Biggl (-{1\over 2}\,{\Lidx}-{1\over 2}\,{\Lidy}-{1\over 2}\,{\Lidz}+{1\over 4}\,{\Licx}\,{\ly}-{1\over 2}\,{\Licy}\,{\lx}\nonumber \\&&
++{1\over 2}\,{\Licy}\,{\ly}+{3\over 8}\,{\Licy}-{1\over 4}\,{\Libx^2}-{1\over 2}\,{\Libx}\,{\lx}\,{\ly}+{1\over 8}\,{\Libx}\nonumber \\&&
+-{1\over 4}\,{\lx^2}\,{\ly^2}+{1\over 12}\,{\lx}\,{\ly^3}+{1\over 2}\,{\lx}\,{\ly}\,{\zeta_2}+{1\over 8}\,{\lx}\,{\ly}\nonumber \\&&
++{1\over 2}\,{\lx}\,{\zeta_3}-{1\over 48}\,{\ly^4}-{1\over 4}\,{\ly^2}\,{\zeta_2}+{1\over 2}\,{\ly}\,{\zeta_3}-{3\over 4}\,{\ly}\,{\zeta_2}+{3\over 8}\,{\ly}\nonumber \\&&
++{1\over 2}\,{\zeta_4}-{3\over 8}\,{\zeta_3}\nonumber \\&&
++{w}\,\Biggl (-{3\over 4}\,{\Licx}-{3\over 4}\,{\Licy}+{1\over 4}\,{\Libx}\,{\lx}+{1\over 4}\,{\Libx}+{1\over 4}\,{\Liby}\,{\ly}\nonumber \\&&
++{1\over 8}\,{\lx}\,{\ly}+{1\over 4}\,{\lx}\,{\zeta_2}+{3\over 8}\,{\lx}+{1\over 4}\,{\ly}\,{\zeta_2}-{3\over 8}\,{\ly}-{1\over 8}\,{\zeta_2}+{3\over 32}\Biggr )\nonumber \\&&
++{w^2}\,\Biggl (-{3\over 8}\,{\Licx}-{3\over 8}\,{\Licy}+{1\over 8}\,{\Libx}\,{\lx}+{1\over 8}\,{\Liby}\,{\ly}+{1\over 8}\,{\lx}\,{\zeta_2}\nonumber \\&&
++{1\over 8}\,{\ly}\,{\zeta_2}-{1\over 32}\Biggr )\Biggr )\nonumber \\&&
++{N}\,{\NF}\,\Biggl (-{1\over 3}\,{\Licx}-{1\over 6}\,{\Licy}+{1\over 6}\,{\Libx}\,{\lx}-{5\over 24}\,{\ly}\,{\zeta_2}+{19\over 108}\,{\ly}\nonumber \\&&
+-{43\over 72}\,{\zeta_3}-{25\over 144}\,{\zeta_2}+{65\over 648}\Biggr )
++{\NF\over N}\,{}\,\Biggl (-{1\over 24}\,{\ly}\,{\zeta_2}+{7\over 27}\,{\ly}\Biggr )\nonumber \\&&
++w\left(\frac{\zeta_2}{4}N^2+\frac{1}{24}\frac{\NF}{N}
++\frac{5}{24}N(N-\NF)+\left(\frac{\zeta_2}{4}-\frac{1}{24}\right)
+\right)+\frac{w(1-w)}{32}(N^2+1)
