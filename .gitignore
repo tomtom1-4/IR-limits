@@ -36,3 +36,4 @@ numerics/mathematica/quadruple_collinear/quark_parent/*.cpp
 numerics/mathematica/collinear/output
 numerics/mathematica/triple_collinear/SplittingFunctions
 numerics/mathematica/quadruple_collinear/quark_parent/P_g_g_g_q.m
+numerics/mathematica/quadruple_collinear/gluon_parent/P_symm_g_g_g_g.m
