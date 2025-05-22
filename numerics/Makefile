@@ -72,6 +72,9 @@ LIBS += -lqcdloop
 endif
 
 SRCS = src/amplitude.cpp src/color.cpp src/eikonal.cpp src/tinyxml2.cpp src/splitting_functions.cpp src/utilities.cpp \
+	/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Tree.cpp \
+  /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/PhaseSpace.cpp \
+	/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Utilities.cpp \
   src/splitting_functions/P0_qqPqPbarg.cpp \
   src/splitting_functions/P0_qqqbarg.cpp \
   src/splitting_functions/P0_qggg.cpp \
@@ -85,9 +88,7 @@ SRCS = src/amplitude.cpp src/color.cpp src/eikonal.cpp src/tinyxml2.cpp src/spli
   src/splitting_functions/P1_gqqbar.cpp \
   src/splitting_functions/P1_ggg.cpp \
   src/splitting_functions/P2_qg.o \
-	/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Tree.cpp \
-  /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/PhaseSpace.cpp \
-	/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Utilities.cpp
+
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
 .PHONY: clean

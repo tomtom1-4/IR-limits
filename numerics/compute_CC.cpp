@@ -1,15 +1,15 @@
 #include "main.hpp"
 
 // Evaluation of input
-std::string process_str = "d d~ -> u u~";
+std::string process_str = "u u~ -> A A";
 std::string unresolved_str = " g";
-std::string suffix = "";
-std::string limit = "collinear";
+std::string suffix = "_QED";
+std::string limit = "soft";
 
 
 const int nBorn = 4;
-const int power = 2;
-const std::array<unsigned, 3> powerNonQCD = {0,0,0};
+const int power = 0;
+const std::array<unsigned, 3> powerNonQCD = {2,0,0};
 const std::string order = "NNLO";
 
 void replace(std::string& str, const std::string& from, const std::string& to) {
@@ -153,7 +153,6 @@ int main() {
     }
   }
   double average_factor = 1./4.; // Spin of the initial state
-  double average_factor_full = 1./4.;
   {
   for(int i = 0; i < 2; i++) {
     average_factor *= 1./double(A.process[i]);
@@ -209,7 +208,18 @@ int main() {
   if(order == "NNLO") M2_averaged_NNLO = (matrixelements->eval(mu))*average_factor*std::pow(gs, 2*power + 4);
   std::cout << "M2 (LO) = " << M2_averaged_LO << std::endl;
   std::cout << "M2 (NLO) = " << M2_averaged_NLO << std::endl;
-  std::cout << "M2 (NNLO) = " << M2_averaged_NNLO << std::endl;
+  std::cout << "M2 (NNLO) = " << std::to_string(M2_averaged_NNLO).c_str() << std::endl;
+
+  /*Stripper::Born<double> me0(process, pp_Stripper);
+  me0.setKinematics(pp_Stripper);
+  double M0ij_Stripper = (me0())*average_factor*std::pow(gs, 2*power + 4)/std::pow(4.*M_PI, 2);
+  std::array<Stripper::Weight<double>, 2> w;
+  Stripper::Factorization::oneLoopPoles(me0, mu, w);
+  double ep_m2 = 0., ep_m1 = 0.;
+  for(int i = 0; i <= 0; i++) {
+    ep_m1 = w[i].coefficient(-1)*average_factor*std::pow(gs, 2*power + 4)/std::pow(4.*M_PI, 2);
+    ep_m2 = w[i].coefficient(-2)*average_factor*std::pow(gs, 2*power + 4)/std::pow(4.*M_PI, 2);
+  }*/
 
   XMLElement* M2_Element_LO = xmlDoc.NewElement("M0");
   M2_Element_LO->SetText(M2_averaged_LO);
@@ -218,6 +228,17 @@ int main() {
   XMLElement* M2_Element_NLO = xmlDoc.NewElement("M1");
   M2_Element_NLO->SetText(M2_averaged_NLO);
   pRoot->InsertEndChild(M2_Element_NLO);
+  /*XMLElement* M2_Element_NLO = xmlDoc.NewElement("M1");
+  XMLElement* M2_Element_NLO_ep2 = xmlDoc.NewElement("ep2");
+  XMLElement* M2_Element_NLO_ep1 = xmlDoc.NewElement("ep1");
+  XMLElement* M2_Element_NLO_ep0 = xmlDoc.NewElement("ep0");
+  M2_Element_NLO_ep2->SetText(ep_m2);
+  M2_Element_NLO_ep1->SetText(ep_m1);
+  M2_Element_NLO_ep0->SetText(M2_averaged_NLO);
+  M2_Element_NLO->InsertEndChild(M2_Element_NLO_ep2);
+  M2_Element_NLO->InsertEndChild(M2_Element_NLO_ep1);
+  M2_Element_NLO->InsertEndChild(M2_Element_NLO_ep0);
+  pRoot->InsertEndChild(M2_Element_NLO);*/
 
   if(order == "NNLO") {
     XMLElement* M2_Element_NNLO = xmlDoc.NewElement("M2");
@@ -225,86 +246,88 @@ int main() {
     pRoot->InsertEndChild(M2_Element_NNLO);
   }
 
-  // Get spin correlators
-  std::unordered_map<std::string, std::complex<double>> SC0, SC1, SC2;
-  for(int i = 0; i < A.process.size(); i++) {
-    if(A.particle_type[i] == 0) continue;
-    if(A.process[i] == 3) {
-      SC2[std::to_string(i) + "-1-1"] = M2_averaged_NNLO/2.;
-      SC2[std::to_string(i) + "11"] = M2_averaged_NNLO/2.;
-      SC2[std::to_string(i) + "-11"] = 0;
-      SC2[std::to_string(i) + "1-1"] = 0;
-    }
-    else {
-      std::cout << "Spin correlators for gluons not yet implemented" << std::endl;
-    }
-    for(std::vector<int> hel : helicities) {  // color and helicity of the bra <M|
-      std::string hel_string;
-      for (int dummy = 0; dummy < hel.size(); dummy++) {
-        hel_string += std::to_string(hel[dummy]);
+  if((order!="NNLO") or (limit!="soft")) {
+    // Get spin correlators
+    std::unordered_map<std::string, std::complex<double>> SC0, SC1, SC2;
+    for(int i = 0; i < A.process.size(); i++) {
+      if(A.particle_type[i] == 0) continue;
+      if(A.process[i] == 3) {
+        SC2[std::to_string(i) + "-1-1"] = M2_averaged_NNLO/2.;
+        SC2[std::to_string(i) + "11"] = M2_averaged_NNLO/2.;
+        SC2[std::to_string(i) + "-11"] = 0;
+        SC2[std::to_string(i) + "1-1"] = 0;
       }
-      for(std::vector<int> col : colors) {
-        std::string col_string;
-        for(int dummy = 0; dummy < col.size(); dummy++) {
-          col_string += std::to_string(col[dummy]);
+      else {
+        std::cout << "Spin correlators for gluons not yet implemented" << std::endl;
+      }
+      for(std::vector<int> hel : helicities) {  // color and helicity of the bra <M|
+        std::string hel_string;
+        for (int dummy = 0; dummy < hel.size(); dummy++) {
+          hel_string += std::to_string(hel[dummy]);
         }
-        std::string key = hel_string + col_string;
-        std::complex<double> M0_bra = std::conj(M0[key]);
-        std::complex<double> M1_bra = std::conj(M1[key]);
-
-        std::vector<int> hel2 = hel;
-        for(int hel_i = -1; hel_i <= 1; hel_i += 2) {
-          hel2[i] = hel_i;
-          std::string hel2_string;
-          for(int dummy = 0; dummy < hel.size(); dummy++) {
-            hel2_string += std::to_string(hel2[dummy]);
+        for(std::vector<int> col : colors) {
+          std::string col_string;
+          for(int dummy = 0; dummy < col.size(); dummy++) {
+            col_string += std::to_string(col[dummy]);
           }
-          std::complex<double> M0_ket = M0[hel2_string + col_string];
-          std::complex<double> M1_ket = M1[hel2_string + col_string];
-          SC0[std::to_string(i) + std::to_string(hel[i]) + std::to_string(hel2[i])] += (M0_bra*M0_ket)*average_factor;
-          SC1[std::to_string(i) + std::to_string(hel[i]) + std::to_string(hel2[i])] += (M0_bra*M1_ket + M1_bra*M0_ket)*average_factor;
+          std::string key = hel_string + col_string;
+          std::complex<double> M0_bra = std::conj(M0[key]);
+          std::complex<double> M1_bra = std::conj(M1[key]);
 
+          std::vector<int> hel2 = hel;
+          for(int hel_i = -1; hel_i <= 1; hel_i += 2) {
+            hel2[i] = hel_i;
+            std::string hel2_string;
+            for(int dummy = 0; dummy < hel.size(); dummy++) {
+              hel2_string += std::to_string(hel2[dummy]);
+            }
+            std::complex<double> M0_ket = M0[hel2_string + col_string];
+            std::complex<double> M1_ket = M1[hel2_string + col_string];
+            SC0[std::to_string(i) + std::to_string(hel[i]) + std::to_string(hel2[i])] += (M0_bra*M0_ket)*average_factor;
+            SC1[std::to_string(i) + std::to_string(hel[i]) + std::to_string(hel2[i])] += (M0_bra*M1_ket + M1_bra*M0_ket)*average_factor;
+
+          }
         }
       }
     }
-  }
 
-  //  Set Spin corrletors
-  XMLElement* SC0_Element = xmlDoc.NewElement("SC0");
-  XMLElement* SC1_Element = xmlDoc.NewElement("SC1");
-  XMLElement* SC2_Element = xmlDoc.NewElement("SC2");
-  for (int i = 0; i < A.process.size(); i++) {
-    if(A.particle_type[i] == 0) continue;
-    for(int s1 = -1; s1 <= 1; s1 += 2) {
-      for(int s2 = -1; s2 <= 1; s2 += 2) {
-        XMLElement* SC0_iEntry_real = xmlDoc.NewElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
-        XMLElement* SC1_iEntry_real = xmlDoc.NewElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
-        XMLElement* SC2_iEntry_real = xmlDoc.NewElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
-        XMLElement* SC0_iEntry_imag = xmlDoc.NewElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
-        XMLElement* SC1_iEntry_imag = xmlDoc.NewElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
-        XMLElement* SC2_iEntry_imag = xmlDoc.NewElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
-        SC0_iEntry_real->SetText(std::real(SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
-        SC1_iEntry_real->SetText(std::real(SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
-        SC2_iEntry_real->SetText(std::real(SC2[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
-        SC0_iEntry_imag->SetText(std::imag(SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
-        SC1_iEntry_imag->SetText(std::imag(SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
-        SC2_iEntry_imag->SetText(std::imag(SC2[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
-        std::cout << i << ", " << s1 << ", " << s2 << "\t" << SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]
-                                                   << "\t" << SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]
-                                                   << "\t" << SC2[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] << std::endl;
+    //  Set Spin corrletors
+    XMLElement* SC0_Element = xmlDoc.NewElement("SC0");
+    XMLElement* SC1_Element = xmlDoc.NewElement("SC1");
+    XMLElement* SC2_Element = xmlDoc.NewElement("SC2");
+    for (int i = 0; i < A.process.size(); i++) {
+      if(A.particle_type[i] == 0) continue;
+      for(int s1 = -1; s1 <= 1; s1 += 2) {
+        for(int s2 = -1; s2 <= 1; s2 += 2) {
+          XMLElement* SC0_iEntry_real = xmlDoc.NewElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+          XMLElement* SC1_iEntry_real = xmlDoc.NewElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+          XMLElement* SC2_iEntry_real = xmlDoc.NewElement(const_cast<char*>(("r" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+          XMLElement* SC0_iEntry_imag = xmlDoc.NewElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+          XMLElement* SC1_iEntry_imag = xmlDoc.NewElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+          XMLElement* SC2_iEntry_imag = xmlDoc.NewElement(const_cast<char*>(("i" + std::to_string(i) + std::to_string(s1) + std::to_string(s2)).c_str()));
+          SC0_iEntry_real->SetText(std::real(SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
+          SC1_iEntry_real->SetText(std::real(SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
+          SC2_iEntry_real->SetText(std::real(SC2[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
+          SC0_iEntry_imag->SetText(std::imag(SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
+          SC1_iEntry_imag->SetText(std::imag(SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
+          SC2_iEntry_imag->SetText(std::imag(SC2[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]));
+          std::cout << i << ", " << s1 << ", " << s2 << "\t" << SC0[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]
+                                                    << "\t" << SC1[std::to_string(i) + std::to_string(s1) + std::to_string(s2)]
+                                                    << "\t" << SC2[std::to_string(i) + std::to_string(s1) + std::to_string(s2)] << std::endl;
 
-        SC0_Element->InsertEndChild(SC0_iEntry_real);
-        SC0_Element->InsertEndChild(SC0_iEntry_imag);
-        SC1_Element->InsertEndChild(SC1_iEntry_real);
-        SC1_Element->InsertEndChild(SC1_iEntry_imag);
-        SC2_Element->InsertEndChild(SC2_iEntry_real);
-        SC2_Element->InsertEndChild(SC2_iEntry_imag);
+          SC0_Element->InsertEndChild(SC0_iEntry_real);
+          SC0_Element->InsertEndChild(SC0_iEntry_imag);
+          SC1_Element->InsertEndChild(SC1_iEntry_real);
+          SC1_Element->InsertEndChild(SC1_iEntry_imag);
+          SC2_Element->InsertEndChild(SC2_iEntry_real);
+          SC2_Element->InsertEndChild(SC2_iEntry_imag);
+        }
       }
     }
+    pRoot->InsertEndChild(SC0_Element);
+    pRoot->InsertEndChild(SC1_Element);
+    pRoot->InsertEndChild(SC2_Element);
   }
-  pRoot->InsertEndChild(SC0_Element);
-  pRoot->InsertEndChild(SC1_Element);
-  pRoot->InsertEndChild(SC2_Element);
 
   // Get color correlators
   // <M|Ti.Tj|M>
@@ -419,7 +442,8 @@ int main() {
         M0_ijElement->InsertEndChild(M0_ijEntry);
         M1_ijElement->InsertEndChild(M1_ijEntry);
         //M1_ij_ImElement->InsertEndChild(M1_ij_ImEntry);
-        std::cout << "<M0|T_" << i << ".T_" << j << "|M0> = " << M0ij*average_factor << "\t" << M0ij*average_factor/M2_averaged_LO << std::endl;
+
+        //std::cout << "<M0|T_" << i << ".T_" << j << "|M0> = " << M0ij*average_factor << "\t" << M0ij_Stripper*average_factor << "\t" << M0ij*average_factor/M2_averaged_LO << std::endl;
         if(order_rcl == "NLO") std::cout << "<M0|T_" << i << ".T_" << j << "|M1> + c.c. = " << M1ij*average_factor << "\t" << M1ij*average_factor/M2_averaged_NLO << std::endl;
         //if(order == "NNLO") {
         //  std::cout << "<M0|T_" << i << ".T_" << j << "|M1> - c.c. = " << M1ij_Im*average_factor << "\t" << M1ij_Im*average_factor/M2_averaged_NLO << std::endl;

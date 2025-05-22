@@ -4,18 +4,18 @@
 //using namespace Stripper;
 
 // Evaluation of input
-std::string process_str = "d d~ -> u u~";
+std::string process_str = "u u~ -> A A";
 std::string unresolved_str = " g";
-std::string limit = "collinear";
+std::string limit = "soft";
 //std::string process_full_str = process_str + unresolved_str;
-std::string process_full_str = "d d~ -> u u~ g";
+std::string process_full_str = "u u~ -> A A g";
 
 const int nBorn = 4;
-const int power = 2;
-const std::array<unsigned, 3> powerNonQCD = {0,0,0};
+const int power = 0;
+const std::array<unsigned, 3> powerNonQCD = {2,0,0};
 const std::vector<int> flavor = {0,0,1,1};
 const std::string order = "NNLO";
-const std::string suffix = ""; // "" or "_EW" or "_QED"
+const std::string suffix = "_QED"; // "" or "_EW" or "_QED"
 std::vector<double> M2_custom;
 
 int main() {
@@ -73,21 +73,29 @@ int main() {
     M2_custom.push_back( -0.632583283928193);
     M2_custom.push_back( -72.7129589447317);
   }
-  else if((process_full_str == "u u~ -> A A g") and (order == "NNLO") and false) {
+  else if((process_full_str == "u u~ -> A A g") and (order == "NNLO")) {
     custom = true;
-    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*6.01809113975941e-06);
-    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.000169317125958414);
-    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.00861239662585315);
-    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.277316617460984);
-    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*6.75448142638242);
-    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*138.689232054403);
-    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*2539.31069282765);
-    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*42816.1520256723);
-    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.);
-    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.);
-    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.);
-    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*0.);
-    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*0.);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*4.83538613801978e-06);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*1.54476748572392e-05);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*5.49200500812953e-05);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.000191162117465791);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.000630408722842142);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.00197007173283094);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.0058781023986536);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.016875328259249);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.0469193849876823);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.126995124044529);
+    M2_custom.push_back(std::pow(gs, 2*(power + nUnresolved) + 4)*0.335987583035483);
+    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*0.871716694258973);
+    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*2.22409119793593);
+    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*5.59076343769503);
+    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*13.8716256713624);
+    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*34.0212692292854);
+    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*82.5789232014353);
+    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*198.578361773121);
+    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*473.502601645154);
+    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*1120.39590157353);
+    M2_custom.push_back( std::pow(gs, 2*(power + nUnresolved) + 4)*2632.49086045922);
   }
   else if((process_full_str == "d d~ -> g g g g") and (order == "NLO")) {
     custom = true;
@@ -234,7 +242,6 @@ int main() {
     particles.erase(particles.begin());
     average_factor *= 1./factorial(occurances);
   }
-  std::cout << average_factor << std::endl;
   while(particles_full.size() > 0) {
     std::string particle = particles_full[0];
     int occurances = 1;
@@ -254,7 +261,6 @@ int main() {
   }
   std::cout << "average_factor = " << average_factor << std::endl;
   std::cout << "average_factor_full = " << average_factor_full << std::endl;
-  std::cout << "average_factor_full/average_factor = " << average_factor_full/average_factor << std::endl;
   std::cout << "A.particle_type = ";
   for(int i : A.particle_type) {
     std::cout << i << ",";
@@ -486,7 +492,7 @@ int main() {
   //phis[1] = 1./6.;
   double increment = std::sqrt(0.5);
   int counter = 0;
-  while (scale > 3.e-8) {
+  while (scale > 3.e-4) {
     scale *= increment;
     std::vector<std::vector<std::vector<double>>> xParFull;
     int level_int = 1;
@@ -545,9 +551,9 @@ int main() {
     if(!custom) {
       if(order == "LO" or order == "NLO") {
         double M2_test = 0;
+        // Recola one-loop
         Recola::compute_process_rcl(1, pp_rcl, order);
         Recola::get_squared_amplitude_rcl(1, power + delta_power/2, order, M2_test);
-        //std::cout << "M2 = " << M2_test << std::endl;
         Recola::compute_process_rcl(2, ppFull_rcl, order);
         Recola::get_squared_amplitude_rcl(2, power + nUnresolved + delta_power/2, order, M2_Full);
         //Stripper one-loop
@@ -555,17 +561,20 @@ int main() {
         //Stripper::Born<Real> me(process_full, ppFull_Stripper);
         //M2_Full_Stripper = Stripper::toDouble(me())*average_factor_full*std::pow(gs, 2*(power));
         //M2_Full = M2_Full_Stripper;
-        //std::cout << "M2_Stripper_full = " << M2_Full_Stripper << std::endl;
         //Stripper::OneLoop<double> me(process_full,ppFull_Stripper);
         //for(int i = 0; i <= 2; i++) M2_Full_Stripper += ((me()[i])*std::pow(std::log(mu*mu/COM/COM), i))*average_factor_full*std::pow(gs, 2*(power + nUnresolved) + 4);
         //std::cout << "gs = " << gs << std::endl;
         //std::cout << M2_Full/average_factor << "\t" << M2_Full_Stripper/average_factor << "\t" << M2_Full/M2_Full_Stripper << std::endl;
         //M2_Full = M2_Full_Stripper*2.;
+        //std::cout << "M2_Stripper_full = " << M2_Full_Stripper << "\t" << M2_Full << "\t" << M2_Full/M2_Full_Stripper << std::endl;
       }
       else if(order == "NNLO") {
+        Stripper::Born<Real> me0(process_full, ppFull_Stripper);
+        double M2_Born_Full = me0();
         Stripper::TwoLoop<Real> me(process_full, ppFull_Stripper);
         //Stripper::OneLoop<double> me(process_full,ppFull_Stripper);
         for(int i = 0; i <= 4; i++) M2_Full += ((Stripper::toDouble(me()[i]))*std::pow(std::log(mu*mu/COM/COM), i))*average_factor_full;
+        //for(int i = 4; i <= 4; i++) M2_Full += (Stripper::toDouble(me()[i]))*average_factor_full*24.;
       }
     }
     else {
@@ -580,7 +589,7 @@ int main() {
         else if(order=="NLO") M2_approx = soft_g_squared_1l(pp_full, M0_ij, M0_ijk, M1_ij, A)*average_factor_full/average_factor;
         else if(order=="NNLO") {
           //M2_test = soft_g_squared_1l(pp_full, M1_ij, M1_ijk, M2_ij, A)*average_factor_full/average_factor;
-          M2_approx = soft_g_squared_2l(pp_full, M0_ij, M0_ijk, Q_ijkl, M1_ij, M1_ijk, M2_ij, A, n_f)*average_factor_full/average_factor;
+          M2_approx = soft_g_squared_2l(pp_full, M0_ij, M0_ijk, Q_ijkl, M1_ij, M1_ijk, M2_ij, A, n_f)*average_factor_full/average_factor; // *(-0.5)?
           M2_test = soft_g_squared_2l_reducible(pp_full, M0_ij, M0_ijk, Q_ijkl, M1_ij, M1_ijk, M2_ij, A, n_f)*average_factor_full/average_factor;
         }
       }

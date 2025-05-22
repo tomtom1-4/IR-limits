@@ -8,6 +8,7 @@
 #include <array>
 
 #include "/home/tom/Documents/software/software/Stripper/Stripper/Matrix.hpp"
+#include "/home/tom/Documents/software/software/Stripper/Stripper/Factorization.hpp"
 #include "/home/tom/Documents/software/software/Stripper/Stripper/PhaseSpace.hpp"
 #include "/home/tom/Documents/software/software/Stripper/Stripper/InitialState.hpp"
 

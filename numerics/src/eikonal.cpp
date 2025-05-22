@@ -10,6 +10,7 @@ LV<std::complex<double>> gamma11(const LV<double>& p1, const LV<double>& p2, con
   if((p1.components[0] < 0) and (p2.components[0] < 0)) log = log - I*M_PI;
   else log = log + I*M_PI;
   std::complex<double> prefactor = -1./12.*(std::pow(M_PI, 2) + 6.*std::pow(log, 2))/std::pow(4.*M_PI, 2);
+  //std::complex<double> prefactor = -1./std::pow(4.*M_PI, 2);
   LV<std::complex<double>> output = prefactor*(p1/(p1*q) - p2/(p2*q));
 
   return output;
@@ -126,20 +127,61 @@ LM<std::complex<double>> gamma21(const LV<double>& pi, const LV<double>& pj, con
 }
 
 LV<std::complex<double>> gamma12Dipole(LV<double> pi, LV<double> pj, LV<double> q, int nl) {
+  // Based on Dixon et al., 2019
+  // hep-ph: 1912.09370
   double dR = 1.;
+  double beta0 = 11./3. - 4./3.*T_F*nl/C_A; // beta function with C_A factored out
   std::complex<double> log = std::log((pi*pj)*mu*mu/(pi*q)/(pj*q)/2.);
   if((pi.components[0] < 0) and (pj.components[0] < 0)) log = log - I*M_PI;
   else log = log + I*M_PI;
   LV<double> kinematic = (pi/(pi*q) - pj/(pj*q));
   std::vector<std::complex<double>> logExpand = {1, 2.*log, 2.*std::pow(log, 2), 4./3.*std::pow(log, 3), 2./3.*std::pow(log, 4)}; // epsilon expansion of (pi.pj * mu^2/pi.q/pj.q/2)^(2*ep)
   std::vector<double> C2 = {1./2.,
-                            -11./12. + T_F*nl/C_A*1./3.,
+                            -11./12. + T_F*nl/C_A*1./3., // =-beta0/4.
                             Zeta2 - 16./9. - 1./12.*dR + T_F*nl/C_A*5./9.,
                             -(11./6.*Zeta3 + 11./12*Zeta2 + 181./54. + 2./9.*dR) + T_F*nl/C_A*(zeta2/3 + 19./27.),
                             7./8.*Zeta4 + 341*Zeta3/18. - 16./9.*Zeta2 - Zeta2/12.*dR - 1037./162. - 35./54.*dR + T_F*nl/C_A*(-62./9.*Zeta3 + 5./9.*Zeta2 + 65./81.)};
 
+
+
+  // Renormalization contributing to the finite part
+  // The contribution comes from the one-loop renormalization of the coupling constant times the one-loop soft current
+  // The two-loop renormalization is multiplied by the tree-level current and hence only renders poles
+  // First factor comes from the power of alpha_s (3/2)
+  // Second factor is the beta function
+  // Third factor is the expansion of the bare one-loop current
+  // Fourth factor accounts for the mismatch between (pi.pj * mu^2/pi.q/pj.q/2)^(2*ep) presen here and (pi.pj * mu^2/pi.q/pj.q/2)^(ep) needed in the one-loop current
+  // so we devide by the appropriate power of 2 to match the expansion.
+  //C2[1] += -3./2.*beta0*(-1.)/std::pow(2., 3);
+  //C2[2] += -3./2.*beta0*(0.)/std::pow(2., 2);
+  //C2[3] += -3./2.*beta0*(-Zeta2/2.)/std::pow(2., 1);
+  //C2[4] += -3./2.*beta0*(7./3.*Zeta3)/std::pow(2., 0);
+
+  //C2[0] *= 1./4.;
+  //C2[1] *= 1./4.;
+  //C2[2] = 0.;
+  //C2[3] = 0.;
+  //C2[4] = 0.;
+
   std::complex<double> prefactor = logExpand[4]*C2[0] + logExpand[3]*C2[1] + logExpand[2]*C2[2] + logExpand[1]*C2[3] + logExpand[0]*C2[4];
-  return kinematic*prefactor/std::pow(4.*M_PI, 4);
+  std::complex<double> finite = (
+          + 13./240.*pow(M_PI,4)*C_A
+          + 76./27.*log*T_F*nl
+          - 386./27.*log*C_A
+          + 20./9.*pow(log,2)*T_F*nl
+          - 67./9.*pow(log,2)*C_A
+          + 5./12.*pow(log,2)*pow(M_PI,2)*C_A
+          + 4./9.*pow(log,3)*T_F*nl
+          - 11./9.*pow(log,3)*C_A
+          + 1./4.*pow(log,4)*C_A
+          + 2*log*Zeta3*C_A
+          + 56./9.*Zeta3*T_F*nl
+          - 154./9.*Zeta3*C_A
+          )*(0.5)/C_A + C2[4];
+  std::cout << "prefactor = " << prefactor << ", finite = " << finite << std::endl;
+  //std::complex<double> prefactor = C2[0];
+  //return kinematic*prefactor/std::pow(4.*M_PI, 4);
+  return kinematic*finite/std::pow(4.*M_PI, 4);
 }
 
 std::complex<double> Jqq(const LV<double>& q1, const LV<double>& q2, const LV<double>& pi, const LV<double>& pj, int nl=5) {
@@ -1567,7 +1609,7 @@ double soft_g_squared_2l(double *pp_full, std::unordered_map<std::string, double
       if(i != j) {
         approx += std::pow(gs, 6)*C_A*C_A*M0_ij[std::to_string(i) + std::to_string(j)]
           *(0.*2.*std::real(gamma11(pi, pj, q).conj()*gamma11(pi, pj, q))/4.
-           +2.*std::real(j1(pi, q)*gamma12Dipole(pi, pj, q, nl))/3.);
+           +2.*std::real(j1(pi, q)*gamma12Dipole(pi, pj, q, nl)));
 
         //std::vector<LV<std::complex<double>>> g11 = gamma11_expanded(pi, pj, q);
         //approx += C_A*C_A*M0_ij[std::to_string(i) + std::to_string(j)]

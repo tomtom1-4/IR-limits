@@ -23,8 +23,7 @@
 
 \title{Infrared Limits for the N${}^3$LO Era}
 
-\author{Micha\l{} Czakon,}
-\author{Felix Eschment and}
+\author{Micha\l{} Czakon and}
 \author{Tom Schellenberger}
 \affiliation{Institut f\"ur Theoretische Teilchenphysik und Kosmologie, RWTH Aachen University,\\ D-52056 Aachen, Germany}
 \emailAdd{mczakon@physik.rwth-aachen.de}
@@ -52,13 +51,16 @@
     \bm{\mathrm{J}} = \big( g_s^B \big)^n \bigg( \bm{\mathrm{J}}^{(0)} + \frac{\mu^{-2\epsilon} \alpha_s^B}{(4\pi)^{1-\epsilon}} \, \bm{\mathrm{J}}^{(1)} + \dots \bigg) \; , \qquad \alpha_s^B \equiv \frac{\big( g_s^B \big)^2}{4\pi} \; ,
 \end{equation}
 %
+\paragraph{Tree Level, Single Soft}
 \begin{equation}
 \bm{\mathrm{J}}^{(0)}{}^{a}_{\alpha}\big( q,\{ p_i \}_{i=1}^m \big) =  \sum_{i} \bm{\mathrm{T}}_i^a j_\alpha(q; p_i),  \quad j_\alpha(q; p_i) = -\frac{p_{i\alpha}}{p_i \cdot q} \; .
 \end{equation}
 %
+\paragraph{One Loop, Single Soft}
 \begin{align}
 &\bm{\mathrm{J}}^{(1)}{}^{a}_{\alpha}\big( q,\{ p_i \}_{i=1}^m \big) =  \sum_{i \neq j} i f^{abc} \bm{\mathrm{T}}_i^b \bm{\mathrm{T}}_j^c \gamma^{(1)}_{\alpha}(q; p_i, p_j), \\
-&\gamma^{(1)}_{\alpha}(q; p_i, p_j) = r_\Gamma \frac{\Gamma(1 - \epsilon) \Gamma(1 + \epsilon)}{\epsilon^2} \left(\frac{p_{i\alpha}}{p_i \cdot q} - \frac{p_{j \alpha}}{p_j \cdot q} \right) \left(\frac{\mu^2 s_{ij}}{s_{qi} s_{qj}} \right)^\epsilon e^{i \pi \epsilon \sigma_{ij}}
+&\gamma^{(1)}_{\alpha}(q; p_i, p_j) = r_\Gamma \frac{\Gamma(1 - \epsilon) \Gamma(1 + \epsilon)}{\epsilon^2} \left(\frac{p_{i\alpha}}{p_i \cdot q} - \frac{p_{j \alpha}}{p_j \cdot q} \right) \left(\frac{\mu^2 s_{ij}}{s_{qi} s_{qj}} \right)^\epsilon e^{i \pi \epsilon \sigma_{ij}} \\ 
+& \quad = \left(\frac{1}{\epsilon^2} + \frac{\pi^2}{12} - \frac{7}{3} \zeta(3) \epsilon - \frac{13 \pi^2}{480} \epsilon^2 + \mathcal{O}(\epsilon^3) \right) \left(\frac{p_{i\alpha}}{p_i \cdot q} - \frac{p_{j \alpha}}{p_j \cdot q} \right) \left(\frac{\mu^2 s_{ij}}{s_{qi} s_{qj}} \right)^\epsilon e^{i \pi \epsilon \sigma_{ij}}
 \end{align}
 %
 \begin{equation}
@@ -71,6 +73,7 @@ r_\Gamma = \frac{\Gamma^2 (1 - \epsilon) \Gamma (1 + \epsilon)}{\Gamma(1 - 2 \ep
 \end{cases}
 \end{equation}
 %
+\paragraph{Tree Level, Double Soft}
 \begin{equation}
 \bm{\mathrm{J}}^{(0)}{}^{a_1 a_2}_{\alpha_1 \alpha_2}\big( q_1, q_2,\{ p_i \}_{i=1}^m \big) = \frac{1}{2} \Big \lbrace \mathbf{J}^{(0)}{}^{a_1}_{\alpha_1} \big( q_1, \{p_i \}_{i = 1}^m \big), \mathbf{J}^{(0)}{}^{a_2}_{\alpha_2}  \big( q_1, \{p_i \}_{i = 1}^m \big) \Big \rbrace + \Gamma^{(0)}{}^{a_1 a_2}_{\alpha_1 \alpha_2} \big( q_1, \{p_i \}_{i = 1}^m \big)
 \end{equation}
@@ -83,6 +86,7 @@ r_\Gamma = \frac{\Gamma^2 (1 - \epsilon) \Gamma (1 + \epsilon)}{\Gamma(1 - 2 \ep
 \gamma^{(0)}_{\alpha_1 \alpha_2}(q_1, q_2; p_i) = \frac{p_{i\alpha_1} q_{1\alpha_2} - p_{i \alpha_2} q_{2 \alpha_1}}{(q_1 \cdot q_2) \big( p_i \cdot (q_1 + q_2)\big)} - \frac{p_i \cdot (q_1 - q_2)}{2 p_i \cdot ( q_1 + q_2 )} \bigg( \frac{p_{i \alpha_1} p_{i \alpha_2}}{(p_i \cdot q_1) (p_i \cdot q_2)} + \frac{g_{\alpha_1\alpha_2}}{q_1 \cdot q_2} \bigg)
 \end{equation}
 %
+\paragraph{One Loop, Double Soft}
 \begin{align}
 &\mathbf{J}^{(1)}{}^{a_1 a_2}_{\alpha_1 \alpha_2}\big( q_1, q_2,\{ p_i \}_{i=1}^m \big) \\
 & \quad = \mathbf{J}^{(1)}{}^{a_1}_{ \alpha_1}\big( q_1,\{ p_i \}_{i=1}^m \big) \mathbf{J}^{(0)}{}^{a_2}_{ \alpha_2}\big( q_2,\{ p_i \}_{i=1}^m \big) + \mathbf{J}^{(1)}{}^{a_2}_{\alpha_2}\big( q_2,\{ p_i \}_{i=1}^m \big) \mathbf{J}^{(0)}{}^{a_1}_{\alpha_1}\big( q_1,\{ p_i \}_{i=1}^m \big)  \\
@@ -101,7 +105,17 @@ r_\Gamma = \frac{\Gamma^2 (1 - \epsilon) \Gamma (1 + \epsilon)}{\Gamma(1 - 2 \ep
 \end{split}
 \end{equation}
 %
+Results for individual coefficient functions $\tilde{J}, \hat{J}_{++}, J_{++}$, and $J_{+-}$ can be found in Ref.~\cite{Czakon:2022dwk}
+% 
+
+\paragraph{Two Loop, Single Soft}
+At two loop, we encounter a new color structure from tripoles 
+\begin{equation}
+\mathbf{J}^{(2)}{}^a_\alpha = \sum_{i \neq j} i f^{abc} \mathbf{T}_i^b \mathbf{T}_j^c \gamma_\alpha^{(2)}(q; p_i, p_j) + \sum_{(i,j,k)} f^{a a_k b} f^{b a_i a_j} \mathbf{T}_i^{a_i} \mathbf{T}_j^{a_j} \mathbf{T}_k^{a_k} \gamma^{(2)}_\alpha (q; p_i, p_j, p_k)
+\end{equation}
+
 \subsection{Squared Currents}
+\cite{Czakon:2013hxa}
 \begin{equation}
 |\mathbf{J}^{(0)}\big( q,\{ p_i \}_{i=1}^m \big)|^2 = -\sum_{i,j} j(q, p_i) \cdot j(q, p_j) \mathbf{T}_i^a \mathbf{T}_j^a
 \end{equation}
@@ -274,5 +288,9 @@ So we see that the limits permute. Further we see that $\braket{\mathbf{\hat{P}}
 & \quad =  \sum_{i \neq j} \mathbf{T}_i \cdot \mathbf{T}_j \; 2 \, \text{Re}\big(j(q, p_i) \cdot \gamma^{(1)} (q, p_i, p_j)  \big)   + \sum_{(i,j,k)} f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \; 2 \, \text{Im} \big( j(q, p_i) \cdot \gamma^{(1)}(q, p_j, p_k) \big)
 \end{split}
 \end{equation}
+
+\newpage
+\bibliographystyle{JHEP}
+\bibliography{main} 
 
 \end{document}

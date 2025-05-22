@@ -29,7 +29,7 @@ cf log(symmetric), gamma0, gamma1, C, j; * j = -p/p.q
 s beta0, beta1, ZUV0, ZUV1;
 cf jj(antisymmetric), jjSym(symmetric); *jj(i, j) = p_i/p_i.q - p_j/p_j.q;
 cf summeP(symmetric), summe(symmetric);
-cf F;
+cf F, L0, L1;
 i q;
 s g;
 s Cg, TF, nl, CF;
@@ -168,9 +168,18 @@ id J2(b?) = summeP(i9, i10)*i_*cOlf(b, c1, c2)*T(i9, c1)*T(i10, c2)*jj(i9, i10)*
         +TF*nl*(1/3/ep^3 + 5/9/ep^2 + 1/ep*(pi_^2/18 + 19/27)))
   + (-1)*summeP(i9, i10, i11)*cOlf(b, c3, c4)*cOlf(c4, c1, c2)*T(i9, c1)*T(i10, c2)*T(i11, c3)*(jj(i9, i11)*F(i9, i10, i11) - jj(i10, i11)*F(i10, i9, i11))*(1 + ep*log + ep^2/2*log^2 + ep^3/6*log^3 + ep^4/24*log^4 + ep^5*O)^2*(1 + ep^2*pi_^2/6);
 
-id F(i1?, i2?, i3?) = -1/ep^2*(log(i2, i3) + log(i1, q) - log(i1, i2) - log(i3, q))*(log(i1, i3) + log(i2, q) - log(i1, i2) - log(i3, q))
-                    + 1/3/ep*(-(log(i2, i3) + log(i1, q) - log(i1, i2) - log(i3, q))^2*(log(i1, i3) + log(i2, q) - log(i1, i2) - log(i3, q))
-                             -2*(log(i2, i3) + log(i1, q) - log(i1, i2) - log(i3, q))*(log(i1, i3) + log(i2, q) - log(i1, i2) - log(i3, q))^2);
+repeat;
+  id once F(i1?, i2?, i3?) = 1/ep^2*(L0(i1, i2, i3)*L1(i1, i2, i3))
+    + 1/3/ep*(L0(i1, i2, i3)^2*L1(i1, i2, i3) - 2*L0(i1, i2, i3)*L1(i1, i2, i3)^2)
+    + 0*(- L1(i1, i2, i3)*(2/9*L0(i1, i2, i3)^3 + 1/3*L0(i1, i2, i3)^2*L1(i1, i2, i3) + 13/18*L0(i1, i2, i3)*L1(i1, i2, i3)^2 + 7/12*L1(i1, i2, i3)^3)
+    + 2*pi_^2/6*(-L0(i1, i2, i3)*L1(i1, i2, i3)) + 40/3*zeta(3)*L1(i1, i2, i3));
+  id L0(i1?, i2?, i3?) = (log(i2, i3) + log(i1, q) - log(i1, i2) - log(i3, q));
+  id L1(i1?, i2?, i3?) = - (log(i1, i3) + log(i2, q) - log(i1, i2) - log(i3, q));
+endrepeat;
+
+*id F(i1?, i2?, i3?) = -1/ep^2*(log(i2, i3) + log(i1, q) - log(i1, i2) - log(i3, q))*(log(i1, i3) + log(i2, q) - log(i1, i2) - log(i3, q))
+*                    + 1/3/ep*(-(log(i2, i3) + log(i1, q) - log(i1, i2) - log(i3, q))^2*(log(i1, i3) + log(i2, q) - log(i1, i2) - log(i3, q))
+*                             -2*(log(i2, i3) + log(i1, q) - log(i1, i2) - log(i3, q))*(log(i1, i3) + log(i2, q) - log(i1, i2) - log(i3, q))^2);
 id log = (log(i9, i10) - log(i9, q) - log(i10, q));
 id jj(i1?, i2?) = -j(i1) + j(i2);
 *id log(i1?, i2?) = 0;
@@ -425,8 +434,22 @@ endif;
 *id j(i2) = (jj(i1, i2) + j(i1));
 
 if(count(ep, 1)>0) discard;
-id log(q, i1) = log + log(i1, i2) - log(q, i2);
-b FBorn0, FBorn1, FBorn2, a, cOlf, cOld, T, i_, summeP, summe, Cg, TF, nl, ep;
+
+* rewrite output in short form
+if(count(T, 1)==3);
+*  id T(i1,c1?)*T(i1,c2?)*T(i2,c3?)*FBorn0*cOlf(b,c2?,c4?)*cOlf(c1?,c3?,c4?)*summeP(i1)*summeP(i2)
+*    = - T(i1,c1)*T(i2,c3)*T(i3,c2)*FBorn0*cOlf(b,c2,c4)*cOlf(c1,c3,c4)*summeP(i1)*summeP(i2)*summeP(i3);
+  id T(i1,c1?)*T(i2,c2?)*T(i2,c3?)*FBorn0*cOlf(b,c3?,c4?)*cOlf(c1?,c2?,c4?)*summeP(i1)*summeP(i2)
+  = -T(i1,c1)*T(i2,c2)*T(i3,c3)*FBorn0*cOlf(b,c3,c4)*cOlf(c1,c2,c4)*summeP(i1)*summeP(i2)*summeP(i3)
+    -T(i1,c1)*T(i2,c2)*T(i1,c3)*FBorn0*cOlf(b,c3,c4)*cOlf(c1,c2,c4)*summeP(i1)*summeP(i2);
+  id T(i1,N1_?)*T(i2,N2_?)*T(i3,N3_?)*FBorn0*cOlf(b,N2_?,N4_?)*cOlf(N1_?,N3_?,N4_?)*summeP(i1)*summeP(i2)*summeP(i3)
+    = T(i1,N1_?)*T(i2,N2_?)*T(i3,N3_?)*FBorn0*cOlf(b,N2_?,N4_?)*cOlf(N1_?,N3_?,N4_?)*summeP(i1)*summeP(i2)*summeP(i3)*replace_(i2, i3, i3, i2);
+endif;
+#call ColorOrder
+id log(q, i1) = -log + log(i1, i2) - log(q, i2);
+
+b FBorn0, FBorn1, FBorn2, a, cOlf, cOld, T, i_, summeP, summe, ep, j;
+Format c;
 *b ep;
 print+s;
 .sort

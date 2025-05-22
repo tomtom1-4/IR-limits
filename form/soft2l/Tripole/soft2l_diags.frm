@@ -59,7 +59,7 @@ mul -1;
 
 *if(count(T1, 1) != 3 || count(T2, 1) != 2) discard;
 
-b cOlT, T1, T2, T3, cOlf, lam, k1, k2, DS, Eik;
+b cOlT, T1, T2, T3, cOlf;
 print d`i';
 .sort
 
