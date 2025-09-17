@@ -10,10 +10,12 @@ USE_QD   = true
 
 ifeq ($(FC),ifort)
 CXXFLAGS = -O$(LEVEL) -std=c++17 -I.. -I$(LHADIR)/include $(OPT) \
-           -I /home/tom/Documents/software/software/Stripper/Stripper/
+           -I$(STRIPPER_PATH) \
+           -I$(PHASE_SPACE_PATH)
 else
 CXXFLAGS = -O$(LEVEL) -std=c++17 -I.. -I$(LHADIR)/include -DGFORTRAN $(OPT) \
-           -I /home/tom/Documents/software/software/Stripper/Stripper/
+           -I$(STRIPPER_PATH) \
+           -I$(PHASE_SPACE_PATH)
 endif
 MAKE_SHR = true
 ifeq ($(strip $(USE_OL)),true)
@@ -44,7 +46,8 @@ else
             -L$(LHADIR)/lib -lLHAPDF -lstdc++ -ldl
 endif
 
-LIBS += -L/home/tom/Documents/software/software/recola_otter/recola2-2.2.3/ -lrecola
+LIBS += -L$(RECOLA2_PATH) -lrecola \
+        -L$(PHASE_SPACE_PATH) -lphase_space
 
 ifeq ($(strip $(USE_OL)),true)
 LIBS += -lopenloops
@@ -72,9 +75,6 @@ LIBS += -lqcdloop
 endif
 
 SRCS = src/amplitude.cpp src/color.cpp src/eikonal.cpp src/tinyxml2.cpp src/splitting_functions.cpp src/utilities.cpp \
-	/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Tree.cpp \
-  /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/PhaseSpace.cpp \
-	/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Utilities.cpp \
   src/splitting_functions/P0_qqPqPbarg.cpp \
   src/splitting_functions/P0_qqqbarg.cpp \
   src/splitting_functions/P0_qggg.cpp \
@@ -107,9 +107,6 @@ OBJS = $(patsubst %.cpp,%.o,$(SRCS))
   src/splitting_functions/P1_gqqbar.o \
   src/splitting_functions/P1_ggg.o \
   src/splitting_functions/P2_qg.o \
-  /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Tree.o \
-  /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/PhaseSpace.o \
-  /home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Utilities.o
 
 #target: $(OBJS)
 

@@ -7,10 +7,11 @@
 #include <unordered_map> // hashmap
 #include <array>
 
-#include "/home/tom/Documents/software/software/Stripper/Stripper/Matrix.hpp"
-#include "/home/tom/Documents/software/software/Stripper/Stripper/Factorization.hpp"
-#include "/home/tom/Documents/software/software/Stripper/Stripper/PhaseSpace.hpp"
-#include "/home/tom/Documents/software/software/Stripper/Stripper/InitialState.hpp"
+// Stripper
+#include "Matrix.hpp"
+#include "Factorization.hpp"
+#include "PhaseSpace.hpp"
+#include "InitialState.hpp"
 
 #include "src/tinyxml2.h"
 #include "recola.hpp"
@@ -18,8 +19,10 @@
 #include "src/params.hpp"
 #include "src/color.hpp"
 #include "src/eikonal.hpp"
-#include "/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Utilities.hpp"
-#include "/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/Tree.hpp"
-#include "/home/tom/Uni/phd/NnLO/phase_space_parameterization/src/PhaseSpace.hpp"
+
+// phase_space
+#include "src/Utilities.hpp"
+#include "src/Tree.hpp"
+#include "src/PhaseSpace.hpp"
 
 using namespace tinyxml2;

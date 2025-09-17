@@ -437,6 +437,7 @@ if(count(ep, 1)>0) discard;
 
 * rewrite output in short form
 if(count(T, 1)==3);
+repeat;
 *  id T(i1,c1?)*T(i1,c2?)*T(i2,c3?)*FBorn0*cOlf(b,c2?,c4?)*cOlf(c1?,c3?,c4?)*summeP(i1)*summeP(i2)
 *    = - T(i1,c1)*T(i2,c3)*T(i3,c2)*FBorn0*cOlf(b,c2,c4)*cOlf(c1,c3,c4)*summeP(i1)*summeP(i2)*summeP(i3);
   id T(i1,c1?)*T(i2,c2?)*T(i2,c3?)*FBorn0*cOlf(b,c3?,c4?)*cOlf(c1?,c2?,c4?)*summeP(i1)*summeP(i2)
@@ -444,14 +445,28 @@ if(count(T, 1)==3);
     -T(i1,c1)*T(i2,c2)*T(i1,c3)*FBorn0*cOlf(b,c3,c4)*cOlf(c1,c2,c4)*summeP(i1)*summeP(i2);
   id T(i1,N1_?)*T(i2,N2_?)*T(i3,N3_?)*FBorn0*cOlf(b,N2_?,N4_?)*cOlf(N1_?,N3_?,N4_?)*summeP(i1)*summeP(i2)*summeP(i3)
     = T(i1,N1_?)*T(i2,N2_?)*T(i3,N3_?)*FBorn0*cOlf(b,N2_?,N4_?)*cOlf(N1_?,N3_?,N4_?)*summeP(i1)*summeP(i2)*summeP(i3)*replace_(i2, i3, i3, i2);
+  #call ColorOrder
+endrepeat;
 endif;
-#call ColorOrder
-id log(q, i1) = -log + log(i1, i2) - log(q, i2);
 
-b FBorn0, FBorn1, FBorn2, a, cOlf, cOld, T, i_, summeP, summe, ep, j;
-Format c;
+.sort
+l Tripole = Finite2
+  - 0*T(i1,N1_?)*T(i2,N2_?)*T(i3,N3_?)*FBorn0*cOlf(b,N3_?,N4_?)*cOlf(N1_?,N2_?,N4_?)*j(i1)*summeP(i1)*summeP(i2)*summeP(i3)
+  *(L0*L1*1/2*((2)^2*log^2)*marker1 + 1/3*(2)*log*(L0^2*L1 - 2*L0*L1^2)*marker2);
+if(expression(Tripole));
+  if(count(T, 1)!=3) discard;
+endif;
+id log = log(i1, i2) - log(q, i2) - log(q, i1);
+id L0 = log(i2, i3) + log(q, i1) - log(i1, i2) - log(q, i3);
+id L1 = log(i1, i2) + log(q, i3) - log(i1, i3) - log(q, i2);
+.sort
+
+*id log(q, i1) = -log + log(i1, i2) - log(q, i2);
+
+b FBorn0, FBorn1, FBorn2, a, cOlf, cOld, T, i_, summeP, summe, ep, j, pi_;
+*Format c;
 *b ep;
-print+s;
+print+s Tripole;
 .sort
 
 .end

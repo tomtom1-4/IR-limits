@@ -1,7 +1,7 @@
 #include "eikonal.hpp"
 
 LV<double> j1(const LV<double>& p, const LV<double>& q) {
-  return p/(p*q);
+  return p/(-(p*q));
 }
 
 LV<std::complex<double>> gamma11(const LV<double>& p1, const LV<double>& p2, const LV<double>& q) {
@@ -9,30 +9,13 @@ LV<std::complex<double>> gamma11(const LV<double>& p1, const LV<double>& p2, con
   std::complex<double> log = std::log((p1*p2)*mu*mu/(p1*q)/(p2*q)/2.);
   if((p1.components[0] < 0) and (p2.components[0] < 0)) log = log - I*M_PI;
   else log = log + I*M_PI;
-  std::complex<double> prefactor = -1./12.*(std::pow(M_PI, 2) + 6.*std::pow(log, 2))/std::pow(4.*M_PI, 2);
+  std::complex<double> prefactor = 1./12.*(std::pow(M_PI, 2) + 6.*std::pow(log, 2))/std::pow(4.*M_PI, 2);
   //std::complex<double> prefactor = -1./std::pow(4.*M_PI, 2);
   LV<std::complex<double>> output = prefactor*(p1/(p1*q) - p2/(p2*q));
 
   return output;
 }
 
-std::vector<LV<std::complex<double>>> gamma11_expanded(const LV<double>& p1, const LV<double>& p2, const LV<double>& q) {
-  std::complex<double> log = std::log((p1*p2)*mu*mu/(p1*q)/(p2*q)/2.);
-  if((p1.components[0] < 0) and (p2.components[0] < 0)) log = log - I*M_PI;
-  else log = log + I*M_PI;
-  std::vector<std::complex<double>> log_expansion = {1, log, 1./2.*std::pow(log, 2), 1./6.*std::pow(log, 3), 1./24.*std::pow(log, 4)};
-  std::vector<double> C1 = {-1., 0., -Zeta2/2.,  7./3*Zeta3, 39./16.*Zeta4};
-  LV<double> kinematic = (p1/(p1*q) - p2/(p2*q));
-  std::vector<LV<std::complex<double>>> output;
-  for(int order = 0; order < 5; order++) {
-    LV<std::complex<double>> gamma11_order;
-    for(int i = 0; i <= order; i++) {
-      gamma11_order = gamma11_order + log_expansion[i]*C1[order - i]*kinematic/std::pow(4.*M_PI, 2);
-    }
-    output.push_back(gamma11_order);
-  }
-  return output;
-}
 
 LM<double> gamma20(const LV<double>& p, const LV<double>& q1, const LV<double>& q2) {
   LM<double> output;
@@ -136,11 +119,11 @@ LV<std::complex<double>> gamma12Dipole(LV<double> pi, LV<double> pj, LV<double> 
   else log = log + I*M_PI;
   LV<double> kinematic = (pi/(pi*q) - pj/(pj*q));
   std::vector<std::complex<double>> logExpand = {1, 2.*log, 2.*std::pow(log, 2), 4./3.*std::pow(log, 3), 2./3.*std::pow(log, 4)}; // epsilon expansion of (pi.pj * mu^2/pi.q/pj.q/2)^(2*ep)
-  std::vector<double> C2 = {1./2.,
-                            -11./12. + T_F*nl/C_A*1./3., // =-beta0/4.
-                            Zeta2 - 16./9. - 1./12.*dR + T_F*nl/C_A*5./9.,
-                            -(11./6.*Zeta3 + 11./12*Zeta2 + 181./54. + 2./9.*dR) + T_F*nl/C_A*(zeta2/3 + 19./27.),
-                            7./8.*Zeta4 + 341*Zeta3/18. - 16./9.*Zeta2 - Zeta2/12.*dR - 1037./162. - 35./54.*dR + T_F*nl/C_A*(-62./9.*Zeta3 + 5./9.*Zeta2 + 65./81.)};
+  std::vector<double> C2 = {-1./2.,
+                            +11./12. - T_F*nl/C_A*1./3., // =-beta0/4.
+                            -Zeta2 + 16./9. + 1./12.*dR - T_F*nl/C_A*5./9.,
+                            +(11./6.*Zeta3 + 11./12*Zeta2 + 181./54. + 2./9.*dR) - T_F*nl/C_A*(zeta2/3 + 19./27.),
+                            -7./8.*Zeta4 - 341*Zeta3/18. + 16./9.*Zeta2 + Zeta2/12.*dR + 1037./162. + 35./54.*dR - T_F*nl/C_A*(-62./9.*Zeta3 + 5./9.*Zeta2 + 65./81.)};
 
 
 
@@ -164,7 +147,7 @@ LV<std::complex<double>> gamma12Dipole(LV<double> pi, LV<double> pj, LV<double> 
   //C2[4] = 0.;
 
   std::complex<double> prefactor = logExpand[4]*C2[0] + logExpand[3]*C2[1] + logExpand[2]*C2[2] + logExpand[1]*C2[3] + logExpand[0]*C2[4];
-  std::complex<double> finite = (
+  std::complex<double> finite = -(
           + 13./240.*pow(M_PI,4)*C_A
           + 76./27.*log*T_F*nl
           - 386./27.*log*C_A
@@ -178,7 +161,6 @@ LV<std::complex<double>> gamma12Dipole(LV<double> pi, LV<double> pj, LV<double> 
           + 56./9.*Zeta3*T_F*nl
           - 154./9.*Zeta3*C_A
           )*(0.5)/C_A + C2[4];
-  std::cout << "prefactor = " << prefactor << ", finite = " << finite << std::endl;
   //std::complex<double> prefactor = C2[0];
   //return kinematic*prefactor/std::pow(4.*M_PI, 4);
   return kinematic*finite/std::pow(4.*M_PI, 4);

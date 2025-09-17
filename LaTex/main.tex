@@ -42,13 +42,20 @@
 \section{Definitions and Conventions}
 \section{Soft Gluon Limits}
 %
+We consider a general amplitude in QCD with $m$ hard partons with momenta $p_1, \ldots , p_m$ and $n$ soft gluon emissions with momenta $q_1 , \ldots , q_n$. We parameterize the ``softness'' of the gluon by means of the bookkeeping parameter $\lambda$ defined via
+\begin{equation}
+\frac{q_i^0}{p_i^0} = \mathcal{O}(\lambda), \quad \forall i \in \lbrace 1,\ldots, n \rbrace \quad \text{and} \quad j \in \lbrace 1, \ldots ,m \rbrace.
+\end{equation}
+Amplitudes in QCD obey the factorization
 \begin{multline} \label{eq:asymptotics}
-    \ip{a_1\lambda_1,\dots,a_n\lambda_n}{M(q_1,\dots,q_n,\{ p_i \}^m_{i=1})} \quad \sim \\[.2cm] \epsilon_{\lambda_1}^{\alpha_1\,*}(q_1) \dots \epsilon_{\lambda_n}^{\alpha_n\,*}(q_n) \, \bm{\mathrm{J}}^{a_1\dots a_n}_{\alpha_1\dots\alpha_n}\big( q_1,\dots,q_n,\{ p_i\}^m_{i=1}\big) \ket{M(\{ p_i\}^m_{i=1})} \; ,
+    \ip{a_1\lambda_1,\dots,a_n\lambda_n}{M(q_1,\dots,q_n,\{ p_i \}^m_{i=1})} \quad \sim \\[.2cm] \epsilon_{\lambda_1}^{\alpha_1\,*}(q_1) \dots \epsilon_{\lambda_n}^{\alpha_n\,*}(q_n) \, \bm{\mathrm{J}}^{a_1\dots a_n}_{\alpha_1\dots\alpha_n}\big( q_1,\dots,q_n,\{ p_i\}^m_{i=1}\big) \ket{M(\{ p_i\}^m_{i=1})},
 \end{multline}
+where the ``$\sim$'' indicates that the factorization is only accurate up to terms of order $\mathcal{O} (\lambda^{-n + 1})$.
 %
 %
+The current can be computed in terms of a perturbative expansion in the coupling
 \begin{equation} \label{eq:Jexp}
-    \bm{\mathrm{J}} = \big( g_s^B \big)^n \bigg( \bm{\mathrm{J}}^{(0)} + \frac{\mu^{-2\epsilon} \alpha_s^B}{(4\pi)^{1-\epsilon}} \, \bm{\mathrm{J}}^{(1)} + \dots \bigg) \; , \qquad \alpha_s^B \equiv \frac{\big( g_s^B \big)^2}{4\pi} \; ,
+\bm{\mathrm{J}} = \big( g_s^B \big)^n \bigg( \bm{\mathrm{J}}^{(0)} + \frac{\mu^{-2\epsilon} \alpha_s^B}{(4\pi)^{1-\epsilon}} \, \bm{\mathrm{J}}^{(1)} + \left(  \frac{\mu^{-2\epsilon} \alpha_s^B}{(4\pi)^{1-\epsilon}} \right)^2 \, \bm{\mathrm{J}}^{(2)}  + \dots \bigg) \; , \qquad \alpha_s^B \equiv \frac{\big( g_s^B \big)^2}{4\pi}.
 \end{equation}
 %
 \paragraph{Tree Level, Single Soft}
@@ -59,7 +66,7 @@
 \paragraph{One Loop, Single Soft}
 \begin{align}
 &\bm{\mathrm{J}}^{(1)}{}^{a}_{\alpha}\big( q,\{ p_i \}_{i=1}^m \big) =  \sum_{i \neq j} i f^{abc} \bm{\mathrm{T}}_i^b \bm{\mathrm{T}}_j^c \gamma^{(1)}_{\alpha}(q; p_i, p_j), \\
-&\gamma^{(1)}_{\alpha}(q; p_i, p_j) = r_\Gamma \frac{\Gamma(1 - \epsilon) \Gamma(1 + \epsilon)}{\epsilon^2} \left(\frac{p_{i\alpha}}{p_i \cdot q} - \frac{p_{j \alpha}}{p_j \cdot q} \right) \left(\frac{\mu^2 s_{ij}}{s_{qi} s_{qj}} \right)^\epsilon e^{i \pi \epsilon \sigma_{ij}} \\ 
+&\gamma^{(1)}_{\alpha}(q; p_i, p_j) = r_\Gamma \frac{\Gamma(1 - \epsilon) \Gamma(1 + \epsilon)}{\epsilon^2} \left(\frac{p_{i\alpha}}{p_i \cdot q} - \frac{p_{j \alpha}}{p_j \cdot q} \right) \left(\frac{\mu^2 s_{ij}}{s_{qi} s_{qj}} \right)^\epsilon e^{i \pi \epsilon \sigma_{ij}} \\
 & \quad = \left(\frac{1}{\epsilon^2} + \frac{\pi^2}{12} - \frac{7}{3} \zeta(3) \epsilon - \frac{13 \pi^2}{480} \epsilon^2 + \mathcal{O}(\epsilon^3) \right) \left(\frac{p_{i\alpha}}{p_i \cdot q} - \frac{p_{j \alpha}}{p_j \cdot q} \right) \left(\frac{\mu^2 s_{ij}}{s_{qi} s_{qj}} \right)^\epsilon e^{i \pi \epsilon \sigma_{ij}}
 \end{align}
 %
@@ -106,13 +113,168 @@ r_\Gamma = \frac{\Gamma^2 (1 - \epsilon) \Gamma (1 + \epsilon)}{\Gamma(1 - 2 \ep
 \end{equation}
 %
 Results for individual coefficient functions $\tilde{J}, \hat{J}_{++}, J_{++}$, and $J_{+-}$ can be found in Ref.~\cite{Czakon:2022dwk}
-% 
+%
 
 \paragraph{Two Loop, Single Soft}
-At two loop, we encounter a new color structure from tripoles 
+At two loop, we encounter a new color structure from the interaction of three distinct Wilson lines called tripoles
 \begin{equation}
-\mathbf{J}^{(2)}{}^a_\alpha = \sum_{i \neq j} i f^{abc} \mathbf{T}_i^b \mathbf{T}_j^c \gamma_\alpha^{(2)}(q; p_i, p_j) + \sum_{(i,j,k)} f^{a a_k b} f^{b a_i a_j} \mathbf{T}_i^{a_i} \mathbf{T}_j^{a_j} \mathbf{T}_k^{a_k} \gamma^{(2)}_\alpha (q; p_i, p_j, p_k)
+\mathbf{J}^{(2)}{}^a_\alpha = \sum_{i \neq j} i C_A f^{abc} \mathbf{T}_i^b \mathbf{T}_j^c \gamma_\alpha^{(2)}(q; p_i, p_j) + \sum_{(i,j,k)} f^{a a_k b} f^{b a_i a_j} \mathbf{T}_i^{a_i} \mathbf{T}_j^{a_j} \mathbf{T}_k^{a_k} \gamma^{(2)}_\alpha (q; p_i, p_j, p_k).
+\label{eq:J2}
 \end{equation}
+Where the parenthesis in the sum indicate a summation over distinct indices. We can see that the color structure is antisymmetric with respect to the exchange of $i$ and $j$, implying that the kinematic function $\gamma_\alpha^{(2)}(q;, p_i, p_j, p_k)$ may also be chosen antisymmetric under the same exchange. The index $k$ on the other hand is singled out in the sense that there is no obvious exchange symmetry, and it only becomes apparent after summation over all Wilson lines. Other color structes, for example with a different index singled out can always be reduced to the tripole structure in Eq.~\eqref{eq:J2} after relabeling of the indices.
+
+The dipole term up to finite order reads
+\begin{equation}
+\begin{split}
+&\gamma^{(2)}_\alpha (q; p_i, p_j) = \left( \frac{p_{i \alpha}}{p_{i} \cdot q} - \frac{p_{j \alpha}}{p_j \cdot q} \right) \left( \frac{\mu^2 s_{ij}}{s_{qi} s_{qj}} \right)^{2\epsilon} e^{i \pi \epsilon \sigma_{ij}} \\
+& \qquad \times \bigg \lbrace  \bigg [-\frac{1}{2 \epsilon^4} + \frac{11}{12 \epsilon^3} - \frac{1}{\epsilon^2} \left(\frac{\pi^2}{6} - \frac{67}{36}\right)  + \frac{1}{\epsilon} \left(\frac{11}{6} \zeta(3) + \frac{11 \pi^2}{72} + \frac{193}{54}\right)  \\
+& \hspace{3cm} - \frac{7}{8} \zeta(4) - \frac{341}{18} \zeta(3) + \frac{67 \pi^2}{216} + \frac{571}{81} \bigg ] \\
+& \qquad \quad + \frac{T_F n_f}{C_A} \bigg [ - \frac{1}{3 \epsilon^3} - \frac{5}{9 \epsilon^2} - \frac{1}{\epsilon} \left(\frac{\pi^2}{18} + \frac{19}{27} \right) + \frac{62}{9} \zeta(3) - \frac{5 \pi^2}{54} - \frac{65}{81} \bigg ] + \mathcal{O}(\epsilon) \bigg \rbrace.
+\end{split}
+\end{equation}
+The result to all orders in $\epsilon$ can be found in Ref.~\cite{Duhr:2013msa}. For the tripole we can make the form-factor \textit{Ansatz}
+\begin{equation}
+\gamma_\alpha^{(2)}(q; p_i, p_j, p_k) = F_1(q; p_i, p_j, p_k) \frac{p_{i\alpha}}{p_i \cdot q} +  F_2(q; p_i, p_j, p_k) \frac{p_{j\alpha}}{p_j \cdot q} +  F_3(q; p_i, p_j, p_k) \frac{p_{k\alpha}}{p_k \cdot q}.
+\end{equation}
+Since the color structure was antisymmetric under the $i \leftrightarrow j$ exchange, the kinematic function $\gamma_\alpha^{(2)}(q; p_i, p_j, p_k)$ can be chosen antisymmetric as well. Thus the form factors must satisfy
+\begin{equation}
+F_1(q; p_i, p_j, p_k) = - F_2(q; p_j, p_i, p_k), \qquad F_3(q; p_i, p_j, p_k) = - F_3(q; p_j, p_i, p_k).
+\end{equation}
+Furthermore, as the dipole term vanishes identically under the contraction with $q$, then so must the tripole term in order to satisfy the Ward identity, yielding the relation
+\begin{equation}
+0 = F_1(q; p_i, p_j, p_k) - F_1(q; p_j, p_i, p_k) + F_3(q; p_i, p_j, p_k).
+\end{equation}
+Hence, there is just a single independent form factor, and we can decompose the kinematic factor as
+\begin{equation}
+\begin{split}
+\gamma_\alpha^{(2)}(q; p_i, p_j, p_k) = \left[ \left(\frac{p_{j \alpha}}{p_j \cdot q} - \frac{p_{k \alpha}}{p_k \cdot q} \right) F(p_j, p_i, p_k) - \left(\frac{p_{i \alpha}}{p_i \cdot q} - \frac{p_{k \alpha}}{p_k \cdot q} \right) F(p_i, p_j, p_k)\right] \left(\frac{\mu^2 s_{ij}}{s_{qi} s_{qj}} \right)^{2 \epsilon} \xi_\epsilon.
+\end{split}
+\end{equation}
+Here, we factored out logarithms of the form $\log\left(\frac{\mu^2 s_{ij}}{s_{qi} s_{qj}} \right)^{2 \epsilon}$ and the factor
+\begin{equation}
+\xi_\epsilon \equiv 1 + \epsilon^2 \frac{\pi^2}{6}
+\end{equation}
+to achieve a simpler form of the form factor. The form factor has been computed by Dixon et a.~\cite{Dixon:2019lnw} and reads up to finite order in $\epsilon$
+\begin{equation}
+\begin{split}
+&F(p_i, p_j, p_k) \\
+&\equiv \frac{1}{\epsilon^2} L_0 L_1 + \frac{1}{3 \epsilon} \left(L_0^2 L_1 - 2 L_0 L_1^2 \right) - L_1 \left(\frac{2}{9} L_0^3 + \frac{1}{3} L_0^2 L_1 + \frac{13}{18} L_0 L_1^2 + \frac{7}{12} L_1^3 \right) - \frac{\pi^2}{3} L_0 L_1  + \frac{40}{3} \zeta(3) L_1 + \mathcal{O}(\epsilon),  \\
+& \hspace{3cm} L_0 \equiv \log\!\left(\frac{s_{jk} s_{qi}}{s_{ij} s_{q k}} \right) \qquad L_1 \equiv \log\!\left(\frac{s_{ij} s_{qk}}{ s_{ik} s_{qj}} \right)
+\end{split}
+\end{equation}
+
+\subsection{Renormalization}
+Regarding the renormalization, we have to distinguish the ultraviolet (UV) region from the infrared (IR) region. For massless partons, the UV renormalization amounts to replacing the bare coupling by its renormalized counterpart
+\begin{equation}
+\alpha_s^B = \bar{\mu}^{2 \epsilon} Z_{\alpha_s} \alpha_s, \quad \bar{\mu} \equiv \mu^2 \frac{e^{\gamma_E}}{4 \pi}.
+\label{eq:alphas_bare}
+\end{equation}
+The renormalization constant can be expressed in terms of the $\beta$-function
+\begin{equation}
+\beta \equiv \frac{1}{4 \pi} \frac{\mathrm{d} \alpha_s}{\mathrm{d}\, \ln \mu^2 } = - \beta_0 \left(\frac{\alpha_s}{4 \pi} \right)^2 - \beta_1 \left( \frac{\alpha_s}{4 \pi} \right)^3 - \ldots
+\end{equation}
+by means of the relation
+\begin{equation}
+Z_{\alpha_s} = \exp\!\left(\frac{1}{\epsilon} \int_0^{\alpha_s} \mathrm{d}\alpha_s^\prime\; \frac{\beta(\alpha_s^\prime)}{\alpha_s^\prime} \frac{1}{1 - \frac{\alpha_s^\prime}{\epsilon} \frac{\beta(\alpha_s^\prime)}{\alpha_s^{\prime 2}}} \right) = 1 - \frac{\alpha_s}{ 4 \pi \epsilon} \beta_0 + \left( \frac{\alpha_s}{4 \pi \epsilon} \right)^2 \left(\beta_0^2 - \frac{\beta_1}{2} \right) + \mathcal{O}(\alpha_s^3).
+\end{equation}
+If we insert Eq.~\eqref{eq:alphas_bare} into \eqref{eq:Jexp}, we obtain the current
+\begin{equation}
+\mathbf{J} = g_s^n \left(\mathbf{J}^{(0)}_{\text{UV}} + \frac{\alpha_s}{4 \pi}  \mathbf{J}^{(1)}_\text{UV} + \left(\frac{\alpha_s}{4 \pi}  \right)^2 \mathbf{J}^{(2)}_{\text{UV}} + \cdots \right).
+\end{equation}
+which relates the UV renormalized amplitudes $\ket{M(q_1, \ldots , q_n, \lbrace p_i \rbrace_{i = 1}^m)}$ and $\ket{M(\lbrace p_i \rbrace_{i = 1}^m)}$. The unrenormalized coefficients are related to the renormalized ones via
+\begin{equation}
+\begin{split}
+e^{\epsilon \gamma_E} \mathbf{J}^{(1)}_{\text{UV}} &= \mathbf{J}^{(1)} - \frac{\beta_0}{2 \epsilon} \mathbf{J}^{(0)}, \\
+e^{2 \epsilon \gamma_E} \mathbf{J}^{(2)}_{\text{UV}} &= \mathbf{J}^{(2)} - \frac{3 \beta_0}{2 \epsilon} \mathbf{J}^{(1)} + \left(\frac{3 \beta_0^2 - 2 \beta_1}{8 \epsilon^2} \right) \mathbf{J}^{(0)}, \\
+&\; \; \vdots
+\label{eq:UV}
+\end{split}
+\end{equation}
+
+For most practical applications, we do not only want to relate the UV renormalized amplitudes, but the UV+IR renormalized amplitudes. Generally speaking, any UV renormalized amplitude $\ket{M}$ can be written as
+\begin{equation}
+\ket{M} = \mathbf{Z} \ket{\mathcal{F}},
+\end{equation}
+where $\mathbf{Z}$ is the infrared renormalization constant and an operator in color space, and $\ket{\mathcal{F}}$ is the finite remainder. If we insert the expansions
+\begin{equation}
+\begin{split}
+\ket{M} &= \ket{M^{(0)}} + \frac{\alpha_s}{4 \pi} \ket{M^{(1)}} + \left(\frac{\alpha_s}{4 \pi} \right)^2 \ket{M^{(2)}} + \ldots \\
+\ket{\mathcal{F}} &= \ket{\mathcal{F}^{(0)}} + \frac{\alpha_s}{4 \pi} \ket{\mathcal{F}^{(1)}} + \left(\frac{\alpha_s}{4 \pi} \right)^2 \ket{\mathcal{F}^{(2)}} + \ldots \\
+\mathbf{Z} &= 1 + \frac{\alpha}{4 \pi} \mathbf{Z}^{(1)} + \left(\frac{\alpha}{4 \pi} \right)^2 \mathbf{Z}^{(2)} + \ldots.
+\end{split}
+\end{equation}
+and sort everything in terms of powers of $\alpha_s$ we find the relations
+\begin{equation}
+\begin{split}
+\ket{M^{(0)}} &= \ket{\mathcal{F}^{(0)}}, \\
+\ket{M^{(1)}} &= \ket{\mathcal{F}^{(1)}} + \mathbf{Z}^{(1)} \ket{M^{(0)}} \\
+\ket{M^{(2)}} &= \ket{\mathcal{F}^{(2)}} + \mathbf{Z}^{(1)} \ket{M^{(1)}} + \mathbf{Z}^{(2)} \ket{M^{(0)}} \\
+&= \left(\mathbf{Z}^{(2)} - \mathbf{Z}^{(1)} \mathbf{Z}^{(1)} \right) \ket{M^{(0)}} + \mathbf{Z}^{(1)} \ket{M^{(1)}} + \ket{\mathcal{F}_n}
+\end{split}
+\end{equation}
+The IR renormalization constant satisfies the renormalization group equation (RGE)
+\begin{equation}
+\frac{\mathrm{d}}{\mathrm{d}\; \ln \mu_R} = \mathbf{Z} = - \mathbf{\Gamma} \mathbf{Z}.
+\end{equation}
+Here $\mathbf{\Gamma}$ is the anomalous dimension operator, which for massless partons reads
+\begin{equation}
+\begin{split}
+\mathbf{\Gamma} = \sum_{i \neq j} \frac{\mathbf{T}_i \cdot \mathbf{T}_j}{2} \gamma_{\text{cusp}} \ln\!\left(\frac{\mu^2}{-s_{ij}} \right) + \sum_i \gamma^i,
+\end{split}
+\end{equation}
+where $\gamma_{\text{cusp}}$ is the cusp anomalous dimension
+\begin{equation}
+\begin{split}
+\gamma_{\text{cusp}} &= \sum_{n = 0} \gamma_n^\text{cusp} \left(\frac{\alpha_s}{4 \pi} \right)^{n + 1}, \\
+\gamma_0^{\text{cusp}} &= 4, \\
+\gamma_1^{\text{cusp}} &= \left(\frac{268}{9} - \frac{4 \pi^2}{3} \right) C_A - \frac{80}{9} T_F n_l,
+\end{split}
+\end{equation}
+and similarly
+\begin{equation}
+\begin{split}
+\gamma^i &= \sum_{n = 0} \gamma_n^i \left(\frac{\alpha_s}{4 \pi} \right)^{n + 1}, \\
+\gamma_0^q &= - 3 C_F, \\
+\gamma_1^q &= C_F^2 \left( - \frac{3}{2} + 2 \pi^2 - 24 \zeta(3) \right) + C_F C_A \left(-\frac{961}{54} - \frac{11 \pi^2}{6} + 26 \zeta(3) \right) + C_F T_F n_l \left( \frac{130}{27} + \frac{2 \pi^2}{3} \right), \\
+\gamma_0^g &= - \beta_0 = -\frac{11}{3} C_A + \frac{4}{3} T_F n_l, \\
+\gamma_1^g &= C_A^2 \left(- \frac{692}{27} + \frac{11 \pi^2}{18} + 2 \zeta(3) \right) + C_A T_F n_l \left(\frac{256}{27} - \frac{2 \pi^2}{9} \right) + 4 C_F T_F n_l.
+\end{split}
+\end{equation}
+The explicit solution of the RGE can be found in Ref.~\cite{Becher:2009cu} and reads up to $\mathcal{O}(\alpha_s^2)$ in the $\overline{\text{MS}}$ scheme
+\begin{equation}
+\mathbf{Z} = 1 + \frac{\alpha_s}{4 \pi} \left( \frac{\Gamma_0^\prime}{4 \epsilon^2} + \frac{\mathbf{\Gamma}_0}{2 \epsilon} \right) + \left( \frac{\alpha_s}{4 \pi} \right)^2 \left[ \frac{(\Gamma_0^\prime)^2}{32 \epsilon^4} + \frac{\Gamma_0^\prime}{8 \epsilon^3} \left( \mathbf{\Gamma}_0 - \frac{3}{2} \beta_0 \right) + \frac{\mathbf{\Gamma}_0}{8 \epsilon^3} \left( \mathbf{\Gamma}_0 - 2 \beta_0 \right) + \frac{\Gamma_1^\prime}{16 \epsilon^2} + \frac{\mathbf{\Gamma}_1}{4 \epsilon} \right] + \mathcal{O} (\alpha_s^3)
+\end{equation}
+where $\Gamma_0$ and $\Gamma_1$ are the respective leading order and next-to-leading order coefficients of the anomalous dimension operator and
+\begin{equation}
+\Gamma^\prime = \frac{\partial}{ \partial \ln \mu_R} \mathbf{\Gamma}.
+\end{equation}
+Notice that $\Gamma^\prime$ is a color singlet, which is why we do not use bold letters for its perturbative coefficients $\Gamma_0^\prime$ and $\Gamma_1^\prime$. The UV+IR renormalized current must relate the finite part of the born amplitude to the finite part of the full amplitude, ergo
+\begin{equation}
+\mathbf{J}_{\text{UV+IR}} = \mathbf{Z}^{-1} \mathbf{J}_{\text{UV}} \mathbf{Z}.
+\label{eq:UV+IR}
+\end{equation}
+Note that the the current $\mathbf{J}_{\text{UV}}$ creates a new particle, thus the parton sums on the left-hand side run over $m + n$ partons, whereas the paron side in the operator standing to the right of $\mathbf{J}_{\text{UV}}$ are only running over $m$ partons.
+The inverse of $\mathbf{Z}$ reads up to order $\mathcal{O}(\alpha_s^2)$
+\begin{equation}
+\mathbf{Z}^{-1} = 1 - \frac{\alpha_s}{4 \pi} \mathbf{Z}^{(1)} + \left( \frac{\alpha_s}{4 \pi} \right)^2 \left(\mathbf{Z}^{(1)} \mathbf{Z}^{(1)} - \mathbf{Z}^{(2)} \right) + \mathcal{O} (\alpha_s^3).
+\end{equation}
+
+As an example, let's consider the renormalization of the one-loop single-soft current. According to Eqs.~\eqref{eq:UV+IR} and\ \eqref{eq:UV} the renormalized current reads
+\begin{equation}
+e^{\epsilon \gamma_E} \mathbf{J}_{\text{UV+IR}}^{(1)} = \mathbf{J}^{(1)} - \frac{\beta_0}{2 \epsilon} \mathbf{J}^{(0)} + [\mathbf{J}^{(0)}, \mathbf{Z}^{(1)}].
+\end{equation}
+The commutator can be evaluated straightforwardly
+\begin{equation}
+\begin{split}
+[\mathbf{J}^{(0)a}_\alpha, \mathbf{Z}^{(1)}] &= - \sum_i \left(\frac{1}{2 \epsilon^2} + \frac{1}{2 \epsilon} \ln\!\left(\frac{\mu^2}{-s_{qi}} \right) \right) i f^{cda} \mathbf{T}_i^{c} \gamma_\text{cusp}^{(0)} \sum_j \mathbf{T}_j^d j_\alpha(q; p_j) \\
+&\; + \frac{1}{4 \epsilon} \sum_{k, i\neq j} [\mathbf{T}_k^a, \mathbf{T}_i \cdot \mathbf{T}_j] \gamma_\text{cusp}^{(0)} \ln\!\left(\frac{\mu^2}{-s_{ij}} \right) j_\alpha (q; p_k) - \frac{1}{2 \epsilon} \gamma^g \sum_i \mathbf{T}_i^a j_\alpha (q; p_i),
+\end{split}
+\end{equation}
+which after a few manipulations comes out as
+\begin{equation}
+    [\mathbf{J}^{(0)a}_\alpha, \mathbf{Z}^{(1)}] = \frac{\beta_0}{2 \epsilon} \mathbf{J}^{(0)} - \sum_{i \neq j} i f^{abc} \mathbf{T}_i^b \mathbf{T}_j^c \left(\frac{p_{i\alpha}}{p_i \cdot q} - \frac{p_{j \alpha}}{p_j \cdot q} \right) \left(\frac{1}{\epsilon^2} + \frac{1}{\epsilon} \ln\!\left(\frac{\mu^2 (-s_{ij})}{(-s_{qi}) (-s_{qj})} \right) \right).
+\end{equation}
+Thus, the IR+UV renormalization in the $\overline{\text{MS}}$ scheme for the one-loop single-soft current simply gets rid of the poles. The same is true for multiple gluon or quark emissions. At higher loop orders, however, the renormalization will also induce finite terms which are crucial to include in order to get correct predictions.
 
 \subsection{Squared Currents}
 \cite{Czakon:2013hxa}
@@ -124,6 +286,7 @@ At two loop, we encounter a new color structure from tripoles
 &\mathbf{J}^{(0)\dagger} \big( q,\{ p_i \}_{i=1}^m \big) \cdot \mathbf{J}^{(1)}\big( q,\{ p_i \}_{i=1}^m \big) + \text{h.c.} \\
 & \quad =  \sum_{i \neq j}C_A \mathbf{T}_i \cdot \mathbf{T}_j \; 2 \, \text{Re}\big(j(q, p_i) \cdot \gamma^{(1)} (q, p_i, p_j)  \big)   + \sum_{(i,j,k)} f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \; 2 \, \text{Im} \big( j(q, p_i) \cdot \gamma^{(1)}(q, p_j, p_k) \big)
 \end{split}
+\label{eq:one_loop_squared}
 \end{equation}
 %
 \begin{equation}
@@ -150,6 +313,7 @@ S^{(0)}&(q_1, q_2, p_i, p_j) = - \gamma^{(0)}_{\alpha_1 \alpha_2}(q_1, q_2, p_i)
 & \quad + \sum_{i,j,k,l} \left(f^{ade}f^{bce} \mathbf{T}_i^a \big \lbrace \mathbf{T}_j^b, \mathbf{T}_k^c \big \rbrace \mathbf{T}_l^d + \text{h.c.} \right) S^{(1)}(q_1, q_2, p_i, p_j, p_k, p_l) \\
 & \quad + \sum_{(i,j,k)} f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \; S^{(1)}(q_1, q_2, p_i, p_j, p_k) + \sum_{(i,j)} \mathbf{T}_i\cdot \mathbf{T}_j \; S^{(1)} (q_1, q_2, p_i, p_j)
 \end{split}
+\label{eq:one_loop_double_soft_squared}
 \end{equation}
 %
 \begin{equation}
@@ -178,7 +342,21 @@ S^{(0)}&(q_1, q_2, p_i, p_j) = - \gamma^{(0)}_{\alpha_1 \alpha_2}(q_1, q_2, p_i)
 & \quad - \left( \gamma^{(1)}(q_1, p_i, p_j) \cdot j(q_1, p_i) \right) \left(j(q_2, p_i) \cdot j(q_2, p_j) \right) + \frac{1}{4} \gamma^{(1)}_{\alpha \beta}(q_1, q_2, p_i, p_j) \gamma^{(0)\alpha \beta}(q_1, q_2, p_i) \\
 & \quad + (q_1 \longleftrightarrow q_2 ) \bigg \rbrace
 \end{split}
-\end{equation} 
+\end{equation}
+
+\subsubsection{Two-Loop Single-Soft Limit}
+\begin{equation}
+\begin{split}
+&\mathbf{J}^{(0)\dagger}(q, \lbrace p_i \rbrace_{i = 1}^m) \cdot \mathbf{J}^{(2)}(q, \lbrace p_i \rbrace_{i = 1}^m) + \mathbf{J}^{(2)\dagger}(q, \lbrace p_i \rbrace_{i = 1}^m) \cdot \mathbf{J}^{(0)}(q, \lbrace p_i \rbrace_{i = 1}^m) + \mathbf{J}^{(1)\dagger}(q, \lbrace p_i \rbrace_{i = 1}^m) \cdot \mathbf{J}^{(1)}(q, \lbrace p_i \rbrace_{i = 1}^m) \\
+&\quad =   \sum_{i \neq j} C_A^2 \mathbf{T}_i \cdot \mathbf{T}_j \times 2 \; \text{Re}\bigg \lbrace j_\alpha (q; p_i) \gamma^{(2)\alpha}(q; p_i, p_j) + \frac{1}{4} \gamma_\alpha^{(1)*}(q; p_i, p_j) \gamma^{(1)\alpha}(q; p_i, p_j) \bigg \rbrace\\
+& \quad + \sum_{(i,j,k)} C_A f^{abc} \mathbf{T}^a_i \mathbf{T}^b_j \mathbf{T}^c_k \times 2\; \text{Im} \bigg \lbrace j^\alpha(q; p_i) \gamma^{(2)}_\alpha(q; p_j, p_k) \\
+& \qquad \quad + \frac{1}{4} j^\alpha(q; p_i) \left(\gamma^{(2)}_\alpha(q; p_i, p_j, p_k) + \gamma^{(2)}_\alpha(q; p_j, p_i, p_k) \right)  + \frac{1}{2} \gamma^{(1)\alpha}(q; p_i, p_j) \gamma^{(1)*}_\alpha (q; p_i, p_k) \bigg \rbrace\\
+& \quad + \sum_{i, j, k, l} f^{a d e} f^{bce} \left[ \mathbf{T}_i^a \big \lbrace \mathbf{T}_j^b, \mathbf{T}_k^c \big \rbrace \mathbf{T}_l^d + \mathbf{T}_l^d \big \lbrace \mathbf{T}_k^c, \mathbf{T}_j^b \big \rbrace \mathbf{T}_i^a \right] \\
+& \qquad \quad \times 2\; \text{Re} \bigg \lbrace - \frac{1}{4}  j^\alpha(q; p_i) \gamma^{(2)}_\alpha(q; p_j, p_k, p_l) - \frac{1}{8} \gamma^{(1)\alpha}(q;, p_i, p_l) \gamma^{(1)*}(q; p_j, p_k) \bigg \rbrace
+\end{split}
+\label{eq:two_loop_squared}
+\end{equation}
+Note that in the last color matrix, we are not summing over distinct integers. We define $\gamma^{(2)}(q; p_i, p_j, p_k)$ to vanish identically in case any of the indices momentum appears multiple times in the argument.
 
 \section{Soft Quark Limits}
 \begin{equation} \label{eq:J0quarks}
@@ -188,7 +366,7 @@ S^{(0)}&(q_1, q_2, p_i, p_j) = - \gamma^{(0)}_{\alpha_1 \alpha_2}(q_1, q_2, p_i)
 \begin{equation}
 \begin{split}
  &\mathbf{J}^{(1)}_{a_1 a_2}(q_1,q_2, \{ p_i \}_{i=1}^m ) =  \frac{1}{q_1 \cdot q_2} \sum_{i\neq j} (T^bT^c)_{a_1a_2} \mathbf{T}^b_i \mathbf{T}^c_j \, \\
-  & \quad \times \left[ \bar{u}(q_1,\lambda_1) \left( \frac{\slashed{p}_i}{p_i \cdot (q_1 + q_2)} \, J_{q\bar{q}}(q_1,q_2, p_i, p_j)  - \frac{\slashed{p}_j}{p_j \cdot (q_1 + q_2)} \, J_{q\bar{q}}(q_2,q_1, p_j, p_i) \right) v(q_2,\lambda_2) \right] 
+  & \quad \times \left[ \bar{u}(q_1,\lambda_1) \left( \frac{\slashed{p}_i}{p_i \cdot (q_1 + q_2)} \, J_{q\bar{q}}(q_1,q_2, p_i, p_j)  - \frac{\slashed{p}_j}{p_j \cdot (q_1 + q_2)} \, J_{q\bar{q}}(q_2,q_1, p_j, p_i) \right) v(q_2,\lambda_2) \right]
 \end{split}
 \end{equation}
 
@@ -203,83 +381,83 @@ S^{(0)}&(q_1, q_2, p_i, p_j) = - \gamma^{(0)}_{\alpha_1 \alpha_2}(q_1, q_2, p_i)
 
 \begin{equation}
 \begin{split}
-\mathbf{J}^{(0)\dagger}&(q_1, q_2,\{ p_i \}_{i=1}^m ) \mathbf{J}^{(1)}(q_1, q_2, \{ p_i \}_{i=1}^m ) + \text{h.c.} \\ 
- = &-2T_F \sum_{(i,j,k)} d^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \mathcal{I}(q_1, q_2, p_i, p_j) \text{Re} \big \lbrace J_{q\bar{q}} (q_1, q_2, p_j, p_k) - J_{q \bar{q}}(q_2, q_1, p_j, p_k)  \big \rbrace  \\ 
-&  +2T_F \sum_{(i,j,k)} f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \mathcal{I}(q_1, q_2, p_i, p_j) \text{Im} \big \lbrace J_{q\bar{q}} (q_1, q_2, p_j, p_k) + J_{q \bar{q}}(q_2, q_1, p_j, p_k)  \big \rbrace  \\ 
-& - 2T_F \sum_{(i,j)} d^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_j^c \bigg [ \mathcal{I}(q_1, q_2, p_i, p_j) \; \text{Re} \bigg \lbrace J_{q \bar{q}} (q_1, q_2, p_i, p_j) - J_{q \bar{q}} (q_2, q_1, p_i, p_j) \bigg \rbrace  \\ 
-& \hspace{2cm}  + \frac{2 p_j \cdot q_1 p_j \cdot q_2}{(q_1 \cdot q_2)^2 (p_j \cdot q_1 + p_j \cdot q_2)^2}  \; \text{Re} \bigg \lbrace J_{q \bar{q}} (q_1, q_2, p_j, p_i) - J_{q \bar{q}} (q_2, q_1, p_j, p_i) \bigg \rbrace \bigg ] \\ 
-& + C_A T_F \sum_{(i,j)} \mathbf{T}_i \cdot \mathbf{T}_j \left[- \mathcal{I}(q_1, q_2, p_i, p_j) + \frac{2 p_i \cdot q_1 p_i \cdot q_2}{(q_1 \cdot q_2)^2 (p_i \cdot q_1 + p_i \cdot q_2)^2} \right] \\ 
+\mathbf{J}^{(0)\dagger}&(q_1, q_2,\{ p_i \}_{i=1}^m ) \mathbf{J}^{(1)}(q_1, q_2, \{ p_i \}_{i=1}^m ) + \text{h.c.} \\
+ = &-2T_F \sum_{(i,j,k)} d^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \mathcal{I}(q_1, q_2, p_i, p_j) \text{Re} \big \lbrace J_{q\bar{q}} (q_1, q_2, p_j, p_k) - J_{q \bar{q}}(q_2, q_1, p_j, p_k)  \big \rbrace  \\
+&  +2T_F \sum_{(i,j,k)} f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c \mathcal{I}(q_1, q_2, p_i, p_j) \text{Im} \big \lbrace J_{q\bar{q}} (q_1, q_2, p_j, p_k) + J_{q \bar{q}}(q_2, q_1, p_j, p_k)  \big \rbrace  \\
+& - 2T_F \sum_{(i,j)} d^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_j^c \bigg [ \mathcal{I}(q_1, q_2, p_i, p_j) \; \text{Re} \bigg \lbrace J_{q \bar{q}} (q_1, q_2, p_i, p_j) - J_{q \bar{q}} (q_2, q_1, p_i, p_j) \bigg \rbrace  \\
+& \hspace{2cm}  + \frac{2 p_j \cdot q_1 p_j \cdot q_2}{(q_1 \cdot q_2)^2 (p_j \cdot q_1 + p_j \cdot q_2)^2}  \; \text{Re} \bigg \lbrace J_{q \bar{q}} (q_1, q_2, p_j, p_i) - J_{q \bar{q}} (q_2, q_1, p_j, p_i) \bigg \rbrace \bigg ] \\
+& + C_A T_F \sum_{(i,j)} \mathbf{T}_i \cdot \mathbf{T}_j \left[- \mathcal{I}(q_1, q_2, p_i, p_j) + \frac{2 p_i \cdot q_1 p_i \cdot q_2}{(q_1 \cdot q_2)^2 (p_i \cdot q_1 + p_i \cdot q_2)^2} \right] \\
 &\hspace{5cm} \times \text{Re} \bigg \lbrace J_{q \bar{q}}(q_1, q_2, p_i, p_j) + J_{q \bar{q}} (q_2, q_1, p_i, p_j) \bigg \rbrace
 \end{split}
 \end{equation}
 
 \section{Collinear Limits}
 \subsection{Tree-Level Collinear Limits}
-We consider the collinear limit of two final state momenta $p_1$ and $p_2$ 
-\begin{equation} 
+We consider the collinear limit of two final state momenta $p_1$ and $p_2$
+\begin{equation}
 \begin{split}
-&p_1^\mu = z p^\mu + k_\perp^\mu - \frac{k_\perp^2}{z} \frac{n^\mu}{2 p \cdot n}, \qquad p_2^\mu = (1 - z) p^\mu - k_\perp^\mu - \frac{k_\perp^2}{1 - z} \frac{n^\mu}{2 p \cdot n} \\ 
+&p_1^\mu = z p^\mu + k_\perp^\mu - \frac{k_\perp^2}{z} \frac{n^\mu}{2 p \cdot n}, \qquad p_2^\mu = (1 - z) p^\mu - k_\perp^\mu - \frac{k_\perp^2}{1 - z} \frac{n^\mu}{2 p \cdot n} \\
 &s_12 = 2 p_1 \cdot p_2 = - \frac{k_\perp^2}{z (1 - z)}, \qquad p^2 = n^2 = p \cdot k_\perp = n \cdot k_\perp  = 0, \\
 & \hspace{4.5cm} k_\perp^\mu \rightarrow 0.
 \end{split}
 \end{equation}
-The matrix element factorizes as 
+The matrix element factorizes as
 \begin{equation}
-|\mathcal{M}^{(0)}_{a_1, a_2, \dots} \! (p_1, p_2, \ldots)|^2 \simeq 4 \pi \alpha_s \frac{2}{s_{12}} \braket{\mathcal{M}^{(0)}_{a, \dots} (p, \ldots) | \mathbf{\hat{P}}_{a_1 a_2}^{(0)} (z, k_\perp; \epsilon) | \mathcal{M}_{a, \dots}^{(0)} (p, \ldots)}. 
+|\mathcal{M}^{(0)}_{a_1, a_2, \dots} \! (p_1, p_2, \ldots)|^2 \simeq 4 \pi \alpha_s \frac{2}{s_{12}} \braket{\mathcal{M}^{(0)}_{a, \dots} (p, \ldots) | \mathbf{\hat{P}}_{a_1 a_2}^{(0)} (z, k_\perp; \epsilon) | \mathcal{M}_{a, \dots}^{(0)} (p, \ldots)}.
 \label{eq:CollinearFactorization}
-\end{equation} 
-The flavor $a$ is set by flavor conservation, i.e.\ if $a_{1,2} = g$ then $a = a_{2, 1}$, while if $a_1 = \bar{a}_2$ then $a = g$. The splitting functions are operator in spin space, and act on the spin of the parton with flavor. We will need the average of Eq. \eqref{eq:CollinearFactorization} over the transverse direction 
+\end{equation}
+The flavor $a$ is set by flavor conservation, i.e.\ if $a_{1,2} = g$ then $a = a_{2, 1}$, while if $a_1 = \bar{a}_2$ then $a = g$. The splitting functions are operator in spin space, and act on the spin of the parton with flavor. We will need the average of Eq. \eqref{eq:CollinearFactorization} over the transverse direction
 \begin{equation}
 \overline{|\mathcal{M}^{(0)}_{a_1, a_2, \dots} (p_1, p_2, \ldots)|^2} \simeq 4 \pi \alpha_s \frac{2}{s_{12}} \braket{\mathbf{\hat{P}}_{a_1 a_2}^{(0)}(z; \epsilon)} |\mathcal{M}^{(0)}_{a,\dots} (p, \ldots)|^2,
 \end{equation}
-where the averaged splitting functions are 
+where the averaged splitting functions are
 \begin{equation}
 \begin{split}
-\braket{\mathbf{\hat{P}}_{gg}^{(0)}(z; \epsilon)} &= 2 C_A \left[ \frac{z}{1 - z} + \frac{1 - z}{z} + z (1 - z) \right], \\  
-\braket{\mathbf{\hat{P}}_{q \bar{q}}^{(0)}(z; \epsilon)} = \braket{\mathbf{\hat{P}}_{\bar{q} q}^{(0)}(z; \epsilon)} &= T_F \left[1 - \frac{2 z (1 - z)}{1 - \epsilon} \right], \\ 
-\braket{\mathbf{\hat{P}}_{q g}^{(0)}(z; \epsilon)} = \braket{\mathbf{\hat{P}}_{\bar{q} g}^{(0)}(z; \epsilon)} &= C_F \left[ \frac{1 + z^2}{1 - z} - \epsilon (1 - z) \right], \\ 
+\braket{\mathbf{\hat{P}}_{gg}^{(0)}(z; \epsilon)} &= 2 C_A \left[ \frac{z}{1 - z} + \frac{1 - z}{z} + z (1 - z) \right], \\
+\braket{\mathbf{\hat{P}}_{q \bar{q}}^{(0)}(z; \epsilon)} = \braket{\mathbf{\hat{P}}_{\bar{q} q}^{(0)}(z; \epsilon)} &= T_F \left[1 - \frac{2 z (1 - z)}{1 - \epsilon} \right], \\
+\braket{\mathbf{\hat{P}}_{q g}^{(0)}(z; \epsilon)} = \braket{\mathbf{\hat{P}}_{\bar{q} g}^{(0)}(z; \epsilon)} &= C_F \left[ \frac{1 + z^2}{1 - z} - \epsilon (1 - z) \right], \\
 \braket{\mathbf{\hat{P}}_{gq}^{(0)}(z; \epsilon)} = \braket{\mathbf{\hat{P}}_{g\bar{q}}^{(0)}(z; \epsilon)} &= \braket{\mathbf{\hat{P}}_{qg}^{(0)}(1 - z; \epsilon)}
 \end{split}
-\end{equation} 
+\end{equation}
 
 \subsection{One-Loop Collinear Limits}
-The factorization of one-loop amplitudes in the final state collinear limit reads 
+The factorization of one-loop amplitudes in the final state collinear limit reads
 \begin{equation}
 \begin{split}
-&2 \text{Re} \braket{\mathcal{M}_{a_1, a_2, \dots}^{(0)} (p_1, p_2, \dots) | \mathcal{M}^{(1)}_{a_1, a_2, \dots}(p_1, p_2, \dots)} \simeq \\ 
+&2 \text{Re} \braket{\mathcal{M}_{a_1, a_2, \dots}^{(0)} (p_1, p_2, \dots) | \mathcal{M}^{(1)}_{a_1, a_2, \dots}(p_1, p_2, \dots)} \simeq \\
 &\quad 4 \pi \alpha_s \frac{2}{s_{12}} \left[ 2 \text{Re} \braket{\mathcal{M}^{(0)}_{a, \dots} (p, \ldots) \mathbf{\hat{P}}_{a_1 a_2}^{(0)}(z, k_\perp; \epsilon) | \mathcal{M}^{(1)}_{a, \dots} (p, \ldots)} + \frac{\alpha_s}{4 \pi} \braket{\mathcal{M}^{(0)}_{a, \dots} (p, \ldots) | \mathbf{\hat{P}}_{a_1 a_2}^{(1)}(z; \epsilon) | \mathcal{M}^{(0)}_{a, \dots} (p, \ldots)} \right]
 \end{split}
 \end{equation}
-The one-loop splitting functions read 
+The one-loop splitting functions read
 \begin{equation}
 \hat{P}_{qg}^{(1), s s^\prime} (z, k_\perp; \epsilon) = r_{SR}^{qg}(z) \hat{P}_{qg}^{(0), s s^\prime} (z, k_\perp; \epsilon) + C_F r_{NS}^{qg}  \left[1 - \epsilon (1 - z) \right] \delta^{s s^\prime}
 \end{equation}
-The renormalized singular coefficients $r_{SR}^{a_1 a_2}$ are related to the unrenormalized singular coefficients $r_{S}^{a_1 a_2}$ through 
+The renormalized singular coefficients $r_{SR}^{a_1 a_2}$ are related to the unrenormalized singular coefficients $r_{S}^{a_1 a_2}$ through
 \begin{equation}
 r_{SR}^{a_1 a_2} (z) = 2 \text{Re} \left(- \frac{\mu_R^2}{s_{12}} \right)^\epsilon r_\Gamma r_S^{a_1 a_2}(z) - \frac{\beta_0}{\epsilon}.
-\end{equation} 
-And the bare singuar coefficients read 
+\end{equation}
+And the bare singuar coefficients read
 \begin{equation}
 \begin{split}
 r_{S}^{qg}(z) = -\frac{1}{\epsilon^2} \left[ C_A \left(\frac{z}{1 - z} \right)^\epsilon \frac{\pi \epsilon}{\sin (\pi \epsilon)} + \sum_{m = 1}^\infty \epsilon^m \left[ (1 + (-1)^m) C_A - 2 C_F \right] \text{Li}_m\! \left(- \frac{1 - z}{z} \right) \right].
 \end{split}
 \end{equation}
-The non-singular coefficient are 
+The non-singular coefficient are
 \begin{equation}
 r_{NS}^{qg} = 2 \text{Re} \left(- \frac{\mu_R^2}{s_{12}} \right)^\epsilon r_\Gamma \frac{C_A - C_F}{1 - 2 \epsilon}
 \end{equation}
 
 \section{Soft-Collinear Limits}
-In this section we want to investigate the soft-collinear limit. In particular we want to analyze if the collinear limit of the soft functions is identical to the soft limit of the splitting functions. This has important consequences related to factorization breaking effects. 
+In this section we want to investigate the soft-collinear limit. In particular we want to analyze if the collinear limit of the soft functions is identical to the soft limit of the splitting functions. This has important consequences related to factorization breaking effects.
 \subsection{Tree-Level Soft-Collinear Limit}
-We say that the soft gluon is now also collinear to the first parton 
+We say that the soft gluon is now also collinear to the first parton
 \begin{equation}
 p_1 = (1 - z) p - k_\perp - \frac{k_\perp^2}{(1 - z)} \frac{n}{2p \cdot n}, \qquad q = z p + k_\perp - \frac{k_\perp^2}{z} \frac{n}{2 p \cdot n}, \qquad z \rightarrow 0,\ k_\perp \rightarrow 0
 \end{equation}
 \begin{equation}
 |\mathbf{J}^{(0)} (q, \lbrace p_i \rbrace_{i = 1}^m ) |^2 \simeq -2\frac{1}{p_1 \cdot q} \sum_{j \neq 1} \frac{p_1 \cdot p_j}{q \cdot p_j} \mathbf{T}_1 \cdot \mathbf{T}_j \simeq 2 C_1 \frac{1}{p_1 \cdot q} \frac{1}{z} = \frac{1}{p_1 \cdot q} \braket{\hat{\mathbf{P}}_{ga_1}^{(0)}}
-\end{equation} 
-So we see that the limits permute. Further we see that $\braket{\mathbf{\hat{P}}_{q \bar{q}}^{(0)} }$ is non-singular in the limit $z \rightarrow 0, 1$. 
+\end{equation}
+So we see that the limits permute. Further we see that $\braket{\mathbf{\hat{P}}_{q \bar{q}}^{(0)} }$ is non-singular in the limit $z \rightarrow 0, 1$.
 
 \subsection{One-Loop Soft-Collinear Limit}
 \begin{equation}
@@ -289,8 +467,58 @@ So we see that the limits permute. Further we see that $\braket{\mathbf{\hat{P}}
 \end{split}
 \end{equation}
 
+\section{Color Structures}
+In this section, we want to analyze the appearing color structures. We list the symmetry properties and discuss the prerequisites for the matrix element to be non-vanishing. Let's start with the dipole term
+\begin{equation}
+\braket{M_1|\mathbf{T}_i \cdot \mathbf{T}_j|M_2} + \text{c.c.}.
+\end{equation}
+The expression is obviously real valued. Furthermore, the color matrix is symmetric, as the two color operators commute. Color conservation further implies that each row and each column adds up to zero. Lastly, since the $\mathbf{T}_i \cdot \mathbf{T}_i$ is a quadratic Casimir, the diagonals of the matrix are proportional to the matrix element without insertion of a color operator.
+
+Next, let's consider the tripole color operator
+\begin{equation}
+\braket{M_1| f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c | M_2} + \text{c.c.},
+\label{eq:tripoleCC}
+\end{equation}
+where implicitly we assume that all parton indices are distinct. Obviously, the tensor is real valued and completely anti-symmetric. The color operator may only contribute in processes with at least three colored partons, otherwise there are not enough distinct indices. However, even if there are four or more partons in the Born process, there is a wide class of processes for which the color correlator vanishes as well. To this end we decompose the matrix element in terms of its color structure
+\begin{equation}
+\ket{M_i} = \sum_\alpha \ket{M_i^\alpha} \otimes \ket{c^\alpha}.
+\end{equation}
+Then we can write
+\begin{equation}
+\begin{split}
+\braket{M_1| i f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c |M_2 } &= \sum_{\alpha, \beta} \braket{M_1^\alpha| M_2^\beta} \braket{c^\alpha|i f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c|c^\beta}\\
+\label{eq:M1ifM2}
+\end{split}
+\end{equation}
+The matrix element $\braket{c^\alpha |i f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c |c^\beta}$ is real-valued, since they can be evaluated with the Cviatanovi\'{c} algorithm~\cite{Cvitanovic:1976am}. Hence we find the relation
+\begin{equation}
+\braket{c^\alpha |i f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c |c^\beta} = \braket{c^\alpha |i f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c |c^\beta}^* = -\braket{c^\beta |i f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c |c^\alpha}.
+\end{equation}
+Inserting this into Eq.~\eqref{eq:M1ifM2} yields after renaming of the indices
+\begin{equation}
+\braket{M_1| i f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c |M_2 } = \frac{1}{2} \sum_{\alpha, \beta} \left(\braket{M_1^\alpha| M_2^\beta} - \braket{M_1^\beta|M_2^\alpha} \right) \braket{c^\alpha| i f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c| c^\beta}
+\end{equation}
+If we now apply this relation to the original tripole color correlator in Eq.~\eqref{eq:tripoleCC} we obtain
+\begin{equation}
+\begin{split}
+\braket{M_1| f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c | M_2} + \text{c.c.} &= \frac{1}{2} \sum_{\alpha, \beta} \left(\braket{M_1^\alpha| M_2^\beta} - \braket{M_1^\beta|M_2^\alpha} \right) \braket{c^\alpha| f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c| c^\beta} \\
+& - \frac{1}{2} \sum_{\alpha, \beta} \left(\braket{M_1^\alpha| M_2^\beta}^* - \braket{M_1^\beta|M_2^\alpha}^* \right) \braket{c^\alpha| f^{abc} \mathbf{T}_i^a \mathbf{T}_j^b \mathbf{T}_k^c| c^\beta}.
+\end{split}
+\end{equation}
+The color correlator is thus vanishing if
+\begin{equation}
+\braket{M_1^\alpha| M_2^\beta} = \braket{M_1^\alpha|M_2^\beta}^*,
+\end{equation}
+i.e.\ if the color stripped amplitude is real. Tree-level amplitudes are real valued, if there is no complex term in the Lagrangian. Hence, the tripole color correlator in Eq.~\eqref{eq:one_loop_squared}, \eqref{eq:one_loop_double_soft_squared}, \eqref{eq:two_loop_squared} do not contribute in case they act upon tree-level amplitude of theories which contain neither unstable particles nor CP-violating terms. Thus, they can be omitted for pure QCD or QCD+QED. At two loop, the tripole term in the one-loop~\eqref{eq:one_loop_squared} can also act on one-loop amplitudes, in which case the amplitude is not guaranteed to be real in the physical phase-space due to the appearance of loop integrals.
+
+The quadrupole color correlator
+\begin{equation}
+\braket{M| f^{ade} f^{bce} \left(\mathbf{T}_i^a \big \lbrace \mathbf{T}_j^b, \mathbf{T}_k^c \rbrace \mathbf{T}_l^d  + \mathbf{T}_l^d \big \lbrace \mathbf{T}_j^b, \mathbf{T}_k^c \rbrace \mathbf{T}_i^a \right)| M}
+\end{equation}
+appears in the square of the two-loop current~\eqref{eq:two_loop_squared} and the square of the one-loop double-soft current~\eqref{eq:one_loop_double_soft_squared}. It, too, is obviously real valued. It is antisymmetric with respect to the exchange of $j$ and $k$, as well as $i$ and $l$. The anti-symmetry in combination with color conservation tells us that the color correlator can only be non-vanishing if the amplitude composes of at least three external partons.
+
 \newpage
 \bibliographystyle{JHEP}
-\bibliography{main} 
+\bibliography{main}
 
 \end{document}

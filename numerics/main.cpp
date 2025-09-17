@@ -13,7 +13,7 @@ std::string process_full_str = "u u~ -> A A g";
 const int nBorn = 4;
 const int power = 0;
 const std::array<unsigned, 3> powerNonQCD = {2,0,0};
-const std::vector<int> flavor = {0,0,1,1};
+const std::vector<bool> flavor = {0,0,1,1};
 const std::string order = "NNLO";
 const std::string suffix = "_QED"; // "" or "_EW" or "_QED"
 std::vector<double> M2_custom;
@@ -525,7 +525,7 @@ int main() {
       level_int++;
       level = clusterTree.getLevel(level_int);
     }
-    PSF::PhaseSpace ppFull = PSF::GenMomenta2(pp, clusterTree, xParFull);
+    PSF::PhaseSpace ppFull = PSF::GenMomenta(pp, clusterTree, xParFull);
 
     ppFull.print();
 
